@@ -1,0 +1,809 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { 
+    MdMovie, 
+    MdDelete, 
+    MdAutorenew, 
+    MdInfoOutline, 
+    MdChevronLeft, 
+    MdChevronRight, 
+    MdAutoAwesome,
+    MdAdd
+} from 'react-icons/md';
+import Sidebar from '@/components/Sidebar';
+
+export default function StoryWriter() {
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [loadingText, setLoadingText] = useState('');
+    const [savedItems, setSavedItems] = useState([]);
+    const [selectedItem, setSelectedItem] = useState(null);
+
+    // Tutorial Carousel
+    const [showDemo, setShowDemo] = useState(true);
+    const [demoSlide, setDemoSlide] = useState(0);
+    const demoSlides = [
+        {
+            title: "⚡ Step 1: Auto-Brainstorm Cast & Concept",
+            desc: "Select your genre & style, type a 1-sentence basic idea (e.g. 'A traveler misses their train in Lagos'), and click 'Auto-Brainstorm Cast'. The AI will map out character cards and motives!"
+        },
+        {
+            title: "✍️ Step 2: Custom Character Management",
+            desc: "Review character cards. You can edit names, change flaws/motivations, add new actors, or remove supporting cast dynamically before compiling the story."
+        },
+        {
+            title: "📖 Step 3: Progressive Chapter Extension",
+            desc: "Generate Chapter 1. Then, use the progressive builder input at the bottom to tell the AI what should happen next (e.g. 'The traveler loses their passport'). Build your story chapter by chapter!"
+        }
+    ];
+
+    // Form State
+    const [niche, setNiche] = useState('Drama');
+    const [customNiche, setCustomNiche] = useState('');
+    const [style, setStyle] = useState('Nollywood / African Drama');
+    const [customStyle, setCustomStyle] = useState('');
+    const [actorsLimit, setActorsLimit] = useState('Unlimited');
+    const [theme, setTheme] = useState('');
+    const [description, setDescription] = useState('');
+    const [characters, setCharacters] = useState([]);
+
+    // Advanced Production
+    const [duration, setDuration] = useState(20);
+    const [isSeasonal, setIsSeasonal] = useState(false);
+    const [hasNarrator, setHasNarrator] = useState(true);
+
+    // Progressive writing state
+    const [activeStoryUuid, setActiveStoryUuid] = useState('');
+    const [activeStoryTitle, setActiveStoryTitle] = useState('');
+    const [activeStoryBlueprint, setActiveStoryBlueprint] = useState('');
+    const [activeChapters, setActiveChapters] = useState([]);
+    const [nextInstructions, setNextInstructions] = useState('');
+
+    const [nichesList, setNichesList] = useState(['Drama', 'Action', 'Thriller', 'Comedy', 'Romance', 'Mystery']);
+    const [stylesList, setStylesList] = useState(['Nollywood / African Drama', 'Hollywood Cinematic', 'Telenovela Drama', 'Short Film / TikTok Style', 'Documentary style']);
+
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user.id || 1;
+
+    useEffect(() => {
+        document.title = 'Story Writer | AI Studio';
+        fetchSavedItems();
+        fetchPresets();
+    }, []);
+
+    const fetchPresets = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/story/presets`);
+            const data = await res.json();
+            if (data.success) {
+                if (data.niches && data.niches.length > 0) setNichesList(data.niches);
+                if (data.styles && data.styles.length > 0) setStylesList(data.styles);
+            }
+        } catch (err) {
+            console.error('Error fetching presets:', err);
+        }
+    };
+
+    const handleAddNichePreset = async () => {
+        const val = prompt('Enter new Niche / Genre name:');
+        if (!val || !val.trim()) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/story/presets/niche`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: val.trim() })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchPresets();
+                setNiche(val.trim());
+            } else {
+                alert(data.message || 'Failed to add niche');
+            }
+        } catch {
+            alert('Error adding niche preset');
+        }
+    };
+
+    const handleDeleteNichePreset = async () => {
+        if (!niche || niche === 'custom') return;
+        if (!confirm(`Are you sure you want to delete preset: "${niche}"?`)) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/story/presets/niche/${encodeURIComponent(niche)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchPresets();
+                setNiche('Drama');
+            } else {
+                alert(data.message || 'Failed to delete niche');
+            }
+        } catch {
+            alert('Error deleting niche preset');
+        }
+    };
+
+    const handleAddStylePreset = async () => {
+        const val = prompt('Enter new Writing Style name:');
+        if (!val || !val.trim()) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/story/presets/style`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: val.trim() })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchPresets();
+                setStyle(val.trim());
+            } else {
+                alert(data.message || 'Failed to add style');
+            }
+        } catch {
+            alert('Error adding style preset');
+        }
+    };
+
+    const handleDeleteStylePreset = async () => {
+        if (!style || style === 'custom') return;
+        if (!confirm(`Are you sure you want to delete preset: "${style}"?`)) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/story/presets/style/${encodeURIComponent(style)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchPresets();
+                setStyle('Nollywood / African Drama');
+            } else {
+                alert(data.message || 'Failed to delete style');
+            }
+        } catch {
+            alert('Error deleting style preset');
+        }
+    };
+
+    const fetchSavedItems = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/story/list?user_id=${userId}`);
+            const data = await res.json();
+            if (data.success) {
+                setSavedItems(data.items.filter(item => item.type === 'story'));
+            }
+        } catch (err) {
+            console.error('Error listing user stories:', err);
+        }
+    };
+
+    const deleteItem = async (uuid, e) => {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this story?')) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/story/${uuid}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                fetchSavedItems();
+                if (selectedItem && selectedItem.uuid === uuid) {
+                    setSelectedItem(null);
+                }
+                if (activeStoryUuid === uuid) {
+                    resetStoryContext();
+                }
+            }
+        } catch (err) {
+            alert('Deletion failed');
+        }
+    };
+
+    const resetStoryContext = () => {
+        setActiveStoryUuid('');
+        setActiveStoryTitle('');
+        setActiveStoryBlueprint('');
+        setActiveChapters([]);
+        setNextInstructions('');
+    };
+
+    const loadItemDetails = async (uuid) => {
+        try {
+            setLoading(true);
+            setLoadingText('Loading story...');
+            const res = await fetch(`${API_URL}/admin/story/${uuid}`);
+            const data = await res.json();
+            if (data.success) {
+                const item = data.item;
+                setSelectedItem(item);
+                
+                setActiveStoryUuid(item.uuid);
+                setActiveStoryTitle(item.title);
+                setActiveStoryBlueprint(item.blueprint);
+                
+                let contentJson = item.content;
+                if (typeof contentJson === 'string') {
+                    try { contentJson = JSON.parse(contentJson); } catch {}
+                }
+                
+                if (contentJson && contentJson.chapters) {
+                    setActiveChapters(contentJson.chapters);
+                    if (contentJson.metadata) {
+                        const meta = contentJson.metadata;
+                        if (meta.niche) setNiche(meta.niche);
+                        if (meta.style) setStyle(meta.style);
+                        if (meta.theme) setTheme(meta.theme);
+                        if (meta.duration) setDuration(meta.duration);
+                        if (meta.is_seasonal !== undefined) setIsSeasonal(meta.is_seasonal);
+                        if (meta.has_narrator !== undefined) setHasNarrator(meta.has_narrator);
+                        if (meta.characters) setCharacters(meta.characters);
+                    }
+                } else {
+                    setActiveChapters([{ chapter_number: 1, title: 'Chapter 1', content: item.content }]);
+                }
+            }
+        } catch (err) {
+            alert('Failed to load story detail');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAutoBrainstorm = async () => {
+        if (!description.trim()) {
+            alert('Please type a basic plot concept or seed idea in the text area first!');
+            return;
+        }
+
+        setLoading(true);
+        setLoadingText('AI is brainstorming characters, roles, and themes...');
+
+        const payload = {
+            user_id: userId,
+            seed_idea: description,
+            niche: niche === 'custom' ? customNiche : niche,
+            style: style === 'custom' ? customStyle : style,
+            duration: duration,
+            is_seasonal: isSeasonal,
+            api_key: ''
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/admin/story/brainstorm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setTheme(data.theme);
+                setDescription(data.plot_summary);
+                setCharacters(data.characters || []);
+                alert('Brainstorm complete! Review and adjust the generated cast list and theme below.');
+            } else {
+                alert(data.message || 'Brainstorming failed.');
+            }
+        } catch (err) {
+            alert('Server error during brainstorm');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addCharacterCard = () => {
+        setCharacters([
+            ...characters,
+            { name: '', role: 'Supporting', defect: '', motivation: '' }
+        ]);
+    };
+
+    const updateCharacterCard = (idx, field, value) => {
+        const updated = [...characters];
+        updated[idx][field] = value;
+        setCharacters(updated);
+    };
+
+    const removeCharacterCard = (idx) => {
+        setCharacters(characters.filter((_, i) => i !== idx));
+    };
+
+    const handleGenerateStory = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setLoadingText('Creating initial Story Treatment outline (Chapter 1)...');
+        resetStoryContext();
+
+        const payload = {
+            user_id: userId,
+            niche: niche === 'custom' ? customNiche : niche,
+            style: style === 'custom' ? customStyle : style,
+            actors_limit: actorsLimit,
+            theme,
+            description,
+            is_seasonal: isSeasonal,
+            has_narrator: hasNarrator,
+            characters: characters,
+            api_key: ''
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/admin/story/generate-story`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setActiveStoryUuid(data.uuid);
+                setActiveStoryBlueprint(data.blueprint);
+                setActiveChapters(data.chapters);
+                fetchSavedItems();
+            } else {
+                alert(data.message || 'Generation failed.');
+            }
+        } catch (err) {
+            alert('Server error generating story treatment');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExtendStory = async () => {
+        if (!activeStoryUuid) return;
+        setLoading(true);
+        setLoadingText(`Brainstorming Chapter ${activeChapters.length + 1}...`);
+
+        const payload = {
+            user_id: userId,
+            story_uuid: activeStoryUuid,
+            next_instructions: nextInstructions,
+            api_key: ''
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/admin/story/generate-story`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setActiveChapters(data.chapters);
+                setNextInstructions('');
+                fetchSavedItems();
+            } else {
+                alert(data.message || 'Extension failed.');
+            }
+        } catch (err) {
+            alert('Server error extending story treatment');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const triggerDownload = async (uuid, format) => {
+        if (!uuid) {
+            alert('No active story loaded to download.');
+            return;
+        }
+        try {
+            setLoading(true);
+            setLoadingText(`Preparing ${format.toUpperCase()} download...`);
+            const res = await fetch(`${API_URL}/admin/story/export?uuid=${uuid}&format=${format}`);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || 'Download failed.');
+                return;
+            }
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition') || '';
+            let filename = `story.${format}`;
+            const match = disposition.match(/filename="?([^"]+)"?/);
+            if (match) filename = match[1];
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            alert('Download failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const nextDemoSlide = () => {
+        setDemoSlide((prev) => (prev + 1) % demoSlides.length);
+    };
+
+    const prevDemoSlide = () => {
+        setDemoSlide((prev) => (prev - 1 + demoSlides.length) % demoSlides.length);
+    };
+
+    return (
+        <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
+            <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-6 mb-6">
+                    <div>
+                        <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                            <MdMovie className="text-red-500 w-6 h-6" /> Story Writer
+                        </h1>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Generate progressive treatments, brainstorm characters, and build your story chapters.</p>
+                    </div>
+                    
+                    <button
+                        onClick={() => setShowDemo(!showDemo)}
+                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-gray-200/50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
+                    >
+                        <MdInfoOutline className="text-red-400 w-4 h-4" /> {showDemo ? "Hide Guide" : "View Guide"}
+                    </button>
+                </div>
+
+                {showDemo && (
+                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-5 mb-6 relative overflow-hidden transition-all duration-300">
+                        <div className="max-w-2xl">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="bg-red-500 text-gray-900 dark:text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
+                                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
+                            <div className="flex items-center gap-2">
+                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                    <MdChevronLeft className="w-4 h-4 text-gray-700 dark:text-white" />
+                                </button>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold">{demoSlide + 1} / {demoSlides.length}</span>
+                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                    <MdChevronRight className="w-4 h-4 text-gray-700 dark:text-white" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div className="lg:col-span-3 space-y-6">
+                        <form onSubmit={handleGenerateStory} className="space-y-6">
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Outline & Concept Details</h3>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Niche / Genre</label>
+                                        <select
+                                            value={niche}
+                                            onChange={(e) => setNiche(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        >
+                                            {nichesList.map((n) => (
+                                                <option key={n} value={n}>{n}</option>
+                                            ))}
+                                            <option value="custom">-- Custom Genre --</option>
+                                        </select>
+                                        {niche === 'custom' && (
+                                            <input
+                                                type="text"
+                                                placeholder="Enter custom genre..."
+                                                value={customNiche}
+                                                onChange={(e) => setCustomNiche(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none mt-2"
+                                            />
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Writing Style</label>
+                                        <select
+                                            value={style}
+                                            onChange={(e) => setStyle(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        >
+                                            {stylesList.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                            <option value="custom">-- Custom Style --</option>
+                                        </select>
+                                        {style === 'custom' && (
+                                            <input
+                                                type="text"
+                                                placeholder="Enter custom style..."
+                                                value={customStyle}
+                                                onChange={(e) => setCustomStyle(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none mt-2"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Core Story Concept / Seed Idea</label>
+                                        <button
+                                            type="button"
+                                            onClick={handleAutoBrainstorm}
+                                            className="text-[10px] bg-red-500 hover:bg-red-600 text-gray-900 dark:text-white px-2 py-0.5 rounded font-bold uppercase"
+                                        >
+                                            Auto-Brainstorm Concept & Cast
+                                        </button>
+                                    </div>
+                                    <textarea
+                                        placeholder="Write a brief summary of what the story is about, or seed ideas..."
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        rows="4"
+                                        className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Theme (Overarching Motif)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Betrayal, Redemption, Greed"
+                                            value={theme}
+                                            onChange={(e) => setTheme(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Character Limit Option</label>
+                                        <select
+                                            value={actorsLimit}
+                                            onChange={(e) => setActorsLimit(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        >
+                                            <option value="Unlimited">Unlimited</option>
+                                            <option value="Focused (2-3 main)">Focused (2-3 main)</option>
+                                            <option value="Solo / Monologue">Solo / Monologue</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 border-t border-gray-200 dark:border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Est. Duration (minutes)</label>
+                                        <input
+                                            type="number"
+                                            value={duration}
+                                            onChange={(e) => setDuration(Number(e.target.value))}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-4">
+                                        <input
+                                            type="checkbox"
+                                            id="isSeasonal"
+                                            checked={isSeasonal}
+                                            onChange={(e) => setIsSeasonal(e.target.checked)}
+                                            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                        />
+                                        <label htmlFor="isSeasonal" className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 font-semibold uppercase">Seasonal (Multi-part)</label>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-4">
+                                        <input
+                                            type="checkbox"
+                                            id="hasNarrator"
+                                            checked={hasNarrator}
+                                            onChange={(e) => setHasNarrator(e.target.checked)}
+                                            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                        />
+                                        <label htmlFor="hasNarrator" className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 font-semibold uppercase">Include Narration voiceover</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Cast Card Sheet</h3>
+                                    <button
+                                        type="button"
+                                        onClick={addCharacterCard}
+                                        className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1"
+                                    >
+                                        <MdAdd className="w-4 h-4" /> Add Character Card
+                                    </button>
+                                </div>
+
+                                {characters.length === 0 ? (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 py-4 text-center">No character cards specified. Auto-Brainstorm to generate cast list dynamically.</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {characters.map((char, index) => (
+                                            <div key={index} className="bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/5 rounded-xl p-4 space-y-3 relative group">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeCharacterCard(index)}
+                                                    className="absolute top-2 right-2 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <MdDelete className="w-4 h-4" />
+                                                </button>
+                                                
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-0.5">Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={char.name || ''}
+                                                        onChange={(e) => updateCharacterCard(index, 'name', e.target.value)}
+                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                        placeholder="e.g. Chief Amara"
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-0.5">Role Type</label>
+                                                        <select
+                                                            value={char.role || 'Supporting'}
+                                                            onChange={(e) => updateCharacterCard(index, 'role', e.target.value)}
+                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                        >
+                                                            <option value="Protagonist">Protagonist</option>
+                                                            <option value="Antagonist">Antagonist</option>
+                                                            <option value="Supporting">Supporting</option>
+                                                            <option value="Narrator">Narrator</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-0.5">Flaw / Weakness</label>
+                                                        <input
+                                                            type="text"
+                                                            value={char.defect || ''}
+                                                            onChange={(e) => updateCharacterCard(index, 'defect', e.target.value)}
+                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                            placeholder="e.g. Arrogance"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-0.5">Motivation</label>
+                                                    <input
+                                                        type="text"
+                                                        value={char.motivation || ''}
+                                                        onChange={(e) => updateCharacterCard(index, 'motivation', e.target.value)}
+                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                        placeholder="e.g. Protect family legacy"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                            >
+                                <MdAutoAwesome className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} /> Compile & Generate Chapter 1
+                            </button>
+                        </form>
+
+                        {activeChapters.length > 0 && (
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full">Active story builder</span>
+                                        <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{activeStoryTitle || "Untitled Story Outline"}</h3>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerDownload(activeStoryUuid, 'txt')}
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                        >
+                                            TXT
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerDownload(activeStoryUuid, 'docx')}
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                        >
+                                            DOCX
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerDownload(activeStoryUuid, 'pdf')}
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                        >
+                                            PDF (Watermarked)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {activeChapters.map((ch, idx) => (
+                                        <div key={idx} className="space-y-2 border-b border-gray-100 dark:border-white/5 pb-4 last:border-none">
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                <span className="w-4 h-4 rounded bg-red-500/10 text-red-500 flex items-center justify-center text-[10px] font-bold">{ch.chapter_number}</span>
+                                                {ch.title || `Chapter ${ch.chapter_number}`}
+                                            </h4>
+                                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 whitespace-pre-line leading-relaxed">{ch.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-200 dark:border-white/5 space-y-3">
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tell AI what should happen in Chapter {activeChapters.length + 1}</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Chief Solomon calls an urgent family meeting to announce the heir..."
+                                            value={nextInstructions}
+                                            onChange={(e) => setNextInstructions(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleExtendStory}
+                                            disabled={loading}
+                                            className="bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase px-5 rounded-xl text-xs flex items-center gap-1"
+                                        >
+                                            <MdAutorenew className="w-4 h-4" /> Extend
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4">
+                            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Saved Story Outlines</h3>
+                            
+                            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                                {savedItems.length === 0 ? (
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 py-4 text-center">No outlines created yet.</p>
+                                ) : (
+                                    savedItems.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => loadItemDetails(item.uuid)}
+                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-2.5 ${
+                                                selectedItem && selectedItem.uuid === item.uuid
+                                                    ? 'bg-red-500/5 border-red-500/30'
+                                                    : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-[#1b1b22]'
+                                            }`}
+                                        >
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <MdMovie className="text-rose-400 w-4 h-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.title}</p>
+                                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                                    <span className="text-[8px] text-gray-500 dark:text-gray-400 max-w-[80px] truncate">{item.niche}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => deleteItem(item.uuid, e)}
+                                                className="text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors self-center flex-shrink-0"
+                                            >
+                                                <MdDelete className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {loading && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
+                        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Synthesizing content..."}</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

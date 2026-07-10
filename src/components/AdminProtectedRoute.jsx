@@ -1,0 +1,95 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+const SESSION_TIMEOUT = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // Check every minute
+
+export default function AdminProtectedRoute({ children }) {
+    const router = useRouter();
+    const [mounted, setMounted] = useState(false);
+    const [user, setUser] = useState(null);
+    const [loginTime, setLoginTime] = useState(null);
+
+    useEffect(() => {
+        setMounted(true);
+        setUser(JSON.parse(localStorage.getItem('user') || 'null'));
+        setLoginTime(localStorage.getItem('login_time'));
+    }, []);
+
+    // Session activity checks
+    useEffect(() => {
+        if (!mounted || !user) return;
+
+        let lastActivity = Date.now();
+        let activityCheckInterval;
+
+        const updateActivity = () => {
+            lastActivity = Date.now();
+            localStorage.setItem('last_activity', lastActivity.toString());
+        };
+
+        const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+        events.forEach(event => {
+            document.addEventListener(event, updateActivity);
+        });
+
+        const checkActivity = () => {
+            const now = Date.now();
+            const storedActivity = parseInt(localStorage.getItem('last_activity') || lastActivity.toString());
+            const timeSinceActivity = now - storedActivity;
+
+            if (timeSinceActivity > SESSION_TIMEOUT) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('login_time');
+                localStorage.removeItem('last_activity');
+                window.location.href = '/login?timeout=true';
+            }
+
+            if (loginTime) {
+                const loginTimestamp = parseInt(loginTime);
+                const sessionDuration = now - loginTimestamp;
+
+                if (sessionDuration > SESSION_TIMEOUT) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('login_time');
+                    localStorage.removeItem('last_activity');
+                    window.location.href = '/login?timeout=true';
+                }
+            }
+        };
+
+        updateActivity();
+        activityCheckInterval = setInterval(checkActivity, ACTIVITY_CHECK_INTERVAL);
+
+        return () => {
+            events.forEach(event => {
+                document.removeEventListener(event, updateActivity);
+            });
+            clearInterval(activityCheckInterval);
+        };
+    }, [mounted, user, loginTime]);
+
+    // Redirections inside useEffect to prevent hydration issues
+    useEffect(() => {
+        if (mounted && !user) {
+            router.replace('/login');
+        } else if (mounted && user && user.role !== 'admin') {
+            router.replace('/dashboard');
+        }
+    }, [mounted, user, router]);
+
+    if (!mounted || !user || user.role !== 'admin') {
+        return (
+            <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-[#0a0a0a]">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 dark:border-gray-200 dark:border-white/10 dark:border-t-white rounded-full animate-spin" />
+                    <p className="text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return children;
+}

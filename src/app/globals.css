@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* Custom styles for phone input */
+.phone-input-custom {
+  width: 100%;
+}
+
+.phone-input-custom input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.phone-input-custom input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #dc2626;
+  border-color: transparent;
+}
+
+.phone-input-custom .react-international-phone-country-selector-button {
+  border: none;
+  border-right: 1px solid #d1d5db;
+  border-radius: 0.75rem 0 0 0.75rem;
+  padding: 0.5rem;
+}
+
+.phone-input-custom .react-international-phone-country-selector-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* 🔥 Global Dark Theme Overrides for Form Inputs 🔥 */
+/* Forces all inputs, textareas, and selects inside .dark elements to have readable white/dark text */
+.dark input, .dark textarea, .dark select {
+  color: #f3f4f6 !important;
+  color-scheme: dark;
+}
+
+/* Allow Tailwind text-color utility classes (e.g. text-white, text-gray-300) to work on form fields */
+input, textarea, select {
+  color: inherit;
+}
+
+/* Default fallback colors for form fields when no explicit Tailwind text class is set */
+:not(.dark) input:not([class*="text-"]), 
+:not(.dark) textarea:not([class*="text-"]), 
+:not(.dark) select:not([class*="text-"]) {
+  color: #111827;
+  color-scheme: light;
+}
+
+/* Enforce white text and dark backgrounds for all input fields inside pages with dark backgrounds (bg-#0a0a0a, bg-#07070a, bg-#0e0e12) */
+[class*="bg-[#07070a]"] input, [class*="bg-[#07070a]"] select, [class*="bg-[#07070a]"] textarea,
+[class*="bg-[#0a0a0a]"] input, [class*="bg-[#0a0a0a]"] select, [class*="bg-[#0a0a0a]"] textarea,
+[class*="bg-[#0e0e12]"] input, [class*="bg-[#0e0e12]"] select, [class*="bg-[#0e0e12]"] textarea,
+[class*="bg-[#111115]"] input, [class*="bg-[#111115]"] select, [class*="bg-[#111115]"] textarea,
+[class*="bg-[#111111]"] input, [class*="bg-[#111111]"] select, [class*="bg-[#111111]"] textarea,
+[class*="bg-[#16161a]"] input, [class*="bg-[#16161a]"] select, [class*="bg-[#16161a]"] textarea {
+  color: #ffffff !important;
+  background-color: #16161a !important;
+}
+
+/* Override international phone input container and flag drop downs for dark theme */
+.phone-input-custom input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: #16161a !important;
+  color: #ffffff !important;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.phone-input-custom input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+  border-color: transparent !important;
+}
+
+.phone-input-custom .react-international-phone-country-selector-button {
+  border: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem 0 0 0.75rem;
+  padding: 0.5rem;
+  background-color: #16161a !important;
+}
+
+.phone-input-custom .react-international-phone-country-selector-button:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Fixes Google Chrome's annoying white auto-fill background in dark themes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+    -webkit-text-fill-color: #f3f4f6 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}

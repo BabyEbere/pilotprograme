@@ -1,0 +1,427 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+import { 
+    MdSave, MdArrowBack, MdImage, MdHelpCenter, MdSearch, 
+    MdCategory, MdHistory, MdPublishedWithChanges, MdAutoAwesome, MdClose
+} from 'react-icons/md';
+import { Editor } from '@tinymce/tinymce-react';
+import AdminSidebar from '@/components/AdminSidebar';
+
+export default function AdminBlogEditor() {
+    const { id } = useParams();
+    const router = useRouter();
+    const pathname = usePathname();
+    const editPost = location.state?.post;
+
+    const [form, setForm] = useState({
+        title: '',
+        slug: '',
+        content: '',
+        excerpt: '',
+        featured_image: '',
+        category_id: 1,
+        status: 'draft',
+        meta_title: '',
+        meta_description: '',
+        keywords: '',
+        faq_json: [],
+        schema_json: {}
+    });
+
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [aiGenerating, setAiGenerating] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [showAiModal, setShowAiModal] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
+    const [activeTab, setActiveTab] = useState('content');
+
+    useEffect(() => {
+        fetchCategories();
+        if (id && editPost) {
+            setForm({
+                ...editPost,
+                faq_json: JSON.parse(editPost.faq_json || '[]'),
+                schema_json: JSON.parse(editPost.schema_json || '{}')
+            });
+        }
+    }, [id, editPost]);
+
+    const fetchCategories = () => {
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/categories`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setCategories(data.categories);
+            });
+    };
+
+    const handleTitleChange = (e) => {
+        const title = e.target.value;
+        const slug = title.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)+/g, '');
+        if (!id) setForm(prev => ({ ...prev, title, slug }));
+        else setForm(prev => ({ ...prev, title }));
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        try {
+            const url = id 
+                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}` 
+                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`;
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form)
+            });
+            const data = await res.json();
+            if (data.success) router.push('/control/blog');
+        } catch (err) {
+            console.error("Failed to save post", err);
+        }
+        setLoading(false);
+    };
+
+    const handleAiGenerate = async () => {
+        if (!aiPrompt) return;
+        setAiGenerating(true);
+        try {
+            const adminData = JSON.parse(localStorage.getItem('user') || '{}');
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    prompt: aiPrompt, 
+                    user_id: adminData.id || 1 
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setForm(prev => ({ 
+                    ...prev, 
+                    content: data.content,
+                    title: data.title || prev.title,
+                    meta_title: data.title || prev.meta_title,
+                    excerpt: data.excerpt || prev.excerpt,
+                    meta_description: data.excerpt || prev.meta_description
+                }));
+                setShowAiModal(false);
+                setAiPrompt('');
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error("AI Generation failed", err);
+            alert("Connection error occurred.");
+        }
+        setAiGenerating(false);
+    };
+
+    const addFaq = () => {
+        setForm(prev => ({
+            ...prev,
+            faq_json: [...prev.faq_json, { q: '', a: '' }]
+        }));
+    };
+
+    const updateFaq = (index, field, value) => {
+        const newFaq = [...form.faq_json];
+        newFaq[index][field] = value;
+        setForm(prev => ({ ...prev, faq_json: newFaq }));
+    };
+
+    return (
+        <div className="flex bg-white dark:bg-[#0a0a0a] min-h-screen text-gray-700 dark:text-gray-300">
+            <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+            <div className="flex-1 p-8">
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex justify-between items-center mb-8">
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => router.push('/control/blog')}
+                                className="p-2 rounded-lg bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400"
+                            >
+                                <MdArrowBack className="w-5 h-5" />
+                            </button>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+                                {id ? 'Edit Blog Post' : 'New Blog Post'}
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setShowAiModal(true)}
+                                className="bg-zinc-900 hover:bg-zinc-800 border border-red-500/30 text-red-500 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                            >
+                                <MdAutoAwesome className="w-5 h-5" />
+                                AI Writer
+                            </button>
+                            <select 
+                                value={form.status}
+                                onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
+                                className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-tight rounded-lg px-3 py-2 text-gray-900 dark:text-white outline-none focus:border-red-500/50"
+                            >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                            </select>
+                            <button 
+                                onClick={handleSave}
+                                disabled={loading}
+                                className="bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-red-900/40 disabled:opacity-50"
+                            >
+                                <MdSave className="w-5 h-5 shadow-sm shadow-black/20" />
+                                {loading ? 'Saving...' : 'Save Post'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                        <div className="xl:col-span-2 space-y-6">
+                            <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl overflow-hidden p-6 space-y-4 shadow-xl">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Title</label>
+                                    <input 
+                                        type="text" 
+                                        value={form.title}
+                                        onChange={handleTitleChange}
+                                        placeholder="Post title..." 
+                                        className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 transition-all font-semibold"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Slug</label>
+                                        <input 
+                                            type="text" 
+                                            value={form.slug}
+                                            onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))}
+                                            placeholder="my-cool-post" 
+                                            className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-[10px] text-red-400 p-3 rounded-xl outline-none focus:border-red-500/30 font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Category</label>
+                                        <select 
+                                            value={form.category_id}
+                                            onChange={(e) => setForm(prev => ({ ...prev, category_id: e.target.value }))}
+                                            className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 uppercase text-[10px] font-bold tracking-widest"
+                                        >
+                                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col min-h-[500px] shadow-xl">
+                                <div className="p-4 border-b border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-[#1a1a1a]/50 flex gap-4 uppercase font-bold text-[10px] tracking-widest overflow-x-auto">
+                                    <button 
+                                        onClick={() => setActiveTab('content')}
+                                        className={`px-3 py-1 rounded-full transition-all ${activeTab === 'content' ? 'bg-red-600 text-gray-900 dark:text-white shadow-sm shadow-red-900/20' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
+                                    >
+                                        Content
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('faq')}
+                                        className={`px-3 py-1 rounded-full transition-all ${activeTab === 'faq' ? 'bg-red-600 text-gray-900 dark:text-white shadow-sm shadow-red-900/20' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
+                                    >
+                                        FAQ
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('seo')}
+                                        className={`px-3 py-1 rounded-full transition-all ${activeTab === 'seo' ? 'bg-red-600 text-gray-900 dark:text-white shadow-sm shadow-red-900/20' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
+                                    >
+                                        SEO Meta
+                                    </button>
+                                </div>
+                                <div className="p-6 flex-1">
+                                    {activeTab === 'content' && (
+                                        <div className="min-h-[400px] bg-transparent rounded-xl overflow-hidden border border-white/5">
+                                            <Editor
+                                                apiKey='68p6fs0nyu59icihoyv7sk06p6olzz92r68eg3heah8qx3tb'
+                                                value={form.content}
+                                                onEditorChange={(content) => setForm(prev => ({ ...prev, content }))}
+                                                init={{
+                                                    height: 500,
+                                                    menubar: false,
+                                                    skin: "oxide-dark",
+                                                    content_css: "dark",
+                                                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                                                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+                                                    content_style: 'body { font-family:Outfit,Helvetica,Arial,sans-serif; font-size:14px; background-color: #111111; color: #d1d5db; }'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    {activeTab === 'faq' && (
+                                        <div className="space-y-4">
+                                            {form.faq_json.map((faq, i) => (
+                                                <div key={i} className="bg-gray-100 dark:bg-[#1a1a1a] p-4 rounded-xl space-y-3 relative group border border-white/5 shadow-inner">
+                                                    <input 
+                                                        type="text" 
+                                                        value={faq.q}
+                                                        onChange={(e) => updateFaq(i, 'q', e.target.value)}
+                                                        placeholder="Question..." 
+                                                        className="w-full bg-transparent text-gray-900 dark:text-white font-bold text-sm outline-none border-b border-white/5 pb-2 uppercase tracking-tight"
+                                                    />
+                                                    <textarea 
+                                                        value={faq.a}
+                                                        onChange={(e) => updateFaq(i, 'a', e.target.value)}
+                                                        placeholder="Answer..." 
+                                                        className="w-full bg-transparent text-gray-500 dark:text-gray-400 text-xs outline-none resize-none h-20 leading-relaxed font-normal"
+                                                    />
+                                                </div>
+                                            ))}
+                                            <button 
+                                                onClick={addFaq}
+                                                className="w-full py-4 rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:bg-gray-200 dark:bg-white/5 transition-all text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                                            >
+                                                <MdHelpCenter className="w-5 h-5 text-red-500" />
+                                                Add FAQ Item
+                                            </button>
+                                        </div>
+                                    )}
+                                    {activeTab === 'seo' && (
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Meta Title</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={form.meta_title}
+                                                    onChange={(e) => setForm(prev => ({ ...prev, meta_title: e.target.value }))}
+                                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/20 shadow-inner"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Meta Description</label>
+                                                <textarea 
+                                                    value={form.meta_description}
+                                                    onChange={(e) => setForm(prev => ({ ...prev, meta_description: e.target.value }))}
+                                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none h-28 text-xs font-normal leading-relaxed shadow-inner"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Keywords (comma separated)</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={form.keywords}
+                                                    onChange={(e) => setForm(prev => ({ ...prev, keywords: e.target.value }))}
+                                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none text-[10px] shadow-inner"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-6 space-y-4 shadow-xl">
+                                <h3 className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                    <MdImage className="w-5 h-5 text-red-500" />
+                                    Featured Image
+                                </h3>
+                                <div className="aspect-video bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/5 flex items-center justify-center relative group shadow-inner">
+                                    {form.featured_image ? (
+                                        <img src={form.featured_image} alt="Featured" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                    ) : (
+                                        <MdImage className="w-12 h-12 text-gray-900 dark:text-white/5 transition-transform group-hover:scale-110" />
+                                    )}
+                                </div>
+                                <input 
+                                    type="text" 
+                                    value={form.featured_image}
+                                    onChange={(e) => setForm(prev => ({ ...prev, featured_image: e.target.value }))}
+                                    placeholder="Image URL..." 
+                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-[10px] text-zinc-400 p-3 rounded-xl outline-none tabular-nums shadow-inner"
+                                />
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-6 space-y-4 shadow-xl">
+                                <h3 className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                    <MdSearch className="w-5 h-5 text-red-500" />
+                                    Post Excerpt
+                                </h3>
+                                <textarea 
+                                    value={form.excerpt}
+                                    onChange={(e) => setForm(prev => ({ ...prev, excerpt: e.target.value }))}
+                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none h-32 text-xs font-normal leading-relaxed shadow-inner"
+                                    placeholder="Brief summary for indexing..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* AI Generation Modal */}
+            {showAiModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !aiGenerating && setShowAiModal(false)}></div>
+                    <div className="relative w-full max-w-xl bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-gray-100 dark:bg-[#1a1a1a]/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-red-600 rounded-lg shadow-lg shadow-red-900/20">
+                                    <MdAutoAwesome className="w-5 h-5 text-gray-900 dark:text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-gray-900 dark:text-white text-sm font-bold uppercase tracking-widest">Pilot AI Content Writer</h3>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black tracking-widest mt-0.5">Powered by Gemini 2.5 Flash</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setShowAiModal(false)}
+                                disabled={aiGenerating}
+                                className="p-2 hover:bg-gray-200 dark:bg-white/5 rounded-lg text-gray-500 dark:text-gray-400 transition-colors"
+                            >
+                                <MdClose className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-8 space-y-6">
+                            <div>
+                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.25em] block mb-3">What should the AI write about?</label>
+                                <textarea 
+                                    value={aiPrompt}
+                                    onChange={(e) => setAiPrompt(e.target.value)}
+                                    placeholder="e.g. Write a guide on how to pick a profitable niche for a faceless channel in 2026..." 
+                                    className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-5 rounded-2xl outline-none min-h-[160px] text-sm leading-relaxed focus:border-red-500/30 transition-all shadow-inner"
+                                    disabled={aiGenerating}
+                                />
+                            </div>
+                            
+                            <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-4 flex items-start gap-3">
+                                <div className="mt-1"><MdAutoAwesome className="w-4 h-4 text-red-500" /></div>
+                                <p className="text-[10px] text-red-200/60 font-medium leading-relaxed italic uppercase tracking-wider">
+                                    The AI is configured to avoid AI clichés (delve, dive, unleash) and focus on natural, human-like words for better Google ranking.
+                                </p>
+                            </div>
+
+                            <button 
+                                onClick={handleAiGenerate}
+                                disabled={aiGenerating || !aiPrompt}
+                                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-gray-900 dark:text-white py-5 rounded-[1.5rem] font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 shadow-xl shadow-red-900/20"
+                            >
+                                {aiGenerating ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        Generating Content...
+                                    </>
+                                ) : (
+                                    <>
+                                        <MdAutoAwesome className="w-5 h-5" />
+                                        Generate Full Post
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
