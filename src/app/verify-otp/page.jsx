@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Mail, ArrowLeft, RefreshCw } from 'lucide-react';
 
-export default function VerifyOTP() {
+function VerifyOTPContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const email = (searchParams && searchParams.get('email')) || '';
@@ -216,5 +216,13 @@ export default function VerifyOTP() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function VerifyOTP() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-red-50 text-gray-900">Loading verification...</div>}>
+            <VerifyOTPContent />
+        </Suspense>
     );
 }

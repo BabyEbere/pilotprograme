@@ -23,11 +23,11 @@ const VALUES = [
 
 const STACK = [
     { icon: MdDescription, label: 'Script Engine', detail: 'Gemini 2.5 Flash' },
-    { icon: MdRecordVoiceOver, label: 'Free TTS', detail: 'Microsoft Edge TTS' },
-    { icon: MdRecordVoiceOver, label: 'Premium TTS', detail: 'SiliconFlow — 3 models' },
-    { icon: MdImage, label: 'Image Gen', detail: 'FLUX via SiliconFlow' },
-    { icon: MdBolt, label: 'AI Generator', detail: 'Trending topic detection' },
-    { icon: MdAutoAwesome, label: 'Payments', detail: 'Paystack (NGN)' },
+    { icon: MdRecordVoiceOver, label: 'Voice Cloning', detail: 'Local Coqui XTTS v2' },
+    { icon: MdRecordVoiceOver, label: 'Free & Premium TTS', detail: 'Edge-TTS & SiliconFlow' },
+    { icon: MdImage, label: 'Visual Rendering', detail: 'FLUX via SiliconFlow' },
+    { icon: MdBolt, label: 'YouTube Optimization', detail: 'Outliers & Metadata Syncer' },
+    { icon: MdAutoAwesome, label: 'Payments & Security', detail: 'Paystack & Google 2FA' },
 ];
 
 function About() {
@@ -65,19 +65,19 @@ function About() {
                             </h2>
                             <div className="space-y-4 text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed font-normal">
                                 <p>
-                                    Running a faceless YouTube channel means producing consistent content —
-                                    scripts, narration, visuals — week after week, often without a team.
-                                    The existing tools were either too expensive, too fragmented, or just not designed for this workflow.
+                                    Running a YouTube channel means producing consistent, high-quality content —
+                                    scripts, narration, visuals — while simultaneously monitoring tags, competitor trends, 
+                                    and upload diagnostics. Historically, this meant paying for five different, disconnected tools.
                                 </p>
                                 <p>
-                                    Pilot Programme brings script generation, audio production, and image creation
-                                    into a single dashboard. Pick your niche, generate a script with Gemini,
-                                    render scene-by-scene audio with your chosen voice, produce matching images —
-                                    all without leaving the platform.
+                                    Pilot Programme acts as a full-fledged co-pilot. We combine a unified script editor, 
+                                    local voice cloning, FLUX graphic rendering, and **real-time YouTube feed optimization** 
+                                    into a single workflow. 
                                 </p>
                                 <p>
-                                    It's built lean, improved constantly, and priced so that it's accessible
-                                    whether you're testing the waters on the free plan or scaling with Pro.
+                                    Link your YouTube channel directly to retrieve keyword analytics, identify trending niche outliers, 
+                                    receive custom tags velocity comparisons, and update, delete, or publish content with one click — 
+                                    all under secure Google 2FA protection.
                                 </p>
                             </div>
                         </div>
@@ -85,14 +85,14 @@ function About() {
                         {/* Stats panel */}
                         <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-8 space-y-6">
                             {[
-                                { value: '3', label: 'TTS engines integrated' },
-                                { value: '24+', label: 'Premium AI voices available' },
-                                { value: '4', label: 'Subscription plans — including free' },
-                                { value: '1', label: 'Payment processor (Paystack NGN)' },
+                                { value: 'Local', label: 'XTTS v2 Voice Cloning powered locally' },
+                                { value: 'Outliers', label: 'Niche competitor spike metrics tracking' },
+                                { value: '1-Click', label: 'Publish, edit, and optimize metadata directly to YouTube' },
+                                { value: 'Secure', label: 'Shielded login protection with Google 2FA security' },
                             ].map((s, i) => (
                                 <div key={i} className={`flex items-center gap-5 ${i < 3 ? 'pb-6 border-b border-gray-200 dark:border-white/8' : ''}`}>
-                                    <p className="text-4xl font-black text-red-500 w-20 flex-shrink-0">{s.value}</p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-snug">{s.label}</p>
+                                    <p className="text-xl sm:text-2xl font-black text-red-500 w-24 flex-shrink-0 uppercase tracking-tight">{s.value}</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-snug">{s.label}</p>
                                 </div>
                             ))}
                         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -33,7 +33,7 @@ function StrengthBar({ password }) {
     );
 }
 
-export default function ResetPassword() {
+function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const resetToken = (searchParams && searchParams.get('token')) || '';
@@ -193,5 +193,13 @@ export default function ResetPassword() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ResetPassword() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0a0a0a] text-white">Loading Reset...</div>}>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

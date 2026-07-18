@@ -34,9 +34,31 @@ function Terms() {
                         </ul>
                     </section>
 
+                    {/* YouTube Integrations & Operations */}
+                    <section className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-8">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">2. YouTube Channel Integrations & Publishing Rights</h2>
+                        <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
+                            To enable real-time channel diagnostics, Suggested Tags, Outliers Benchmarking, and direct upload capabilities, you must authenticate and link your YouTube channel via Google OAuth.
+                        </p>
+                        <ul className="list-disc list-inside text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 space-y-2 ml-2 font-normal">
+                            <li><strong>Authorized Actions:</strong> By connecting your channel, you explicitly authorize Pilot Programme to read your upload stats, suggest optimizations, and edit, delete, or publish videos on your behalf.</li>
+                            <li><strong>User Control & Intent:</strong> All modifications, updates, uploads, and deletions are executed strictly under your manual control and only when explicitly triggered by you. Pilot Programme will never perform unsolicited edits, deletes, or uploads.</li>
+                            <li><strong>Compliance & Guidelines:</strong> You agree that all video files and metadata (titles, descriptions, tags) processed or published via Pilot Programme must comply with YouTube's Terms of Service and Community Guidelines. We prohibit the distribution of illegal, abusive, copyrighted, or policy-violating materials.</li>
+                            <li><strong>Responsibility:</strong> You remain solely responsible and legally liable for any and all contents uploaded, modified, or deleted on your connected channels.</li>
+                        </ul>
+                    </section>
+
+                    {/* Security & Google 2FA */}
+                    <section className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-8">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">3. Account Security & Two-Factor Authentication (2FA)</h2>
+                        <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed font-normal">
+                            You are responsible for maintaining the confidentiality of your account credentials. We provide Google 2FA (Authenticator) and secure Email OTP layers to defend your account from unauthorized access. You agree to notify us immediately of any security breaches or unauthorized use of your Google integrations.
+                        </p>
+                    </section>
+
                     {/* Prohibited Activities */}
                     <section className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-8">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">2. Prohibited Activities</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">4. Prohibited Activities</h2>
                         <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed font-normal">
                             You may not use our services to generate illegal content, distribute spam, or 
                             attempt to circumvent platform security or API limits. Failure to comply will 
@@ -46,7 +68,7 @@ function Terms() {
 
                     {/* Termination & Modification */}
                     <section className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-8">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">3. Termination of Use</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">5. Termination of Use</h2>
                         <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed font-normal">
                             We reserve the right to suspend or terminate access to our services if you violate these terms. 
                             We also reserve the right to update these terms as our platform evolves.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -9,7 +9,7 @@ import { useGoogleAuth } from '@/components/GoogleAuthProvider';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Shield, User, Globe, Check, Loader2 } from 'lucide-react';
 import Loader from '@/components/Loader';
 
-export default function Login() {
+function LoginContent() {
     const router = useRouter();
     const pathname = usePathname();
     const { enabled: googleEnabled } = useGoogleAuth();
@@ -610,5 +610,13 @@ export default function Login() {
                 <Loader message="Signing in with Google..." fullScreen={true} />
             )}
         </div>
+    );
+}
+
+export default function Login() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#07070a] text-white">Loading Login...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }
