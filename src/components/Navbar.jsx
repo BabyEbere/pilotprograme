@@ -19,7 +19,7 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    useEffect(() => { setIsOpen(false); }, [location]);
+    useEffect(() => { setIsOpen(false); }, [pathname]);
 
     const links = [
         { to: '/', label: 'Home' },

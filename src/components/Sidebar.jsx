@@ -51,6 +51,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         { icon: MdDashboard, label: 'Dashboard', path: '/dashboard' },
         { icon: MdVideoLibrary, label: 'Projects', path: '/dashboard/projects' },
         { icon: MdDescription, label: 'Scripts', path: '/dashboard/scripts' },
+        { icon: MdTrendingUp, label: 'YouTube Analyzer', path: '/dashboard/youtube-analyzer' },
         ...(storyLabEnabled ? [{ icon: MdLink, label: 'Blog to Script', path: '/dashboard/blog-to-script' }] : []),
     ];
 
@@ -313,6 +314,15 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             >
                                 <MdTrendingUp className="w-5 h-5 flex-shrink-0" />
                                 <span className="text-xs font-semibold">Plans</span>
+                            </Link>
+
+                            {/* YouTube Analyzer */}
+                            <Link href="/dashboard/youtube-analyzer"
+                                onClick={() => setMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/youtube-analyzer') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                            >
+                                <MdTrendingUp className="w-5 h-5 flex-shrink-0 text-red-500" />
+                                <span className="text-xs font-semibold">YT Analyzer</span>
                             </Link>
 
                             {/* Affiliates */}

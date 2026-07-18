@@ -1,6 +1,8 @@
 "use client";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import DynamicSEO from '@/components/DynamicSEO';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 
 import Link from 'next/link';
@@ -239,7 +241,15 @@ function Features() {
 export default function WrappedFeatures(props) {
     return (
         <>
+            <DynamicSEO 
+                pageSlug="features"
+                fallbackTitle="Features — Pilot Programme AI YouTube Automation"
+                fallbackDescription="Explore all features of Pilot Programme: Script generation, voiceover audio, scene images, AI content generator, and niche management for faceless YouTube channels."
+                fallbackKeywords="Pilot Programme features, AI script generation, text to speech, AI voiceover, scene images, YouTube automation tools"
+                schemaType="Article"
+            />
             <Navbar />
+            <Breadcrumbs />
             <Features {...props} />
             <Footer />
         </>

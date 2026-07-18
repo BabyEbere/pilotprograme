@@ -1,6 +1,8 @@
 "use client";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import DynamicSEO from '@/components/DynamicSEO';
+import BlogSection from '@/components/BlogSection';
 
 
 import { useEffect, useState, useRef } from 'react';
@@ -12,36 +14,6 @@ import {
     MdAutoAwesome, MdBolt, MdTrendingUp,
     MdLock, MdCreditCard, MdRocketLaunch, MdStar, MdDiamond
 } from 'react-icons/md';
-
-// ── SEO helmet ────────────────────────────────────────────────────────────────
-function SEO() {
-    useEffect(() => {
-        document.title = 'Pilot Programme — AI-Powered Faceless YouTube Automation';
-        let desc = document.querySelector('meta[name="description"]');
-        if (!desc) { desc = document.createElement('meta'); desc.name = 'description'; document.head.appendChild(desc); }
-        desc.content = 'Generate YouTube scripts, AI voiceovers, and scene images — all in one platform. Pilot Programme automates faceless YouTube content creation for creators worldwide.';
-
-        const ogTags = [
-            { property: 'og:title', content: 'Pilot Programme — Faceless YouTube Automation' },
-            { property: 'og:description', content: 'Scripts, audio, and images for your faceless YouTube channel — powered by Gemini AI.' },
-            { property: 'og:type', content: 'website' },
-            { property: 'og:url', content: 'https://pilotprogramme.com' },
-            { name: 'twitter:card', content: 'summary_large_image' },
-            { name: 'twitter:title', content: 'Pilot Programme — AI YouTube Automation' },
-            { name: 'twitter:description', content: 'Generate scripts, voiceovers, and images for faceless YouTube. Plans from free.' },
-            { name: 'robots', content: 'index, follow' },
-            { name: 'keywords', content: 'faceless YouTube, AI YouTube automation, script generator, text to speech, AI voiceover, YouTube scripts, Pilot Programme, faceless YouTube automation' },
-        ];
-        ogTags.forEach(tag => {
-            const key = tag.property ? 'property' : 'name';
-            const val = tag.property || tag.name;
-            let el = document.querySelector(`meta[${key}="${val}"]`);
-            if (!el) { el = document.createElement('meta'); el.setAttribute(key, val); document.head.appendChild(el); }
-            el.content = tag.content;
-        });
-    }, []);
-    return null;
-}
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function Counter({ target, suffix = '' }) {
@@ -319,7 +291,6 @@ function Home() {
 
     return (
         <div className="bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
-            <SEO />
 
             {/* ── HERO ─────────────────────────────────────────────────────── */}
             <section className="relative bg-white dark:bg-[#0a0a0a] overflow-hidden">
@@ -407,6 +378,116 @@ function Home() {
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
                         </div>
                     ))}
+                </div>
+            </section>
+
+            {/* ── PARTNERSHIPS ─────────────────────────────────────────────── */}
+            <section className="py-16 bg-gray-50 dark:bg-[#0d0d0d] border-y border-gray-200 dark:border-white/8 transition-colors overflow-hidden relative">
+                {/* Background glow */}
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[80px]" />
+                    <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/5 dark:bg-red-500/10 rounded-full blur-[80px]" />
+                </div>
+
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+                    {/* Header */}
+                    <div className="text-center mb-12">
+                        <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-3">Pilot Programme is Powered By</p>
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-3 leading-tight">
+                            Three industry leaders.{' '}
+                            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">
+                                One platform.
+                            </span>
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+                            Our partnerships with Google, Gemini AI, and PookieTech form the technological backbone of everything we build — ensuring enterprise-grade reliability, speed, and intelligence.
+                        </p>
+                    </div>
+
+                    {/* Partner Cards */}
+                    <div className="grid md:grid-cols-3 gap-6">
+
+                        {/* Google */}
+                        <div className="group relative bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-7 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 flex flex-col items-center text-center">
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            {/* Google Logo SVG */}
+                            <div className="w-14 h-14 rounded-2xl bg-white shadow-lg border border-gray-100 dark:border-white/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                                <svg viewBox="0 0 48 48" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                    <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                    <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                </svg>
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+                                Infrastructure Partner
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Google</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                                Enterprise cloud infrastructure, APIs, and world-class compute power. Pilot Programme runs on Google's reliable, globally-distributed technology stack.
+                            </p>
+                        </div>
+
+                        {/* Gemini */}
+                        <div className="group relative bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-7 hover:border-purple-500/40 hover:shadow-2xl hover:shadow-purple-900/10 transition-all duration-300 flex flex-col items-center text-center ring-1 ring-purple-500/20 dark:ring-purple-500/30">
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            {/* Gemini Logo — real image */}
+                            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-lg border border-gray-100 dark:border-white/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 overflow-hidden p-2">
+                                <img
+                                    src="/gemini-logo.png"
+                                    alt="Google Gemini AI Logo"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                            <div className="absolute top-4 right-4">
+                                <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-purple-600 text-white tracking-wide">AI Core</span>
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+                                AI Intelligence Partner
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Gemini AI</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                                Google Gemini 2.5 Flash powers our script engine — generating niche-aware, multi-scene YouTube scripts with visual cues, trending research, and storytelling depth.
+                            </p>
+                        </div>
+
+                        {/* PookieTech */}
+                        <div className="group relative bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-7 hover:border-red-500/40 hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-300 flex flex-col items-center text-center">
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            {/* PookieTech Logo — real image */}
+                            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-lg border border-gray-100 dark:border-white/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 overflow-hidden p-1.5">
+                                <img
+                                    src="/pookietech.png"
+                                    alt="PookieTech Logo"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+                                Platform Partner
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">PookieTech</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                                The creative and engineering force behind Pilot Programme. PookieTech designs, builds, and maintains the platform — from the voice pipeline to the subscription system.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Bottom trust line */}
+                    <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-gray-400 dark:text-gray-500">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span>Google Cloud Infrastructure</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                            <span>Gemini 2.5 Flash AI Engine</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <span>Built by PookieTech</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -626,6 +707,8 @@ function Home() {
                     </div>
                 </div>
             </section>
+            
+            <BlogSection limit={3} />
         </div>
     );
 }
@@ -633,6 +716,12 @@ function Home() {
 export default function WrappedHome(props) {
     return (
         <>
+            <DynamicSEO 
+                pageSlug="home"
+                fallbackTitle="Pilot Programme — AI-Powered Faceless YouTube Automation"
+                fallbackDescription="Generate YouTube scripts, AI voiceovers, and scene images — all in one platform. Pilot Programme automates faceless YouTube content creation for creators worldwide. Powered by Google, Gemini AI, and PookieTech."
+                fallbackKeywords="faceless YouTube, AI YouTube automation, script generator, text to speech, AI voiceover, YouTube scripts, Pilot Programme, faceless YouTube automation, Google AI partnership, Gemini AI, PookieTech, AI content creation"
+            />
             <Navbar />
             <Home {...props} />
             <Footer />

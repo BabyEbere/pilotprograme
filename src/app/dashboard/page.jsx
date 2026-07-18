@@ -265,6 +265,104 @@ export default function Dashboard() {
                         </div>
                     )}
 
+                    {/* ── YouTube Integration Section ── */}
+                    {!loading && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-red-500">
+                                        <path d="M23.498 6.163c-.272-1.022-1.074-1.824-2.096-2.097C19.548 3.5 12 3.5 12 3.5s-7.548 0-9.402.566C1.576 4.34 0.774 5.14 0.5 6.163 0 8.02 0 12 0 12s0 3.98.5 5.837c.272 1.022 1.074 1.824 2.096 2.097C4.452 20.5 12 20.5 12 20.5s7.548 0 9.402-.566c1.022-.273 1.824-1.075 2.097-2.097.5-1.856.5-5.837.5-5.837s0-3.98-.5-5.837zm-13.7 9.387V8.45l6.4 3.55-6.4 3.55z" />
+                                    </svg>
+                                    YouTube Channels
+                                </h2>
+                                <button
+                                    onClick={() => router.push('/dashboard/settings')}
+                                    className="text-xs text-red-500 font-bold hover:underline uppercase tracking-wider"
+                                >
+                                    Manage Links
+                                </button>
+                            </div>
+
+                            {data?.youtube_channels && data.youtube_channels.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {data.youtube_channels.map((chan) => (
+                                        <div
+                                            key={chan.channel_id}
+                                            className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-200 dark:border-white/5 p-5 shadow-sm hover:shadow-md transition-all duration-300"
+                                        >
+                                            <div className="flex items-center gap-3.5 mb-4 border-b border-gray-100 dark:border-white/5 pb-3">
+                                                {chan.thumbnail ? (
+                                                    <img
+                                                        src={chan.thumbnail}
+                                                        alt={chan.title}
+                                                        className="w-11 h-11 rounded-xl border border-emerald-500/20 object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-11 h-11 rounded-xl bg-red-600/10 flex items-center justify-center text-red-500 font-bold">
+                                                        YT
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 dark:text-white leading-tight truncate max-w-[180px]">
+                                                        {chan.title}
+                                                    </h3>
+                                                    <span className="inline-flex items-center gap-1 mt-0.5 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                                        Active Integration
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                <div>
+                                                    <p className="text-sm font-black text-gray-900 dark:text-white">
+                                                        {Number(chan.subscribers).toLocaleString()}
+                                                    </p>
+                                                    <p className="text-[9px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5">
+                                                        Subs
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-gray-900 dark:text-white">
+                                                        {Number(chan.videos).toLocaleString()}
+                                                    </p>
+                                                    <p className="text-[9px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5">
+                                                        Videos
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-gray-900 dark:text-white">
+                                                        {Number(chan.views).toLocaleString()}
+                                                    </p>
+                                                    <p className="text-[9px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5">
+                                                        Views
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-gradient-to-br from-red-950/20 via-black to-[#0d0d11] border border-red-500/10 dark:border-white/5 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+                                    <div className="absolute top-[-20%] left-[-10%] w-[200px] h-[200px] bg-red-600/5 rounded-full blur-[80px] pointer-events-none"></div>
+                                    <div className="space-y-1 z-10">
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                                            Scale your audience on YouTube
+                                        </h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed">
+                                            Link your YouTube channel to access direct video publishing, automated description templates, and growth analytics trackers instantly from your dashboard.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => router.push('/dashboard/settings')}
+                                        className="flex-shrink-0 z-10 bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md self-start md:self-auto uppercase tracking-wider cursor-pointer"
+                                    >
+                                        Link YouTube Channel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* ── Main grid: usage + recent scripts ── */}
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 

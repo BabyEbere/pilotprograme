@@ -67,6 +67,8 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
         { icon: MdEmail, label: 'Marketing', path: '/control/marketing' },
         { icon: MdSettings, label: 'Settings', path: '/control/settings' },
         { icon: MdVideoLibrary, label: 'Story Lab', path: '/control/story-lab' },
+        { icon: MdEdit, label: 'Story Lab Settings', path: '/control/story-lab-settings' },
+        { icon: MdSearch, label: 'SEO Settings', path: '/control/seo-settings' },
         {
             icon: MdConfirmationNumber,
             label: 'Support',
@@ -83,6 +85,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     ];
 
     const researchItems = [
+        { icon: MdVideoLibrary, label: 'YouTube Diagnostics', path: '/control/youtube-analyzer' },
         { icon: MdVideoLibrary, label: 'YouTube Hub', path: '/control/youtube' },
         { icon: MdSearch, label: 'Research Hub', path: '/control/research' },
         { icon: MdTrendingUp, label: 'AI Learning', path: '/control/ai-learning' },

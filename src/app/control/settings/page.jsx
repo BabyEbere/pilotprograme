@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     MdSettings, MdSave, MdEmail, MdVpnKey, MdDns, MdPerson,
-    MdCheckCircle, MdError, MdRefresh, MdInfo
+    MdCheckCircle, MdError, MdRefresh, MdInfo, MdLink
 } from 'react-icons/md';
 import AdminSidebar from '@/components/AdminSidebar';
 
@@ -150,6 +150,75 @@ const AdminSettings = () => {
                                     Standard SMTP settings are optional unless you're using third-party mail relays.
                                 </div>
                             </div>
+
+                            {/* ── Google OAuth Section ─────────────────────── */}
+                            <Section title="🔐 Google OAuth / Sign-In" icon={MdLink}>
+                                {/* Enable/Disable Toggle */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
+                                    <div className="md:col-span-1">
+                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Google Sign-In</label>
+                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide the "Continue with Google" button on Register &amp; Login pages.</p>
+                                    </div>
+                                    <div className="md:col-span-2 flex items-center gap-4">
+                                        <button
+                                            onClick={() => {
+                                                const newVal = settings.google_oauth_enabled === 'true' ? 'false' : 'true';
+                                                handleSettingChange('google_oauth_enabled', newVal);
+                                                handleSave('google_oauth_enabled', newVal, 'Enable/disable Google OAuth sign-in on register and login pages');
+                                            }}
+                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                settings.google_oauth_enabled === 'true' ? 'bg-blue-600' : 'bg-gray-700'
+                                            }`}
+                                        >
+                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                settings.google_oauth_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                            }`} />
+                                        </button>
+                                        <span className={`text-xs font-bold uppercase tracking-widest ${
+                                            settings.google_oauth_enabled === 'true' ? 'text-blue-400' : 'text-gray-600 dark:text-gray-500'
+                                        }`}>
+                                            {settings.google_oauth_enabled === 'true' ? 'Active — Google button visible to users' : 'Disabled — Google button hidden'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Client ID input */}
+                                <InputField
+                                    label="Google OAuth Client ID"
+                                    id="google_oauth_client_id"
+                                    type="password"
+                                    value={settings.google_oauth_client_id}
+                                    onChange={handleSettingChange}
+                                    onSave={handleSave}
+                                    placeholder="XXXXXXXXXX.apps.googleusercontent.com"
+                                    description="From Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web application type)."
+                                    saving={saving}
+                                />
+
+                                {/* Client Secret input */}
+                                <InputField
+                                    label="Google OAuth Client Secret"
+                                    id="google_oauth_client_secret"
+                                    type="password"
+                                    value={settings.google_oauth_client_secret}
+                                    onChange={handleSettingChange}
+                                    onSave={handleSave}
+                                    placeholder="GOCSPX-......"
+                                    description="From Google Cloud Console → Credentials → Client Secret."
+                                    saving={saving}
+                                />
+
+                                {/* Info note */}
+                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
+                                    <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <span className="text-blue-300 not-italic">How to get a Client ID and Secret:</span>{' '}
+                                        Go to <span className="text-blue-300">console.cloud.google.com</span> → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID.
+                                        Set type to <span className="text-blue-300">Web application</span>, add your domain to Authorized JavaScript Origins, and save.
+                                        Copy the Client ID and Client Secret. Both are required for YouTube channel linking to work.
+                                    </div>
+                                </div>
+                            </Section>
 
                             <Section title="Brevo Marketing API" icon={MdVpnKey}>
                                 <InputField 

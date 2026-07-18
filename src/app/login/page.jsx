@@ -3,13 +3,19 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleAuth } from '@/components/GoogleAuthProvider';
 
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Shield, User, Globe, Check, Loader2 } from 'lucide-react';
+import Loader from '@/components/Loader';
 
 export default function Login() {
     const router = useRouter();
     const pathname = usePathname();
+    const { enabled: googleEnabled } = useGoogleAuth();
     const [showPassword, setShowPassword] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [googleError, setGoogleError] = useState('');
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -192,6 +198,46 @@ export default function Login() {
         }
     };
 
+    // ── Google Sign-In ────────────────────────────────────────────────────
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            setGoogleLoading(true);
+            setGoogleError('');
+            try {
+                const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userInfo = await userInfoRes.json();
+
+                const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/auth/google/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        access_token: tokenResponse.access_token,
+                        sub: userInfo.sub,
+                        email: userInfo.email,
+                        picture: userInfo.picture,
+                    }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('login_time', Date.now().toString());
+                    localStorage.setItem('last_activity', Date.now().toString());
+                    router.push(data.user.role === 'admin' ? '/control' : '/dashboard');
+                } else {
+                    setGoogleError(data.message || 'Google sign-in failed.');
+                }
+            } catch (err) {
+                setGoogleError('Google sign-in failed. Please try again.');
+            } finally {
+                setGoogleLoading(false);
+            }
+        },
+        onError: () => setGoogleError('Google sign-in was cancelled or failed.'),
+        flow: 'implicit',
+    });
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#07070a] py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl w-full bg-white/90 dark:bg-[#111115]/50 border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 min-h-[700px] backdrop-blur-xl">
@@ -343,6 +389,43 @@ export default function Login() {
                             </form>
                         ) : (
                             /* Standard Form */
+                            <>
+                            {/* ── Google Sign-In Button ───────────────────── */}
+                            {googleEnabled && !requires2fa && (
+                                <div className="mb-4">
+                                    {googleError && (
+                                        <div className="mb-3 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold leading-relaxed">
+                                            {googleError}
+                                        </div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setGoogleError(''); googleLogin(); }}
+                                        disabled={googleLoading}
+                                        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-semibold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm"
+                                    >
+                                        {googleLoading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin text-gray-500 dark:text-gray-400" />
+                                        ) : (
+                                            <svg viewBox="0 0 48 48" className="w-4 h-4 flex-shrink-0">
+                                                <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                                <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                                <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                            </svg>
+                                        )}
+                                        {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+                                    </button>
+                                    <div className="relative flex items-center justify-center my-4">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-gray-200 dark:border-white/8" />
+                                        </div>
+                                        <span className="relative px-3 bg-white dark:bg-[#0e0e12] text-[9px] font-bold text-gray-500 uppercase tracking-wider">
+                                            or sign in with email
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="hidden lg:block mb-6">
                                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Welcome back</h3>
@@ -498,6 +581,7 @@ export default function Login() {
                                     {loading ? 'Signing In...' : 'Sign In'}
                                 </button>
                             </form>
+                            </>
                         )}
 
                         {/* Divider */}
@@ -522,6 +606,9 @@ export default function Login() {
                 </div>
 
             </div>
+            {googleLoading && (
+                <Loader message="Signing in with Google..." fullScreen={true} />
+            )}
         </div>
     );
 }

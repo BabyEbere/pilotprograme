@@ -1,6 +1,8 @@
 "use client";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import DynamicSEO from '@/components/DynamicSEO';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 
 import React, { useState, useEffect } from 'react';
@@ -386,7 +388,15 @@ function PricingLanding() {
 export default function WrappedPricingLanding(props) {
     return (
         <>
+            <DynamicSEO 
+                pageSlug="pricing"
+                fallbackTitle="Pricing — Pilot Programme AI YouTube Automation"
+                fallbackDescription="Choose the perfect plan for your faceless YouTube channel. Free, Starter, Pro, and Enterprise plans with varying features for AI content creation."
+                fallbackKeywords="Pilot Programme pricing, faceless YouTube plans, AI automation pricing, YouTube automation subscription"
+                schemaType="Product"
+            />
             <Navbar />
+            <Breadcrumbs />
             <PricingLanding {...props} />
             <Footer />
         </>
