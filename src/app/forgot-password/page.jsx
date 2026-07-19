@@ -72,8 +72,7 @@ export default function ForgotPassword() {
                                 you'll receive a 6-digit reset code within a minute.
                                 Check your spam folder if you don't see it.
                             </p>
-                            <Link href="/verify-reset-otp"
-                                state={{ email }}
+                            <Link href={`/verify-reset-otp?email=${encodeURIComponent(email)}`}
                                 className="block w-full bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white py-2.5 rounded-xl text-sm font-semibold text-center transition-all shadow-md shadow-red-900/40"
                             >
                                 Enter Reset Code

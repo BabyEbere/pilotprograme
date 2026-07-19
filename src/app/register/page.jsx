@@ -260,7 +260,7 @@ export default function Register() {
                 const data = await response.json();
 
                 if (data.success) {
-                    router.push('/verify-otp', { state: { email: formData.email } });
+                    router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
                 } else {
                     if (data.registration_disabled) {
                         setRegDisabled(true);
