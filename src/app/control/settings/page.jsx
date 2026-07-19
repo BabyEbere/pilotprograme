@@ -53,6 +53,7 @@ const AdminSettings = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState(null);
+    const [activeTab, setActiveTab] = useState('general');
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 
@@ -134,6 +135,35 @@ const AdminSettings = () => {
                     </div>
                 </div>
 
+                {/* Tabs */}
+                <div className="border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#111111] px-6">
+                    <div className="flex gap-6 max-w-5xl mx-auto overflow-x-auto no-scrollbar">
+                        {[
+                            { id: 'general', name: 'General & Registration', icon: MdPerson },
+                            { id: 'system_smtp', name: 'System SMTP', icon: MdEmail },
+                            { id: 'marketing_smtp', name: 'Marketing SMTP', icon: MdVpnKey },
+                            { id: 'video_models', name: 'Video & Models', icon: MdSettings }
+                        ].map(tab => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`py-4 px-1 text-xs font-black uppercase tracking-widest border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
+                                        isActive 
+                                            ? 'border-red-500 text-red-500' 
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    }`}
+                                >
+                                    <Icon size={16} />
+                                    {tab.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Content */}
                 <div className="p-6 max-w-5xl mx-auto">
                     {loading ? (
@@ -143,433 +173,462 @@ const AdminSettings = () => {
                          </div>
                     ) : (
                         <>
-                            <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-4 mb-8 flex gap-3 text-xs text-red-200/60 leading-relaxed font-bold uppercase tracking-wider italic">
-                                <MdInfo className="text-red-500 w-5 h-5 flex-shrink-0" />
-                                <div>
-                                    Note: Your Marketing system uses the Brevo API Key for campaigns. 
-                                    Standard SMTP settings are optional unless you're using third-party mail relays.
-                                </div>
-                            </div>
+                            {/* ── TAB: GENERAL ─────────────────────────────────── */}
+                            {activeTab === 'general' && (
+                                <>
+                                    {/* Google OAuth Section */}
+                                    <Section title="🔐 Google OAuth / Sign-In" icon={MdLink}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Google Sign-In</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide the "Continue with Google" button on Register &amp; Login pages.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.google_oauth_enabled === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('google_oauth_enabled', newVal);
+                                                        handleSave('google_oauth_enabled', newVal, 'Enable/disable Google OAuth sign-in on register and login pages');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.google_oauth_enabled === 'true' ? 'bg-blue-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.google_oauth_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.google_oauth_enabled === 'true' ? 'text-blue-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.google_oauth_enabled === 'true' ? 'Active — Google button visible to users' : 'Disabled — Google button hidden'}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                            {/* ── Google OAuth Section ─────────────────────── */}
-                            <Section title="🔐 Google OAuth / Sign-In" icon={MdLink}>
-                                {/* Enable/Disable Toggle */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Google Sign-In</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide the "Continue with Google" button on Register &amp; Login pages.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.google_oauth_enabled === 'true' ? 'false' : 'true';
-                                                handleSettingChange('google_oauth_enabled', newVal);
-                                                handleSave('google_oauth_enabled', newVal, 'Enable/disable Google OAuth sign-in on register and login pages');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.google_oauth_enabled === 'true' ? 'bg-blue-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.google_oauth_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.google_oauth_enabled === 'true' ? 'text-blue-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.google_oauth_enabled === 'true' ? 'Active — Google button visible to users' : 'Disabled — Google button hidden'}
-                                        </span>
-                                    </div>
-                                </div>
+                                        <InputField
+                                            label="Google OAuth Client ID"
+                                            id="google_oauth_client_id"
+                                            type="password"
+                                            value={settings.google_oauth_client_id}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="XXXXXXXXXX.apps.googleusercontent.com"
+                                            description="From Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web application type)."
+                                            saving={saving}
+                                        />
 
-                                {/* Client ID input */}
-                                <InputField
-                                    label="Google OAuth Client ID"
-                                    id="google_oauth_client_id"
-                                    type="password"
-                                    value={settings.google_oauth_client_id}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="XXXXXXXXXX.apps.googleusercontent.com"
-                                    description="From Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web application type)."
-                                    saving={saving}
-                                />
+                                        <InputField
+                                            label="Google OAuth Client Secret"
+                                            id="google_oauth_client_secret"
+                                            type="password"
+                                            value={settings.google_oauth_client_secret}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="GOCSPX-......"
+                                            description="From Google Cloud Console → Credentials → Client Secret."
+                                            saving={saving}
+                                        />
 
-                                {/* Client Secret input */}
-                                <InputField
-                                    label="Google OAuth Client Secret"
-                                    id="google_oauth_client_secret"
-                                    type="password"
-                                    value={settings.google_oauth_client_secret}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="GOCSPX-......"
-                                    description="From Google Cloud Console → Credentials → Client Secret."
-                                    saving={saving}
-                                />
+                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
+                                            <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <span className="text-blue-300 not-italic">How to get a Client ID and Secret:</span>{' '}
+                                                Go to <span className="text-blue-300">console.cloud.google.com</span> → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID.
+                                                Set type to <span className="text-blue-300">Web application</span>, add your domain to Authorized JavaScript Origins, and save.
+                                            </div>
+                                        </div>
+                                    </Section>
 
-                                {/* Info note */}
-                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
-                                    <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <span className="text-blue-300 not-italic">How to get a Client ID and Secret:</span>{' '}
-                                        Go to <span className="text-blue-300">console.cloud.google.com</span> → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID.
-                                        Set type to <span className="text-blue-300">Web application</span>, add your domain to Authorized JavaScript Origins, and save.
-                                        Copy the Client ID and Client Secret. Both are required for YouTube channel linking to work.
-                                    </div>
-                                </div>
-                            </Section>
+                                    {/* Registration Control Section */}
+                                    <Section title="🚫 Registration & Maintenance" icon={MdPerson}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Disable New Registrations</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Turn this on to pause registrations for maintenance. Users trying to sign up will be prompted to join the waitlist instead.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.registration_disabled === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('registration_disabled', newVal);
+                                                        handleSave('registration_disabled', newVal, 'Pause registrations and show waitlist/maintenance page');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.registration_disabled === 'true' ? 'bg-red-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.registration_disabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.registration_disabled === 'true' ? 'text-red-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.registration_disabled === 'true' ? 'Paused — Waitlist / Maintenance message shown' : 'Active — Standard registration open'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Section>
+                                </>
+                            )}
 
-                            {/* ── Registration Control Section ────────────────────── */}
-                            <Section title="🚫 Registration & Maintenance" icon={MdPerson}>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Disable New Registrations</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Turn this on to pause registrations for maintenance. Users trying to sign up will be prompted to join the waitlist instead.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.registration_disabled === 'true' ? 'false' : 'true';
-                                                handleSettingChange('registration_disabled', newVal);
-                                                handleSave('registration_disabled', newVal, 'Pause registrations and show waitlist/maintenance page');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.registration_disabled === 'true' ? 'bg-red-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.registration_disabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.registration_disabled === 'true' ? 'text-red-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.registration_disabled === 'true' ? 'Paused — Waitlist / Maintenance message shown' : 'Active — Standard registration open'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Section>
+                            {/* ── TAB: SYSTEM SMTP ──────────────────────────────── */}
+                            {activeTab === 'system_smtp' && (
+                                <Section title="✉ System SMTP Server (Registrations, OTPs, Transactions)" icon={MdEmail}>
+                                    <InputField
+                                        label="SMTP Host"
+                                        id="system_smtp_host"
+                                        value={settings.system_smtp_host}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="mail.example.com"
+                                        description="Outgoing mail server hostname."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Port"
+                                        id="system_smtp_port"
+                                        value={settings.system_smtp_port}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="465"
+                                        description="Standard ports are 465 (SSL) or 587 (TLS)."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Username"
+                                        id="system_smtp_username"
+                                        value={settings.system_smtp_username}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="info@example.com"
+                                        description="Username/Email for authentication."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Password"
+                                        id="system_smtp_password"
+                                        type="password"
+                                        value={settings.system_smtp_password}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="••••••••"
+                                        description="Password/API Key for authentication."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="From Email"
+                                        id="system_smtp_from_email"
+                                        value={settings.system_smtp_from_email}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="no-reply@example.com"
+                                        description="Email address shown in the 'From' field."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="From Name"
+                                        id="system_smtp_from_name"
+                                        value={settings.system_smtp_from_name}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="PilotPrograme"
+                                        description="Display sender name in email client."
+                                        saving={saving}
+                                    />
+                                </Section>
+                            )}
 
-                            <Section title="Brevo Marketing API" icon={MdVpnKey}>
-                                <InputField 
-                                    label="Brevo API Key" 
-                                    id="brevo_api_key" 
-                                    type="password"
-                                    value={settings.brevo_api_key}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="xkeysib-..."
-                                    description="Used for API-based campaign sending (Reliable & fast)."
-                                    saving={saving}
-                                />
-                                <InputField 
-                                    label="Test Recipient" 
-                                    id="marketing_test_email" 
-                                    value={settings.marketing_test_email}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="talkwella@gmai.com"
-                                    description="Default email for 'Send Test Body' in Marketing panel."
-                                    saving={saving}
-                                />
-                            </Section>
+                            {/* ── TAB: MARKETING SMTP ───────────────────────────── */}
+                            {activeTab === 'marketing_smtp' && (
+                                <Section title="📣 Marketing SMTP Server (Audience Outreach Campaigns)" icon={MdVpnKey}>
+                                    <InputField
+                                        label="SMTP Host"
+                                        id="marketing_smtp_host"
+                                        value={settings.marketing_smtp_host}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="smtp.marketing.com"
+                                        description="Outgoing marketing mail server hostname."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Port"
+                                        id="marketing_smtp_port"
+                                        value={settings.marketing_smtp_port}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="587"
+                                        description="Standard ports are 587 (TLS) or 465 (SSL)."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Username"
+                                        id="marketing_smtp_username"
+                                        value={settings.marketing_smtp_username}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="marketing@example.com"
+                                        description="Username/Email for authentication."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="SMTP Password"
+                                        id="marketing_smtp_password"
+                                        type="password"
+                                        value={settings.marketing_smtp_password}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="••••••••"
+                                        description="Password/API Key for authentication."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="From Email"
+                                        id="marketing_smtp_from_email"
+                                        value={settings.marketing_smtp_from_email}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="promo@example.com"
+                                        description="Email address shown in the 'From' field."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="From Name"
+                                        id="marketing_smtp_from_name"
+                                        value={settings.marketing_smtp_from_name}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="PilotPrograme Promotions"
+                                        description="Display sender name in marketing emails."
+                                        saving={saving}
+                                    />
+                                    <InputField
+                                        label="Test Recipient Email"
+                                        id="marketing_test_email"
+                                        value={settings.marketing_test_email}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="talkwella@gmai.com"
+                                        description="Email address used for testing campaigns."
+                                        saving={saving}
+                                    />
+                                </Section>
+                            )}
 
-                            <Section title="Standard SMTP (Optional)" icon={MdDns}>
-                                <InputField 
-                                    label="SMTP Host" 
-                                    id="smtp_host" 
-                                    value={settings.smtp_host}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="smtp-relay.brevo.com"
-                                    description="Required only for non-API-based mail relays."
-                                    saving={saving}
-                                />
-                                <InputField 
-                                    label="SMTP Port" 
-                                    id="smtp_port" 
-                                    value={settings.smtp_port}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="587"
-                                    description="Standard ports are 587 or 465."
-                                    saving={saving}
-                                />
-                                <InputField 
-                                    label="SMTP Username" 
-                                    id="smtp_user" 
-                                    value={settings.smtp_user}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="login@example.com"
-                                    description="Your SMTP login email."
-                                    saving={saving}
-                                />
-                                <InputField 
-                                    label="SMTP Password" 
-                                    id="smtp_pass" 
-                                    type="password"
-                                    value={settings.smtp_pass}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="••••••••"
-                                    description="Your SMTP password/key."
-                                    saving={saving}
-                                />
-                            </Section>
+                            {/* ── TAB: VIDEO & MODELS ──────────────────────────── */}
+                            {activeTab === 'video_models' && (
+                                <>
+                                    {/* Video Generation Section */}
+                                    <Section title="🎬 Video Generation" icon={MdSettings}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Video Tool</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide video generation for all users.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.video_tool_enabled === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('video_tool_enabled', newVal);
+                                                        handleSave('video_tool_enabled', newVal, 'Enable/disable video generation for users');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.video_tool_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.video_tool_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.video_tool_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.video_tool_enabled === 'true' ? 'Active — Users can generate videos' : 'Disabled — Video page hidden'}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                            <Section title="Branding & Verification" icon={MdPerson}>
-                                <InputField 
-                                    label="Safe Sender Name" 
-                                    id="marketing_from_name" 
-                                    value={settings.marketing_from_name}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="AI Studio Team"
-                                    description="Display name in recipients' inbox."
-                                    saving={saving}
-                                />
-                                <InputField 
-                                    label="Default From Email" 
-                                    id="marketing_from_email" 
-                                    value={settings.marketing_from_email}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="hello@pilotprograme.com"
-                                    description="Email shown in the 'From' field."
-                                    saving={saving}
-                                />
-                            </Section>
+                                        <InputField 
+                                            label="Pollinations API Key (FREE)" 
+                                            id="pollinations_video_key" 
+                                            type="password"
+                                            value={settings.pollinations_video_key}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="sk_... or pk_..."
+                                            description="Free API key from enter.pollinations.ai — enables 4 free video models."
+                                            saving={saving}
+                                        />
 
-                            {/* ── Video Generation Section ────────────────────── */}
-                            <Section title="🎬 Video Generation" icon={MdSettings}>
-                                {/* Enable / Disable Toggle */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Video Tool</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide video generation for all users.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.video_tool_enabled === 'true' ? 'false' : 'true';
-                                                handleSettingChange('video_tool_enabled', newVal);
-                                                handleSave('video_tool_enabled', newVal, 'Enable/disable video generation for users');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.video_tool_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.video_tool_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.video_tool_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.video_tool_enabled === 'true' ? 'Active — Users can generate videos' : 'Disabled — Video page hidden'}
-                                        </span>
-                                    </div>
-                                </div>
+                                        <InputField 
+                                            label="LTX API Key (Premium, Optional)" 
+                                            id="ltx_api_key" 
+                                            type="password"
+                                            value={settings.ltx_api_key}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="Your LTX Video API key"
+                                            description="Optional. Get from console.ltx.video for premium LTX 2.3 models."
+                                            saving={saving}
+                                        />
 
-                                <InputField 
-                                    label="Pollinations API Key (FREE)" 
-                                    id="pollinations_video_key" 
-                                    type="password"
-                                    value={settings.pollinations_video_key}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="sk_... or pk_..."
-                                    description="Free API key from enter.pollinations.ai — enables 4 free video models."
-                                    saving={saving}
-                                />
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Default Model</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Model pre-selected for users.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex gap-3">
+                                                <select
+                                                    value={settings.video_default_model || 'seedance'}
+                                                    onChange={(e) => {
+                                                        handleSettingChange('video_default_model', e.target.value);
+                                                        handleSave('video_default_model', e.target.value);
+                                                    }}
+                                                    className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium"
+                                                >
+                                                    <option value="seedance">Seedance (Free)</option>
+                                                    <option value="wan-fast">Wan Fast (Free)</option>
+                                                    <option value="wan">Wan Standard (Free)</option>
+                                                    <option value="ltx-2">LTX-2 (Free)</option>
+                                                    <option value="Wan-AI/Wan2.2-T2V-A14B">Wan 2.2 T2V (SiliconFlow)</option>
+                                                    <option value="ltx-2-3-fast">LTX 2.3 Fast (Premium)</option>
+                                                    <option value="ltx-2-3-pro">LTX 2.3 Pro (Premium)</option>
+                                                </select>
+                                            </div>
+                                        </div>
 
-                                <InputField 
-                                    label="LTX API Key (Premium, Optional)" 
-                                    id="ltx_api_key" 
-                                    type="password"
-                                    value={settings.ltx_api_key}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="Your LTX Video API key"
-                                    description="Optional. Get from console.ltx.video for premium LTX 2.3 models."
-                                    saving={saving}
-                                />
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Max Duration</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Maximum video length per generation.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex gap-3">
+                                                <select
+                                                    value={settings.video_max_duration || '5'}
+                                                    onChange={(e) => {
+                                                        handleSettingChange('video_max_duration', e.target.value);
+                                                        handleSave('video_max_duration', e.target.value);
+                                                    }}
+                                                    className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium"
+                                                >
+                                                    <option value="3">3 seconds</option>
+                                                    <option value="5">5 seconds</option>
+                                                    <option value="8">8 seconds</option>
+                                                    <option value="10">10 seconds</option>
+                                                    <option value="15">15 seconds</option>
+                                                    <option value="20">20 seconds</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </Section>
 
-                                {/* Default model selector */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Default Model</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Model pre-selected for users.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex gap-3">
-                                        <select
-                                            value={settings.video_default_model || 'seedance'}
-                                            onChange={(e) => {
-                                                handleSettingChange('video_default_model', e.target.value);
-                                                handleSave('video_default_model', e.target.value);
-                                            }}
-                                            className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium"
-                                        >
-                                            <option value="seedance">Seedance (Free)</option>
-                                            <option value="wan-fast">Wan Fast (Free)</option>
-                                            <option value="wan">Wan Standard (Free)</option>
-                                            <option value="ltx-2">LTX-2 (Free)</option>
-                                            <option value="Wan-AI/Wan2.2-T2V-A14B">Wan 2.2 T2V (SiliconFlow)</option>
-                                            <option value="ltx-2-3-fast">LTX 2.3 Fast (Premium)</option>
-                                            <option value="ltx-2-3-pro">LTX 2.3 Pro (Premium)</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                    {/* Experimental Local Models Section */}
+                                    <Section title="🧪 Experimental Local Models" icon={MdSettings}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable XTTS v2</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide Coqui XTTS v2 for audio generation.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.xtts_enabled === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('xtts_enabled', newVal);
+                                                        handleSave('xtts_enabled', newVal, 'Enable/disable experimental XTTS v2 engine');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.xtts_enabled === 'true' ? 'bg-purple-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.xtts_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.xtts_enabled === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.xtts_enabled === 'true' ? 'Active — XTTS is visible to users' : 'Disabled — Hidden from UI'}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                                {/* Max duration */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Max Duration</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Maximum video length per generation.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex gap-3">
-                                        <select
-                                            value={settings.video_max_duration || '5'}
-                                            onChange={(e) => {
-                                                handleSettingChange('video_max_duration', e.target.value);
-                                                handleSave('video_max_duration', e.target.value);
-                                            }}
-                                            className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium"
-                                        >
-                                            <option value="3">3 seconds</option>
-                                            <option value="5">5 seconds</option>
-                                            <option value="8">8 seconds</option>
-                                            <option value="10">10 seconds</option>
-                                            <option value="15">15 seconds</option>
-                                            <option value="20">20 seconds</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                        <InputField 
+                                            label="XTTS Server API URL" 
+                                            id="xtts_api_url" 
+                                            value={settings.xtts_api_url}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="http://localhost:8020"
+                                            description="URL of the separate local XTTS server."
+                                            saving={saving}
+                                        />
+                                    </Section>
 
-                                {/* Info note about SiliconFlow */}
-                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
-                                    <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <span className="text-blue-300 not-italic">SiliconFlow video models</span> automatically use your existing SiliconFlow API keys 
-                                        from the Keys page — no separate key needed.
-                                    </div>
-                                </div>
-                            </Section>
+                                    {/* Story Lab Settings Section */}
+                                    <Section title="📖 Story Lab Settings" icon={MdSettings}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Story Lab</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide Story Lab page for all regular users.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.story_lab_enabled === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('story_lab_enabled', newVal);
+                                                        handleSave('story_lab_enabled', newVal, 'Enable/disable Story Lab interface for users');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.story_lab_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.story_lab_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.story_lab_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.story_lab_enabled === 'true' ? 'Active — Story Lab active' : 'Disabled — Story Lab hidden'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Section>
 
-                            {/* ── Experimental Local Models Section ────────────────────── */}
-                            <Section title="🧪 Experimental Local Models" icon={MdSettings}>
-                                {/* Enable / Disable Toggle */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable XTTS v2</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide Coqui XTTS v2 for audio generation.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.xtts_enabled === 'true' ? 'false' : 'true';
-                                                handleSettingChange('xtts_enabled', newVal);
-                                                handleSave('xtts_enabled', newVal, 'Enable/disable experimental XTTS v2 engine');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.xtts_enabled === 'true' ? 'bg-purple-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.xtts_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.xtts_enabled === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.xtts_enabled === 'true' ? 'Active — XTTS is visible to users' : 'Disabled — Hidden from UI'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <InputField 
-                                    label="XTTS Server API URL" 
-                                    id="xtts_api_url" 
-                                    value={settings.xtts_api_url}
-                                    onChange={handleSettingChange}
-                                    onSave={handleSave}
-                                    placeholder="http://localhost:8020"
-                                    description="URL of the separate local XTTS server."
-                                    saving={saving}
-                                />
-                                
-                                <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-4 flex gap-3 text-xs text-purple-200/60 leading-relaxed font-bold italic">
-                                    <MdInfo className="text-purple-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <span className="text-purple-300 not-italic">Infrastructure Requirement:</span> XTTS cannot run natively on a standard shared host. You must run a separate API server (like <code>xtts-api-server</code>) and point this URL to it.
-                                    </div>
-                                </div>
-                            </Section>
-
-                            {/* ── Story Lab Settings Section ────────────────────── */}
-                            <Section title="📖 Story Lab Settings" icon={MdSettings}>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Enable Story Lab</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Show/hide Story Lab page for all regular users.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.story_lab_enabled === 'true' ? 'false' : 'true';
-                                                handleSettingChange('story_lab_enabled', newVal);
-                                                handleSave('story_lab_enabled', newVal, 'Enable/disable Story Lab interface for users');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.story_lab_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.story_lab_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.story_lab_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.story_lab_enabled === 'true' ? 'Active — Users can use Story Lab' : 'Disabled — Story Lab hidden'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Section>
-
-                            {/* ── Infrastructure & Processing Section ────────────────────── */}
-                            <Section title="⚙ Infrastructure & Processing" icon={MdSettings}>
-                                {/* Background Rendering Toggle */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">
-                                    <div className="md:col-span-1">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Persistent Background Rendering</label>
-                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Turn on for VPS servers to process TTS requests in detached daemon threads. Turn off for Shared Hosting/DirectAdmin servers to avoid orphaned threads.</p>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const newVal = settings.enable_background_audio_rendering === 'true' ? 'false' : 'true';
-                                                handleSettingChange('enable_background_audio_rendering', newVal);
-                                                handleSave('enable_background_audio_rendering', newVal, 'Enable/disable offline persistent background rendering for audio');
-                                            }}
-                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                settings.enable_background_audio_rendering === 'true' ? 'bg-purple-600' : 'bg-gray-700'
-                                            }`}
-                                        >
-                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                settings.enable_background_audio_rendering === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                            }`} />
-                                        </button>
-                                        <span className={`text-xs font-bold uppercase tracking-widest ${
-                                            settings.enable_background_audio_rendering === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
-                                        }`}>
-                                            {settings.enable_background_audio_rendering === 'true' ? 'Active — Async background processing enabled (VPS mode)' : 'Inactive — Synchronous inline processing active (Shared/DirectAdmin mode)'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Section>
+                                    {/* Infrastructure & Processing Section */}
+                                    <Section title="⚙ Infrastructure & Processing" icon={MdSettings}>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                            <div className="md:col-span-1">
+                                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Background Rendering</label>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Turn on for VPS servers to process TTS requests in detached daemon threads. Turn off for Shared Hosting/DirectAdmin servers to avoid orphaned threads.</p>
+                                            </div>
+                                            <div className="md:col-span-2 flex items-center gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = settings.enable_background_audio_rendering === 'true' ? 'false' : 'true';
+                                                        handleSettingChange('enable_background_audio_rendering', newVal);
+                                                        handleSave('enable_background_audio_rendering', newVal, 'Enable/disable offline persistent background rendering for audio');
+                                                    }}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                        settings.enable_background_audio_rendering === 'true' ? 'bg-purple-600' : 'bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        settings.enable_background_audio_rendering === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                    }`} />
+                                                </button>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${
+                                                    settings.enable_background_audio_rendering === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
+                                                }`}>
+                                                    {settings.enable_background_audio_rendering === 'true' ? 'Active — Async background processing enabled (VPS mode)' : 'Inactive — Synchronous inline processing active (Shared/DirectAdmin mode)'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Section>
+                                </>
+                            )}
                         </>
                     )}
                 </div>
