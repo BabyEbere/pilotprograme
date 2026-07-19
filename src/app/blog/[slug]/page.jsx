@@ -33,8 +33,12 @@ export default function BlogPostPage() {
             const res = await fetch(`${API_URL}/blog/posts/${encodeURIComponent(slug)}`);
             const data = await res.json();
             
-            if (data.success) {
-                setPost(data.post);
+            if (data.success && data.post) {
+                const sanitizedPost = {
+                    ...data.post,
+                    featured_image: data.post.featured_image ? data.post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+                };
+                setPost(sanitizedPost);
             } else {
                 setError(data.message || 'Post not found');
             }

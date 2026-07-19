@@ -23,7 +23,11 @@ export default function BlogSection({ limit = 3 }) {
             const res = await fetch(`${API_URL}/blog/posts?status=published&limit=${limit}`);
             const data = await res.json();
             if (data.success) {
-                setPosts(data.posts || []);
+                const sanitized = (data.posts || []).map(post => ({
+                    ...post,
+                    featured_image: post.featured_image ? post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+                }));
+                setPosts(sanitized);
             }
         } catch (err) {
             console.error('Error fetching blog posts:', err);
