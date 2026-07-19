@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
-
+import { useParams, useRouter } from 'next/navigation';
 import { 
     MdSave, MdArrowBack, MdImage, MdHelpCenter, MdSearch, 
-    MdCategory, MdHistory, MdPublishedWithChanges, MdAutoAwesome, MdClose
+    MdAutoAwesome, MdClose, MdUpload, MdAutoFixHigh, MdRefresh
 } from 'react-icons/md';
 import { Editor } from '@tinymce/tinymce-react';
 import AdminSidebar from '@/components/AdminSidebar';
@@ -13,8 +12,6 @@ import AdminSidebar from '@/components/AdminSidebar';
 export default function AdminBlogEditor() {
     const { id } = useParams();
     const router = useRouter();
-    const pathname = usePathname();
-    const editPost = location.state?.post;
 
     const [form, setForm] = useState({
         title: '',
@@ -38,20 +35,67 @@ export default function AdminBlogEditor() {
     const [showAiModal, setShowAiModal] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
     const [activeTab, setActiveTab] = useState('content');
+    const [showThumbnailOptions, setShowThumbnailOptions] = useState(false);
+    const [generatingThumbnails, setGeneratingThumbnails] = useState(false);
+    const [generatedThumbnails, setGeneratedThumbnails] = useState([]);
+    const [generatingFaqs, setGeneratingFaqs] = useState(false);
 
     useEffect(() => {
         fetchCategories();
-        if (id && editPost) {
-            setForm({
-                ...editPost,
-                faq_json: JSON.parse(editPost.faq_json || '[]'),
-                schema_json: JSON.parse(editPost.schema_json || '{}')
-            });
+        if (id) {
+            setLoading(true);
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            
+            fetch(`${API_URL}/admin/blog/posts/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.post) {
+                        let faq = [];
+                        try {
+                            faq = typeof data.post.faq_json === 'string' ? JSON.parse(data.post.faq_json || '[]') : (data.post.faq_json || []);
+                        } catch (e) {
+                            faq = [];
+                        }
+                        let schema = {};
+                        try {
+                            schema = typeof data.post.schema_json === 'string' ? JSON.parse(data.post.schema_json || '{}') : (data.post.schema_json || {});
+                        } catch (e) {
+                            schema = {};
+                        }
+                        setForm({
+                            title: data.post.title || '',
+                            slug: data.post.slug || '',
+                            content: data.post.content || '',
+                            excerpt: data.post.excerpt || '',
+                            featured_image: data.post.featured_image || '',
+                            category_id: data.post.category_id || 1,
+                            status: data.post.status || 'draft',
+                            meta_title: data.post.meta_title || '',
+                            meta_description: data.post.meta_description || '',
+                            keywords: data.post.keywords || '',
+                            faq_json: faq,
+                            schema_json: schema
+                        });
+                    } else {
+                        console.error("Failed to fetch post:", data.message);
+                    }
+                })
+                .catch(err => console.error("Error fetching post:", err))
+                .finally(() => setLoading(false));
         }
-    }, [id, editPost]);
+    }, [id]);
 
     const fetchCategories = () => {
-        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/categories`)
+        const API_URL = (typeof window !== 'undefined' 
+            ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                ? 'http://localhost:5000' 
+                : 'https://s1.pilotprograme.com/api') 
+            : 'http://localhost:5000');
+        fetch(`${API_URL}/admin/blog/categories`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) setCategories(data.categories);
@@ -60,30 +104,50 @@ export default function AdminBlogEditor() {
 
     const handleTitleChange = (e) => {
         const title = e.target.value;
-        const slug = title.toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)+/g, '');
-        if (!id) setForm(prev => ({ ...prev, title, slug }));
-        else setForm(prev => ({ ...prev, title }));
+        // Don't auto-update slug on edit mode to prevent breaking existing links by accident
+        setForm(prev => ({ ...prev, title }));
+    };
+
+    const handleSlugChange = (e) => {
+        const slug = e.target.value.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        setForm(prev => ({ ...prev, slug }));
     };
 
     const handleSave = async () => {
         setLoading(true);
         try {
-            const url = id 
-                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}` 
-                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`;
-            const method = id ? 'PUT' : 'POST';
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            const url = `${API_URL}/admin/blog/posts/${id}`;
+
+            const payload = {
+                ...form,
+                faq_json: JSON.stringify(form.faq_json),
+                schema_json: JSON.stringify(form.schema_json)
+            };
 
             const res = await fetch(url, {
-                method,
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form)
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
-            if (data.success) router.push('/control/blog');
+            if (data.success) {
+                router.push('/control/blog');
+            } else {
+                alert(data.message || 'Failed to save post');
+            }
         } catch (err) {
             console.error("Failed to save post", err);
+            alert("Error saving post");
         }
         setLoading(false);
     };
@@ -93,7 +157,12 @@ export default function AdminBlogEditor() {
         setAiGenerating(true);
         try {
             const adminData = JSON.parse(localStorage.getItem('user') || '{}');
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate`, {
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            const res = await fetch(`${API_URL}/admin/blog/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -136,6 +205,110 @@ export default function AdminBlogEditor() {
         setForm(prev => ({ ...prev, faq_json: newFaq }));
     };
 
+    const handleThumbnailUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            
+            const res = await fetch(`${API_URL}/admin/blog/upload-image`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                setForm(prev => ({ ...prev, featured_image: data.url }));
+            } else {
+                alert(data.message || 'Upload failed');
+            }
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            alert('Failed to upload image');
+        }
+    };
+
+    const handleGenerateThumbnails = async () => {
+        if (!form.title) {
+            alert('Please enter a title first');
+            return;
+        }
+
+        setGeneratingThumbnails(true);
+        try {
+            const adminData = JSON.parse(localStorage.getItem('user') || '{}');
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            const res = await fetch(`${API_URL}/admin/blog/generate-thumbnails`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    title: form.title,
+                    user_id: adminData.id || 1 
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setGeneratedThumbnails(data.thumbnails || []);
+            } else {
+                alert(data.message || 'Failed to generate thumbnails');
+            }
+        } catch (err) {
+            console.error('Error generating thumbnails:', err);
+            alert('Failed to generate thumbnails');
+        } finally {
+            setGeneratingThumbnails(false);
+        }
+    };
+
+    const handleGenerateFaqs = async () => {
+        if (!form.content) {
+            alert('Please generate or write content first');
+            return;
+        }
+
+        setGeneratingFaqs(true);
+        try {
+            const adminData = JSON.parse(localStorage.getItem('user') || '{}');
+            const API_URL = (typeof window !== 'undefined' 
+                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                    ? 'http://localhost:5000' 
+                    : 'https://s1.pilotprograme.com/api') 
+                : 'http://localhost:5000');
+            const res = await fetch(`${API_URL}/admin/blog/generate-faqs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    content: form.content,
+                    title: form.title,
+                    user_id: adminData.id || 1 
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setForm(prev => ({ ...prev, faq_json: data.faqs || [] }));
+            } else {
+                alert(data.message || 'Failed to generate FAQs');
+            }
+        } catch (err) {
+            console.error('Error generating FAQs:', err);
+            alert('Failed to generate FAQs');
+        } finally {
+            setGeneratingFaqs(false);
+        }
+    };
+
     return (
         <div className="flex bg-white dark:bg-[#0a0a0a] min-h-screen text-gray-700 dark:text-gray-300">
             <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
@@ -145,12 +318,12 @@ export default function AdminBlogEditor() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => router.push('/control/blog')}
-                                className="p-2 rounded-lg bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400"
+                                className="p-2 rounded-lg bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 text-gray-600 dark:text-gray-400"
                             >
                                 <MdArrowBack className="w-5 h-5" />
                             </button>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">
-                                {id ? 'Edit Blog Post' : 'New Blog Post'}
+                                Edit Blog Post
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
@@ -199,7 +372,7 @@ export default function AdminBlogEditor() {
                                         <input 
                                             type="text" 
                                             value={form.slug}
-                                            onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))}
+                                            onChange={handleSlugChange}
                                             placeholder="my-cool-post" 
                                             className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-[10px] text-red-400 p-3 rounded-xl outline-none focus:border-red-500/30 font-mono"
                                         />
@@ -259,6 +432,21 @@ export default function AdminBlogEditor() {
                                     )}
                                     {activeTab === 'faq' && (
                                         <div className="space-y-4">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest">Frequently Asked Questions</p>
+                                                <button
+                                                    onClick={handleGenerateFaqs}
+                                                    disabled={generatingFaqs || !form.content}
+                                                    className="flex items-center gap-2 px-3 py-2 bg-red-600 text-gray-900 dark:text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[10px] font-bold uppercase tracking-widest"
+                                                >
+                                                    {generatingFaqs ? (
+                                                        <MdRefresh className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <MdAutoAwesome className="w-4 h-4" />
+                                                    )}
+                                                    AI Generate FAQs
+                                                </button>
+                                            </div>
                                             {form.faq_json.map((faq, i) => (
                                                 <div key={i} className="bg-gray-100 dark:bg-[#1a1a1a] p-4 rounded-xl space-y-3 relative group border border-white/5 shadow-inner">
                                                     <input 
@@ -321,10 +509,19 @@ export default function AdminBlogEditor() {
 
                         <div className="space-y-6">
                             <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/8 rounded-2xl p-6 space-y-4 shadow-xl">
-                                <h3 className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                                    <MdImage className="w-5 h-5 text-red-500" />
-                                    Featured Image
-                                </h3>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                        <MdImage className="w-5 h-5 text-red-500" />
+                                        Featured Image
+                                    </h3>
+                                    <button
+                                        onClick={() => setShowThumbnailOptions(!showThumbnailOptions)}
+                                        className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors"
+                                    >
+                                        {showThumbnailOptions ? 'Close Options' : 'Add Image'}
+                                    </button>
+                                </div>
+                                
                                 <div className="aspect-video bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/5 flex items-center justify-center relative group shadow-inner">
                                     {form.featured_image ? (
                                         <img src={form.featured_image} alt="Featured" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
@@ -332,6 +529,54 @@ export default function AdminBlogEditor() {
                                         <MdImage className="w-12 h-12 text-gray-900 dark:text-white/5 transition-transform group-hover:scale-110" />
                                     )}
                                 </div>
+                                
+                                {showThumbnailOptions && (
+                                    <div className="space-y-3 pt-3 border-t border-gray-200 dark:border-white/10">
+                                        <div className="flex gap-2">
+                                            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 rounded-xl cursor-pointer hover:bg-gray-200 dark:hover:bg-[#252525] transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">
+                                                <MdUpload className="w-4 h-4" />
+                                                Upload
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    onChange={handleThumbnailUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <button
+                                                onClick={handleGenerateThumbnails}
+                                                disabled={generatingThumbnails || !form.title}
+                                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-gray-900 dark:text-white rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[10px] font-bold uppercase tracking-widest"
+                                            >
+                                                {generatingThumbnails ? (
+                                                    <MdRefresh className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <MdAutoFixHigh className="w-4 h-4" />
+                                                )}
+                                                AI Generate
+                                            </button>
+                                        </div>
+                                        
+                                        {generatedThumbnails.length > 0 && (
+                                            <div className="grid grid-cols-4 gap-2 mt-4">
+                                                {generatedThumbnails.map((thumb, index) => (
+                                                    <div 
+                                                        key={index}
+                                                        onClick={() => setForm(prev => ({ ...prev, featured_image: thumb.url }))}
+                                                        className={`aspect-video rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                                                            form.featured_image === thumb.url 
+                                                                ? 'border-red-500 ring-2 ring-red-500/30' 
+                                                                : 'border-transparent hover:border-gray-300 dark:hover:border-white/20'
+                                                        }`}
+                                                    >
+                                                        <img src={thumb.url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
                                 <input 
                                     type="text" 
                                     value={form.featured_image}
