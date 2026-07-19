@@ -19,6 +19,9 @@ export const metadata = {
   icons: {
     icon: "/pilotprograme-logo.jpg",
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
+  },
 };
 
 export default function RootLayout({ children }) {
