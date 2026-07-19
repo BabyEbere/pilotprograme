@@ -129,7 +129,16 @@ export default function BlogPostPage() {
                 fallbackDescription={post.meta_description || post.excerpt}
                 fallbackKeywords={post.keywords}
                 schemaType="Article"
-                faqData={post.faq_json ? JSON.parse(post.faq_json || '[]') : []}
+                faqData={(() => {
+                    if (!post.faq_json) return [];
+                    try {
+                        let parsed = typeof post.faq_json === 'string' ? JSON.parse(post.faq_json) : post.faq_json;
+                        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                        return Array.isArray(parsed) ? parsed : [];
+                    } catch (e) {
+                        return [];
+                    }
+                })()}
             />
             <Navbar />
             <Breadcrumbs />
@@ -199,19 +208,31 @@ export default function BlogPostPage() {
                     />
                     
                     {/* FAQ Section */}
-                    {post.faq_json && JSON.parse(post.faq_json || '[]').length > 0 && (
-                        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
-                            <div className="space-y-4">
-                                {JSON.parse(post.faq_json).map((faq, index) => (
-                                    <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-lg p-6">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
-                                        <p className="text-gray-600 dark:text-gray-400">{faq.a}</p>
-                                    </div>
-                                ))}
+                    {(() => {
+                        if (!post.faq_json) return null;
+                        let faqs = [];
+                        try {
+                            let parsed = typeof post.faq_json === 'string' ? JSON.parse(post.faq_json) : post.faq_json;
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            faqs = Array.isArray(parsed) ? parsed : [];
+                        } catch (e) {
+                            faqs = [];
+                        }
+                        if (faqs.length === 0) return null;
+                        return (
+                            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
+                                <div className="space-y-4">
+                                    {faqs.map((faq, index) => (
+                                        <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-lg p-6">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
+                                            <p className="text-gray-600 dark:text-gray-400">{faq.a}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </article>
             <Footer />
