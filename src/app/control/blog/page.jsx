@@ -22,7 +22,7 @@ export default function AdminBlog() {
 
     const fetchPosts = () => {
         setLoading(true);
-        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`)
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) setPosts(data.posts);
@@ -37,7 +37,7 @@ export default function AdminBlog() {
     const handleDelete = async (id) => {
         if (!confirm("Are you sure you want to delete this post?")) return;
         try {
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) fetchPosts();
         } catch (err) {

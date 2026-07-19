@@ -143,7 +143,7 @@ export default function AdminVoices() {
     const [previewState, setPreviewState] = useState({});
     const audioRefs = useRef({});
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const adminData = JSON.parse(localStorage.getItem('user') || '{}');
     const headers = { Authorization: `Bearer ${adminData.token}`, 'Content-Type': 'application/json' };
 

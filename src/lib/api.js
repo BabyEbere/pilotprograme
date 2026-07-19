@@ -15,7 +15,7 @@ export function getApiUrl() {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:5000';
     }
-    return 'https://pilotprograme.com/api';
+    return 'https://s1.pilotprograme.com/api';
   }
   
   // Server-side fallback

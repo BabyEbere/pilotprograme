@@ -56,7 +56,7 @@ export default function AdminBlogEditor() {
     }, [id, editPost]);
 
     const fetchCategories = () => {
-        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/categories`)
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/categories`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) setCategories(data.categories);
@@ -89,8 +89,8 @@ export default function AdminBlogEditor() {
         setLoading(true);
         try {
             const url = id 
-                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}` 
-                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`;
+                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts/${id}` 
+                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/posts`;
             const method = id ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
@@ -111,7 +111,7 @@ export default function AdminBlogEditor() {
         setAiGenerating(true);
         try {
             const adminData = JSON.parse(localStorage.getItem('user') || '{}');
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate`, {
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -165,7 +165,7 @@ export default function AdminBlogEditor() {
             const API_URL = (typeof window !== 'undefined' 
                 ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
                     ? 'http://localhost:5000' 
-                    : 'https://pilotprograme.com/api') 
+                    : 'https://s1.pilotprograme.com/api') 
                 : 'http://localhost:5000');
             
             const res = await fetch(`${API_URL}/admin/blog/upload-image`, {
@@ -194,7 +194,7 @@ export default function AdminBlogEditor() {
         setGeneratingThumbnails(true);
         try {
             const adminData = JSON.parse(localStorage.getItem('user') || '{}');
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate-thumbnails`, {
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate-thumbnails`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -225,7 +225,7 @@ export default function AdminBlogEditor() {
         setGeneratingFaqs(true);
         try {
             const adminData = JSON.parse(localStorage.getItem('user') || '{}');
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate-faqs`, {
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/generate-faqs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

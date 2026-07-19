@@ -25,7 +25,7 @@ export default function BlogPage() {
             const API_URL = (typeof window !== 'undefined' 
                 ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
                     ? 'http://localhost:5000' 
-                    : 'https://pilotprograme.com/api') 
+                    : 'https://s1.pilotprograme.com/api') 
                 : 'http://localhost:5000');
             
             const res = await fetch(`${API_URL}/blog/posts?status=published`);
@@ -45,7 +45,7 @@ export default function BlogPage() {
             const API_URL = (typeof window !== 'undefined' 
                 ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
                     ? 'http://localhost:5000' 
-                    : 'https://pilotprograme.com/api') 
+                    : 'https://s1.pilotprograme.com/api') 
                 : 'http://localhost:5000');
             
             const res = await fetch(`${API_URL}/blog/categories`);

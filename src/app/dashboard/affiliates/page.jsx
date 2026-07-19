@@ -36,7 +36,7 @@ export default function Affiliate() {
 
     const fetchAffiliateData = async () => {
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/stats?user_id=${user.id}`);
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/stats?user_id=${user.id}`);
             const data = await response.json();
             if (data.success) {
                 setStats(data);
@@ -53,7 +53,7 @@ export default function Affiliate() {
 
     const fetchWithdrawals = async () => {
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/withdrawals?user_id=${user.id}`);
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/withdrawals?user_id=${user.id}`);
             const data = await response.json();
             if (data.success) {
                 setWithdrawals(data.withdrawals);
@@ -91,7 +91,7 @@ export default function Affiliate() {
 
         setWithdrawLoading(true);
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/withdraw`, {
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/withdraw`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -33,7 +33,7 @@ export default function AILearningDashboard() {
 
     const fetchNiches = async () => {
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/niches`);
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/niches`);
             const data = await response.json();
             if (data.success) {
                 setNiches(data.niches || []);
@@ -46,8 +46,8 @@ export default function AILearningDashboard() {
     const fetchPatterns = async () => {
         try {
             const url = selectedNiche === 'all'
-                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/patterns?min_success_rate=70`
-                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/patterns?niche_id=${selectedNiche}&min_success_rate=70`;
+                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/patterns?min_success_rate=70`
+                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/patterns?niche_id=${selectedNiche}&min_success_rate=70`;
 
             const response = await fetch(url);
             const data = await response.json();
@@ -62,8 +62,8 @@ export default function AILearningDashboard() {
     const fetchFeedbackStats = async () => {
         try {
             const url = selectedNiche === 'all'
-                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/feedback/stats`
-                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/feedback/stats?niche_id=${selectedNiche}`;
+                ? `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/feedback/stats`
+                : `${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/feedback/stats?niche_id=${selectedNiche}`;
 
             const response = await fetch(url);
             const data = await response.json();
@@ -82,7 +82,7 @@ export default function AILearningDashboard() {
         }
 
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/insights/${selectedNiche}?faceless_only=true`);
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/insights/${selectedNiche}?faceless_only=true`);
             const data = await response.json();
             if (data.success) {
                 setInsights(data.insights || {});

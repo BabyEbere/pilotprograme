@@ -23,7 +23,7 @@ export default function AdminAffiliates() {
     const fetchWithdrawals = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/withdrawals`);
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/withdrawals`);
             const json = await response.json();
             if (json.success) {
                 setWithdrawals(json.withdrawals);
@@ -46,7 +46,7 @@ export default function AdminAffiliates() {
 
         setProcessingId(id);
         try {
-            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/withdrawals/${id}/${action}`, {
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/withdrawals/${id}/${action}`, {
                 method: 'POST'
             });
             const data = await response.json();
@@ -70,7 +70,7 @@ export default function AdminAffiliates() {
     const saveSettings = async () => {
         setSavingSettings(true);
         try {
-            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/affiliate/settings`, {
+            const res = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/affiliate/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ min_withdrawal: minWithdrawal })

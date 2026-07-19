@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
             gtag('config', 'G-BPW39ST45W');
             
             // Define __API_URL__ globally on the client side from environment variable
-            window.__API_URL__ = "${process.env.NEXT_PUBLIC_API_URL || ''}" || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api');
+            window.__API_URL__ = "${process.env.NEXT_PUBLIC_API_URL || ''}" || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api');
           `}
         </Script>
       </head>

@@ -33,7 +33,7 @@ export default function AdminScripts() {
     const [audioElement, setAudioElement] = useState(null);
     const [storyLabStats, setStoryLabStats] = useState(null);
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 
     // Fetch all scripts and stats
     const fetchScripts = async () => {

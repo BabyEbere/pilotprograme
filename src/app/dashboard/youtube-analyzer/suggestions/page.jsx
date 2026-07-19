@@ -14,7 +14,7 @@ export default function DailySuggestionsPage() {
     const [savedIdeasMap, setSavedIdeasMap] = useState({});
     const [toastMsg, setToastMsg] = useState('');
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const user = JSON.parse(typeof window !== 'undefined' ? (localStorage.getItem('user') || '{}') : '{}');
 
     const fetchDailyIdeas = async () => {

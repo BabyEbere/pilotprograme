@@ -33,7 +33,7 @@ export default function AdminUsers() {
     const [upgradePlanId, setUpgradePlanId] = useState('');
     const [upgradeDays, setUpgradeDays] = useState(30);
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });

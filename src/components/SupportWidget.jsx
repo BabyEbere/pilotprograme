@@ -6,7 +6,7 @@ import {
     MdWarning, MdConfirmationNumber, MdRefresh, MdImage,
 } from 'react-icons/md';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 const MAX_MB = 5;
 
 function getSessionId() {
@@ -24,7 +24,7 @@ function timeStr(iso) {
 }
 
 function ImageBubble({ url }) {
-    const base = typeof (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000') !== 'undefined' ? (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000').replace('/api', '') : '';
+    const base = typeof (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000') !== 'undefined' ? (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000').replace('/api', '') : '';
     const src = url.startsWith('http') ? url : `${base}${url}`;
     return (
         <a href={src} target="_blank" rel="noreferrer">

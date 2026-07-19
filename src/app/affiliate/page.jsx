@@ -16,7 +16,7 @@ function AffiliatePublic() {
     const [minWithdrawal, setMinWithdrawal] = useState(5000);
 
     useEffect(() => {
-        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/settings`)
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/affiliate/settings`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) setMinWithdrawal(data.min_withdrawal);

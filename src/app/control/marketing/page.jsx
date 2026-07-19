@@ -302,7 +302,7 @@ const AdminMarketing = () => {
         recipients: []
     });
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const TINY_MCE_KEY = '68p6fs0nyu59icihoyv7sk06p6olzz92r68eg3heah8qx3tb';
 
     const showToast = (msg, type = 'success') => {

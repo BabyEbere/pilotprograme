@@ -38,7 +38,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     const [contentDropdownOpen, setContentDropdownOpen] = useState(false);
     const [openTickets, setOpenTickets] = useState(0);
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
 
     // Fetch open ticket count for badge

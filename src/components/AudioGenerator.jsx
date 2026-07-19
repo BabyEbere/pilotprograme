@@ -25,7 +25,7 @@ export default function AudioGenerator({ scriptId, onClose, onSuccess, userId })
         setLoading(true);
         setError(null);
         try {
-            const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+            const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
             const response = await fetch(`${API_URL}/scripts/${scriptId}/audio`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

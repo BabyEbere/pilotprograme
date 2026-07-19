@@ -75,7 +75,7 @@ export default function Plans() {
     const [paymentMessage, setPaymentMessage] = useState('');
 
     const wasExpired = typeof window !== 'undefined' && window.history?.state?.expired === true;
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
 
     // ── Geolocation (Disabled — NGN Only) ────────────────────────────────────

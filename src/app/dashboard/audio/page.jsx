@@ -154,7 +154,7 @@ export default function Audio() {
         scene_number: 1,   // SiliconFlow: which scene to generate (1-based)
     });
 
-    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000');
+    const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 
     // ── Router state ─────────────────────────────────────────────────────────
     useEffect(() => {

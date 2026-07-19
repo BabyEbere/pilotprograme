@@ -161,7 +161,7 @@ function PricingLanding() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://pilotprograme.com/api') : 'http://localhost:5000')}/admin/pricing`)
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/pricing`)
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.plans) {
