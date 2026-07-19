@@ -194,26 +194,7 @@ export default function BlogPostPage() {
                     
                     {/* Content */}
                     <div 
-                        className="prose prose-lg dark:prose-invert max-w-none
-                            prose-headings:text-gray-900 dark:prose-headings:text-white
-                            prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-12 prose-h1:mb-8
-                            prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b prose-h2:border-gray-200 dark:prose-h2:border-white/10 prose-h2:pb-3
-                            prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-10 prose-h3:mb-5
-                            prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-8 prose-h4:mb-4
-                            prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-loose prose-p:mb-8 prose-p:text-base
-                            prose-a:text-red-600 dark:prose-a:text-red-500 prose-a:underline prose-a:font-semibold prose-a:no-underline hover:prose-a:underline prose-a:decoration-2 prose-a:decoration-red-600 dark:prose-a:decoration-red-500 prose-a:underline-offset-2
-                            prose-strong:text-gray-900 dark:prose-strong:text-white prose-strong:font-bold
-                            prose-em:text-gray-700 dark:prose-em:text-gray-300 prose-em:italic
-                            prose-code:text-red-600 dark:prose-code:text-red-500 prose-code:bg-gray-100 dark:prose-code:bg-[#1a1a1a] prose-code:px-3 prose-code:py-1.5 prose-code:rounded-lg prose-code:font-mono prose-code:text-sm
-                            prose-pre:bg-gray-100 dark:prose-pre:bg-[#111111] prose-pre:p-6 prose-pre:rounded-xl prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-white/10 prose-pre:my-8
-                            prose-ul:text-gray-700 dark:prose-ul:text-gray-300 prose-ul:mb-8 prose-ul:space-y-3 prose-ul:pl-6
-                            prose-ol:text-gray-700 dark:prose-ol:text-gray-300 prose-ol:mb-8 prose-ol:space-y-3 prose-ol:pl-6
-                            prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-li:mb-3 prose-li:leading-relaxed
-                            prose-blockquote:border-l-4 prose-blockquote:border-red-500 prose-blockquote:bg-gray-50 dark:prose-blockquote:bg-[#111111] prose-blockquote:p-6 prose-blockquote:rounded-r-xl prose-blockquote:my-8
-                            prose-blockquote:text-gray-600 dark:prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:leading-relaxed
-                            prose-hr:border-gray-200 dark:prose-hr:border-white/10 prose-hr:my-12 prose-hr:border-t-2
-                            prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8
-                        "
+                        className="blog-content max-w-none"
                         dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                     
