@@ -46,12 +46,37 @@ export default function Register() {
     const [verifyingHuman, setVerifyingHuman] = useState(false);
     const [verificationError, setVerificationError] = useState('');
 
+    // Registration Pause / Waitlist states
+    const [regDisabled, setRegDisabled] = useState(false);
+    const [checkingRegStatus, setCheckingRegStatus] = useState(true);
+    const [waitlistData, setWaitlistData] = useState({ email: '', whatsapp: '' });
+    const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+    const [waitlistError, setWaitlistError] = useState('');
+    const [waitlistSuccess, setWaitlistSuccess] = useState('');
+    const [waitlistLoading, setWaitlistLoading] = useState(false);
+
     useEffect(() => {
         const hash = window.location.hash;
         if (hash && hash.startsWith('#aff-')) {
             const code = hash.replace('#aff-', '');
             setFormData(prev => ({ ...prev, referredByCode: code }));
         }
+
+        // Check registration status on mount
+        const checkRegStatus = async () => {
+            try {
+                const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/auth/reg-status`);
+                const data = await response.json();
+                if (data.success) {
+                    setRegDisabled(data.registration_disabled);
+                }
+            } catch (error) {
+                console.error('Error checking registration status:', error);
+            } finally {
+                setCheckingRegStatus(false);
+            }
+        };
+        checkRegStatus();
     }, []);
 
     // Load countries, and once loaded, run location detection
@@ -237,6 +262,9 @@ export default function Register() {
                 if (data.success) {
                     router.push('/verify-otp', { state: { email: formData.email } });
                 } else {
+                    if (data.registration_disabled) {
+                        setRegDisabled(true);
+                    }
                     setErrors({ submit: data.message });
                 }
             } catch (error) {
@@ -246,6 +274,48 @@ export default function Register() {
             }
         } else {
             setErrors(newErrors);
+        }
+    };
+
+    const handleWaitlistSubmit = async (e) => {
+        e.preventDefault();
+        setWaitlistError('');
+        setWaitlistSuccess('');
+        
+        if (!waitlistData.email.trim() && !waitlistData.whatsapp.trim()) {
+            setWaitlistError('Please provide either an email address or WhatsApp number.');
+            return;
+        }
+
+        if (waitlistData.email.trim() && !/\S+@\S+\.\S+/.test(waitlistData.email)) {
+            setWaitlistError('Please enter a valid email address.');
+            return;
+        }
+
+        setWaitlistLoading(true);
+        try {
+            const response = await fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/auth/waitlist`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: waitlistData.email,
+                    whatsapp: waitlistData.whatsapp
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok || data.success) {
+                setWaitlistSuccess(data.message || 'Successfully joined the waitlist!');
+                setWaitlistSubmitted(true);
+            } else {
+                setWaitlistError(data.message || 'Failed to join waitlist. Please try again.');
+            }
+        } catch (error) {
+            setWaitlistError('A network error occurred. Please try again.');
+        } finally {
+            setWaitlistLoading(false);
         }
     };
 
@@ -402,322 +472,411 @@ export default function Register() {
                             <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Enter your details to register and start creating content.</p>
                         </div>
 
-                        {/* ── Google Sign-Up Button ─────────────────────── */}
-                        {googleEnabled && (
-                            <div className="mb-4">
-                                {googleError && (
-                                    <div className="mb-3 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold">
-                                        {googleError}
+                        {regDisabled ? (
+                            <div className="space-y-6">
+                                <div className="bg-red-500/5 border border-red-500/10 text-red-500 p-4 rounded-2xl flex items-start gap-3">
+                                    <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-xs font-black uppercase tracking-wider">Registrations Temporarily Closed</h4>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed normal-case">
+                                            We are currently undergoing scheduled upgrades to optimize our local voice cloning models and background video generators. 
+                                            Registrations will reopen shortly!
+                                        </p>
                                     </div>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() => { setGoogleError(''); googleLogin(); }}
-                                    disabled={googleLoading}
-                                    className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-semibold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm"
-                                >
-                                    {googleLoading ? (
-                                        <Loader2 className="w-4 h-4 animate-spin text-gray-500 dark:text-gray-400" />
-                                    ) : (
-                                        <svg viewBox="0 0 48 48" className="w-4 h-4 flex-shrink-0">
-                                            <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                                            <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                                            <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                                        </svg>
-                                    )}
-                                    {googleLoading ? 'Connecting...' : 'Continue with Google'}
-                                </button>
-
-                                {/* OR divider */}
-                                <div className="relative flex items-center justify-center my-4">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-gray-200 dark:border-white/8" />
-                                    </div>
-                                    <span className="relative px-3 bg-white dark:bg-[#0e0e12] text-[9px] font-bold text-gray-500 uppercase tracking-wider">
-                                        or register with email
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Honeypot */}
-                            <input
-                                type="text"
-                                name="bot_trap"
-                                value={formData.bot_trap}
-                                onChange={handleChange}
-                                style={{ display: 'none' }}
-                                tabIndex="-1"
-                                autoComplete="off"
-                            />
-
-                            {/* Submit Error */}
-                            {errors.submit && (
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
-                                    {errors.submit}
-                                </div>
-                            )}
-
-                            {/* Grid wrapper for fields */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* Full Name */}
-                                <div>
-                                    <label htmlFor="fullName" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Full Name
-                                    </label>
-                                    <div className="relative">
-                                        <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                        <input
-                                            id="fullName"
-                                            name="fullName"
-                                            type="text"
-                                            value={formData.fullName}
-                                            onChange={handleChange}
-                                            className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.fullName ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
-                                            placeholder="John Doe"
-                                        />
-                                    </div>
-                                    {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
                                 </div>
 
-                                {/* Email */}
-                                <div>
-                                    <label htmlFor="email" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
-                                            placeholder="john@example.com"
-                                        />
-                                    </div>
-                                    {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                                <div className="text-center py-2">
+                                    <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Join the Priority list</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">
+                                        Fill in your email or WhatsApp number below, and we'll notify you as soon as we open registrations.
+                                    </p>
                                 </div>
 
-                                {/* Country Search */}
-                                <div>
-                                    <label htmlFor="country" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Country
-                                    </label>
-                                    <div className="relative z-35">
-                                        <Globe className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 z-10" />
-                                        <input
-                                            type="text"
-                                            value={formData.countryName || searchCountry}
-                                            onChange={(e) => {
-                                                setSearchCountry(e.target.value);
-                                                setShowCountryDropdown(true);
-                                            }}
-                                            onFocus={() => setShowCountryDropdown(true)}
-                                            className="w-full pl-10 pr-9 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-600 rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none"
-                                            placeholder="Search country..."
-                                            disabled={loadingCountries}
-                                        />
-                                        {formData.countryCode && (
-                                            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base pointer-events-none">
-                                                {getCountryFlag(formData.countryCode)}
-                                            </span>
-                                        )}
-
-                                        {showCountryDropdown && !loadingCountries && (
-                                            <div className="absolute z-45 w-full mt-1 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
-                                                {filteredCountries.length > 0 ? (
-                                                    filteredCountries.map((country) => (
-                                                        <button
-                                                            key={country.code}
-                                                            type="button"
-                                                            onClick={() => handleCountrySelect(country)}
-                                                            className="w-full px-3 py-2 text-left hover:bg-gray-200 dark:bg-white/5 flex items-center gap-2.5 transition-colors text-xs text-gray-700 dark:text-gray-300"
-                                                        >
-                                                            <span>{getCountryFlag(country.code)}</span>
-                                                            <span className="flex-1 truncate">{country.name}</span>
-                                                            {country.dial_code && (
-                                                                <span className="text-gray-500 dark:text-gray-400 text-[10px] font-mono">{country.dial_code}</span>
-                                                            )}
-                                                        </button>
-                                                    ))
-                                                ) : (
-                                                    <div className="px-3 py-2 text-gray-550 text-xs">No results</div>
-                                                )}
+                                {waitlistSubmitted ? (
+                                    <div className="bg-emerald-950/20 border border-emerald-500/25 p-6 rounded-2xl text-center space-y-3">
+                                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                                            <Check className="w-6 h-6 stroke-[3px]" />
+                                        </div>
+                                        <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Priority Spot Secured!</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                            {waitlistSuccess || "You've been added to our waiting list. We will notify you immediately once registrations resume."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleWaitlistSubmit} className="space-y-4">
+                                        {waitlistError && (
+                                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
+                                                {waitlistError}
                                             </div>
                                         )}
-                                    </div>
-                                    {detectingLocation && (
-                                        <p className="mt-1 text-[9px] text-gray-550 flex items-center gap-1 font-semibold uppercase tracking-wider">
-                                            <Loader2 className="animate-spin h-3 w-3 text-red-500" />
-                                            Detecting...
-                                        </p>
-                                    )}
-                                </div>
 
-                                {/* Phone Number */}
-                                <div>
-                                    <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Phone Number <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
-                                    </label>
-                                    <PhoneInput
-                                        defaultCountry={phoneCountryCode}
-                                        value={formData.phoneNumber}
-                                        onChange={handlePhoneChange}
-                                        inputClassName="!w-full !bg-white dark:bg-[#16161a] !border-gray-200 dark:border-white/10 !text-gray-900 dark:text-white !rounded-xl !py-2.5 !pl-10 !h-auto focus:!ring-1 focus:!ring-red-500/30 focus:!border-transparent transition-all !text-xs"
-                                        className="phone-input-custom !border-none"
-                                    />
-                                </div>
-
-                                {/* Password */}
-                                <div>
-                                    <label htmlFor="password" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            className={`w-full pl-10 pr-9 py-2.5 bg-white dark:bg-[#16161a] border ${errors.password ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
-                                            placeholder="••••••••"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
-                                        >
-                                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                        </button>
-                                    </div>
-                                    {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
-                                </div>
-
-                                {/* Confirm Password */}
-                                <div>
-                                    <label htmlFor="confirmPassword" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Confirm Password
-                                    </label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                        <input
-                                            id="confirmPassword"
-                                            name="confirmPassword"
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={formData.confirmPassword}
-                                            onChange={handleChange}
-                                            className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
-                                            placeholder="••••••••"
-                                        />
-                                    </div>
-                                    {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
-                                </div>
-
-                                {/* Company */}
-                                <div>
-                                    <label htmlFor="company" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Company <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
-                                    </label>
-                                    <div className="relative">
-                                        <Building2 className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                        <input
-                                            id="company"
-                                            name="company"
-                                            type="text"
-                                            value={formData.company}
-                                            onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-650 rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none"
-                                            placeholder="Your Company"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Use Case */}
-                                <div>
-                                    <label htmlFor="useCase" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
-                                        Platform Use Case <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
-                                    </label>
-                                    <div className="relative">
-                                        <Briefcase className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                                        <select
-                                            id="useCase"
-                                            name="useCase"
-                                            value={formData.useCase}
-                                            onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none appearance-none cursor-pointer"
-                                        >
-                                            <option value="">Select use case</option>
-                                            <option value="educational">Educational Content</option>
-                                            <option value="entertainment">Entertainment</option>
-                                            <option value="documentary">Documentary/Storytelling</option>
-                                            <option value="business">Business/Marketing</option>
-                                            <option value="podcast">Podcast to Video</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Human Verification */}
-                            <div className="pt-1.5">
-                                <div 
-                                    onClick={handleVerificationCheck}
-                                    className={`p-3.5 rounded-xl border transition-all duration-300 flex items-center justify-between cursor-pointer select-none ${
-                                        isHuman 
-                                            ? 'bg-emerald-950/10 border-emerald-500/20' 
-                                            : verifyingHuman 
-                                                ? 'bg-gray-100/50 dark:bg-white/[0.01] border-gray-200 dark:border-white/10 animate-pulse'
-                                                : 'bg-white dark:bg-[#16161a] border-gray-200 dark:border-white/10 hover:border-white/20'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-                                            isHuman 
-                                                ? 'bg-emerald-500 border-emerald-500 text-gray-900 dark:text-white' 
-                                                : 'border-white/20 bg-gray-200 dark:bg-black/30'
-                                        }`}>
-                                            {isHuman ? (
-                                                <Check className="w-3 h-3 stroke-[3px]" />
-                                            ) : verifyingHuman ? (
-                                                <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin" />
-                                            ) : null}
-                                        </div>
                                         <div>
-                                            <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                                                {isHuman 
-                                                    ? 'Verification success' 
-                                                    : verifyingHuman 
-                                                        ? 'Securing connection...' 
-                                                        : 'I am not a robot'}
-                                            </p>
+                                            <label htmlFor="waitlistEmail" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Email Address
+                                            </label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                <input
+                                                    id="waitlistEmail"
+                                                    type="email"
+                                                    value={waitlistData.email}
+                                                    onChange={(e) => setWaitlistData(prev => ({ ...prev, email: e.target.value }))}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent outline-none transition-all"
+                                                    placeholder="john@example.com"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <span className="text-[9px] font-mono text-gray-500 dark:text-gray-400 tracking-wider">SECURE CHECK</span>
-                                </div>
-                                {verificationError && (
-                                    <p className="mt-1 text-xs text-red-550 font-bold uppercase tracking-wider">{verificationError}</p>
+
+                                        <div>
+                                            <label htmlFor="waitlistWhatsapp" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                WhatsApp Number
+                                            </label>
+                                            <PhoneInput
+                                                defaultCountry={phoneCountryCode}
+                                                value={waitlistData.whatsapp}
+                                                onChange={(phone) => setWaitlistData(prev => ({ ...prev, whatsapp: phone }))}
+                                                inputClassName="!w-full !bg-white dark:bg-[#16161a] !border-gray-200 dark:border-white/10 !text-gray-900 dark:text-white !rounded-xl !py-2.5 !pl-10 !h-auto focus:!ring-1 focus:!ring-red-500/30 focus:!border-transparent transition-all !text-xs"
+                                                className="phone-input-custom !border-none"
+                                            />
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={waitlistLoading}
+                                            className="w-full py-3 rounded-lg bg-red-600 hover:bg-red-750 text-gray-900 dark:text-white font-bold text-xs tracking-wider uppercase transition-all duration-300 hover:scale-[1.002] flex items-center justify-center gap-2"
+                                        >
+                                            {waitlistLoading ? (
+                                                <>
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    Joining Waitlist...
+                                                </>
+                                            ) : (
+                                                'Notify Me When Available'
+                                            )}
+                                        </button>
+                                    </form>
                                 )}
                             </div>
+                        ) : (
+                            <>
+                                {/* ── Google Sign-Up Button ─────────────────────── */}
+                                {googleEnabled && (
+                                    <div className="mb-4">
+                                        {googleError && (
+                                            <div className="mb-3 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold">
+                                                {googleError}
+                                            </div>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => { setGoogleError(''); googleLogin(); }}
+                                            disabled={googleLoading}
+                                            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-semibold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm"
+                                        >
+                                            {googleLoading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-gray-500 dark:text-gray-400" />
+                                            ) : (
+                                                <svg viewBox="0 0 48 48" className="w-4 h-4 flex-shrink-0">
+                                                    <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                                    <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                                    <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                                </svg>
+                                            )}
+                                            {googleLoading ? 'Connecting...' : 'Continue with Google'}
+                                        </button>
 
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                disabled={loading || !isHuman}
-                                className={`w-full py-3 rounded-lg font-bold text-xs tracking-wider uppercase transition-all duration-300 ${
-                                    isHuman 
-                                        ? 'bg-red-600 hover:bg-red-750 text-gray-900 dark:text-white hover:scale-[1.002] cursor-pointer' 
-                                        : 'bg-gray-200 dark:bg-white/5 border border-white/5 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                }`}
-                            >
-                                {loading ? 'Creating Account...' : 'Register account'}
-                            </button>
-                        </form>
+                                        {/* OR divider */}
+                                        <div className="relative flex items-center justify-center my-4">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <div className="w-full border-t border-gray-200 dark:border-white/8" />
+                                            </div>
+                                            <span className="relative px-3 bg-white dark:bg-[#0e0e12] text-[9px] font-bold text-gray-500 uppercase tracking-wider">
+                                                or register with email
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    {/* Honeypot */}
+                                    <input
+                                        type="text"
+                                        name="bot_trap"
+                                        value={formData.bot_trap}
+                                        onChange={handleChange}
+                                        style={{ display: 'none' }}
+                                        tabIndex="-1"
+                                        autoComplete="off"
+                                    />
+
+                                    {/* Submit Error */}
+                                    {errors.submit && (
+                                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
+                                            {errors.submit}
+                                        </div>
+                                    )}
+
+                                    {/* Grid wrapper for fields */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Full Name */}
+                                        <div>
+                                            <label htmlFor="fullName" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Full Name
+                                            </label>
+                                            <div className="relative">
+                                                <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                <input
+                                                    id="fullName"
+                                                    name="fullName"
+                                                    type="text"
+                                                    value={formData.fullName}
+                                                    onChange={handleChange}
+                                                    className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.fullName ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
+                                                    placeholder="John Doe"
+                                                />
+                                            </div>
+                                            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+                                        </div>
+
+                                        {/* Email */}
+                                        <div>
+                                            <label htmlFor="email" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Email Address
+                                            </label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                <input
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    value={formData.email}
+                                                    onChange={handleChange}
+                                                    className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
+                                                    placeholder="john@example.com"
+                                                />
+                                            </div>
+                                            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                                        </div>
+
+                                        {/* Country Search */}
+                                        <div>
+                                            <label htmlFor="country" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Country
+                                            </label>
+                                            <div className="relative z-35">
+                                                <Globe className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 z-10" />
+                                                <input
+                                                    type="text"
+                                                    value={formData.countryName || searchCountry}
+                                                    onChange={(e) => {
+                                                        setSearchCountry(e.target.value);
+                                                        setShowCountryDropdown(true);
+                                                    }}
+                                                    onFocus={() => setShowCountryDropdown(true)}
+                                                    className="w-full pl-10 pr-9 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-600 rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none"
+                                                    placeholder="Search country..."
+                                                    disabled={loadingCountries}
+                                                />
+                                                {formData.countryCode && (
+                                                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base pointer-events-none">
+                                                        {getCountryFlag(formData.countryCode)}
+                                                    </span>
+                                                )}
+
+                                                {showCountryDropdown && !loadingCountries && (
+                                                    <div className="absolute z-45 w-full mt-1 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
+                                                        {filteredCountries.length > 0 ? (
+                                                            filteredCountries.map((country) => (
+                                                                <button
+                                                                    key={country.code}
+                                                                    type="button"
+                                                                    onClick={() => handleCountrySelect(country)}
+                                                                    className="w-full px-3 py-2 text-left hover:bg-gray-200 dark:bg-white/5 flex items-center gap-2.5 transition-colors text-xs text-gray-700 dark:text-gray-300"
+                                                                >
+                                                                    <span>{getCountryFlag(country.code)}</span>
+                                                                    <span className="flex-1 truncate">{country.name}</span>
+                                                                    {country.dial_code && (
+                                                                        <span className="text-gray-500 dark:text-gray-400 text-[10px] font-mono">{country.dial_code}</span>
+                                                                    )}
+                                                                </button>
+                                                            ))
+                                                        ) : (
+                                                            <div className="px-3 py-2 text-gray-550 text-xs">No results</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {detectingLocation && (
+                                                <p className="mt-1 text-[9px] text-gray-550 flex items-center gap-1 font-semibold uppercase tracking-wider">
+                                                    <Loader2 className="animate-spin h-3 w-3 text-red-500" />
+                                                    Detecting...
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Phone Number */}
+                                        <div>
+                                            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Phone Number <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
+                                            </label>
+                                            <PhoneInput
+                                                defaultCountry={phoneCountryCode}
+                                                value={formData.phoneNumber}
+                                                onChange={handlePhoneChange}
+                                                inputClassName="!w-full !bg-white dark:bg-[#16161a] !border-gray-200 dark:border-white/10 !text-gray-900 dark:text-white !rounded-xl !py-2.5 !pl-10 !h-auto focus:!ring-1 focus:!ring-red-500/30 focus:!border-transparent transition-all !text-xs"
+                                                className="phone-input-custom !border-none"
+                                            />
+                                        </div>
+
+                                        {/* Password */}
+                                        <div>
+                                            <label htmlFor="password" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Password
+                                            </label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-550 dark:text-gray-400" />
+                                                <input
+                                                    id="password"
+                                                    name="password"
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={formData.password}
+                                                    onChange={handleChange}
+                                                    className={`w-full pl-10 pr-9 py-2.5 bg-white dark:bg-[#16161a] border ${errors.password ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
+                                                    placeholder="••••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                            {errors.password && <p className="mt-1 text-xs text-red-550">{errors.password}</p>}
+                                        </div>
+
+                                        {/* Confirm Password */}
+                                        <div>
+                                            <label htmlFor="confirmPassword" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Confirm Password
+                                            </label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                <input
+                                                    id="confirmPassword"
+                                                    name="confirmPassword"
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleChange}
+                                                    className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl text-gray-900 dark:text-white placeholder-gray-600 text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none`}
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+                                            {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
+                                        </div>
+
+                                        {/* Company */}
+                                        <div>
+                                            <label htmlFor="company" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Company <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <Building2 className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                <input
+                                                    id="company"
+                                                    name="company"
+                                                    type="text"
+                                                    value={formData.company}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-600 rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none"
+                                                    placeholder="Your Company"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Use Case */}
+                                        <div>
+                                            <label htmlFor="useCase" className="block text-[10px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">
+                                                Platform Use Case <span className="text-gray-600 dark:text-gray-500 font-bold lowercase tracking-normal">(optional)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <Briefcase className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                                                <select
+                                                    id="useCase"
+                                                    name="useCase"
+                                                    value={formData.useCase}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl text-xs focus:ring-1 focus:ring-red-500/30 focus:border-transparent transition-all outline-none appearance-none cursor-pointer"
+                                                >
+                                                    <option value="">Select use case</option>
+                                                    <option value="educational">Educational Content</option>
+                                                    <option value="entertainment">Entertainment</option>
+                                                    <option value="documentary">Documentary/Storytelling</option>
+                                                    <option value="business">Business/Marketing</option>
+                                                    <option value="podcast">Podcast to Video</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Human Verification */}
+                                    <div className="pt-1.5">
+                                        <div 
+                                            onClick={handleVerificationCheck}
+                                            className={`p-3.5 rounded-xl border transition-all duration-300 flex items-center justify-between cursor-pointer select-none ${
+                                                isHuman 
+                                                    ? 'bg-emerald-950/10 border-emerald-500/20' 
+                                                    : verifyingHuman 
+                                                        ? 'bg-gray-100/50 dark:bg-white/[0.01] border-gray-200 dark:border-white/10 animate-pulse'
+                                                        : 'bg-white dark:bg-[#16161a] border-gray-200 dark:border-white/10 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                                    isHuman 
+                                                        ? 'bg-emerald-500 border-emerald-500 text-gray-900 dark:text-white' 
+                                                        : 'border-white/20 bg-gray-200 dark:bg-black/30'
+                                                }`}>
+                                                    {isHuman ? (
+                                                        <Check className="w-3 h-3 stroke-[3px]" />
+                                                    ) : verifyingHuman ? (
+                                                        <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin" />
+                                                    ) : null}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                                                        {isHuman 
+                                                            ? 'Verification success' 
+                                                            : verifyingHuman 
+                                                                ? 'Securing connection...' 
+                                                                : 'I am not a robot'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="text-[9px] font-mono text-gray-500 dark:text-gray-400 tracking-wider">SECURE CHECK</span>
+                                        </div>
+                                        {verificationError && (
+                                            <p className="mt-1 text-xs text-red-550 font-bold uppercase tracking-wider">{verificationError}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !isHuman}
+                                        className={`w-full py-3 rounded-lg font-bold text-xs tracking-wider uppercase transition-all duration-300 ${
+                                            isHuman 
+                                                ? 'bg-red-600 hover:bg-red-750 text-gray-900 dark:text-white hover:scale-[1.002] cursor-pointer' 
+                                                : 'bg-gray-200 dark:bg-white/5 border border-white/5 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        {loading ? 'Creating Account...' : 'Register account'}
+                                    </button>
+                                </form>
+                            </>
+                        )}
 
                         {/* Divider */}
                         <div className="mt-5 relative flex items-center justify-center">

@@ -220,6 +220,37 @@ const AdminSettings = () => {
                                 </div>
                             </Section>
 
+                            {/* ── Registration Control Section ────────────────────── */}
+                            <Section title="🚫 Registration & Maintenance" icon={MdPerson}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                    <div className="md:col-span-1">
+                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Disable New Registrations</label>
+                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">Turn this on to pause registrations for maintenance. Users trying to sign up will be prompted to join the waitlist instead.</p>
+                                    </div>
+                                    <div className="md:col-span-2 flex items-center gap-4">
+                                        <button
+                                            onClick={() => {
+                                                const newVal = settings.registration_disabled === 'true' ? 'false' : 'true';
+                                                handleSettingChange('registration_disabled', newVal);
+                                                handleSave('registration_disabled', newVal, 'Pause registrations and show waitlist/maintenance page');
+                                            }}
+                                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
+                                                settings.registration_disabled === 'true' ? 'bg-red-600' : 'bg-gray-700'
+                                            }`}
+                                        >
+                                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                                                settings.registration_disabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                            }`} />
+                                        </button>
+                                        <span className={`text-xs font-bold uppercase tracking-widest ${
+                                            settings.registration_disabled === 'true' ? 'text-red-400' : 'text-gray-600 dark:text-gray-500'
+                                        }`}>
+                                            {settings.registration_disabled === 'true' ? 'Paused — Waitlist / Maintenance message shown' : 'Active — Standard registration open'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Section>
+
                             <Section title="Brevo Marketing API" icon={MdVpnKey}>
                                 <InputField 
                                     label="Brevo API Key" 

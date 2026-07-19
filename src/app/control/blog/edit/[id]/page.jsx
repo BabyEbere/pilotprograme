@@ -56,13 +56,17 @@ export default function AdminBlogEditor() {
                     if (data.success && data.post) {
                         let faq = [];
                         try {
-                            faq = typeof data.post.faq_json === 'string' ? JSON.parse(data.post.faq_json || '[]') : (data.post.faq_json || []);
+                            let parsed = typeof data.post.faq_json === 'string' ? JSON.parse(data.post.faq_json || '[]') : (data.post.faq_json || []);
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            faq = Array.isArray(parsed) ? parsed : [];
                         } catch (e) {
                             faq = [];
                         }
                         let schema = {};
                         try {
-                            schema = typeof data.post.schema_json === 'string' ? JSON.parse(data.post.schema_json || '{}') : (data.post.schema_json || {});
+                            let parsed = typeof data.post.schema_json === 'string' ? JSON.parse(data.post.schema_json || '{}') : (data.post.schema_json || {});
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            schema = (parsed && typeof parsed === 'object') ? parsed : {};
                         } catch (e) {
                             schema = {};
                         }
@@ -128,16 +132,10 @@ export default function AdminBlogEditor() {
                 : 'http://localhost:5000');
             const url = `${API_URL}/admin/blog/posts/${id}`;
 
-            const payload = {
-                ...form,
-                faq_json: JSON.stringify(form.faq_json),
-                schema_json: JSON.stringify(form.schema_json)
-            };
-
             const res = await fetch(url, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(form)
             });
             const data = await res.json();
             if (data.success) {
