@@ -21,7 +21,10 @@ import {
     MdMovie,
     MdMoreHoriz,
     MdBook,
-    MdLink
+    MdLink,
+    MdLock,
+    MdOndemandVideo,
+    MdHelp
 } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
@@ -32,6 +35,9 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     const [videoEnabled, setVideoEnabled] = useState(false);
     const [storyLabEnabled, setStoryLabEnabled] = useState(false);
     const { theme, toggleTheme } = useTheme();
+
+    const [sub, setSub] = useState(null);
+    const [loadingPlan, setLoadingPlan] = useState(true);
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
 
@@ -45,7 +51,38 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             .then(r => r.json())
             .then(d => { if (d.success) setStoryLabEnabled(d.enabled); })
             .catch(() => {});
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user && user.id) {
+            fetch(`${API_URL}/plans/my-subscription?user_id=${user.id}`, {
+                headers: { 'Authorization': `Bearer ${user.token || ''}` }
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        setSub(d.subscription);
+                    }
+                    setLoadingPlan(false);
+                })
+                .catch(() => setLoadingPlan(false));
+        } else {
+            setLoadingPlan(false);
+        }
     }, []);
+
+    const isLocked = (label) => {
+        if (loadingPlan) return false;
+        if (label === 'YouTube Analyzer' || label === 'YT Analyzer') {
+            return !sub || sub.max_youtube_analyzer === 0;
+        }
+        if (label === 'Blog to Script') {
+            return !sub || sub.max_blog_to_script === 0;
+        }
+        if (label === 'Story to Script') {
+            return !sub || sub.max_story_to_script === 0;
+        }
+        return false;
+    };
 
     const topItems = [
         { icon: MdDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -61,6 +98,8 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         { icon: MdImage, label: 'Images', path: '/dashboard/images' },
         { icon: MdAudiotrack, label: 'Audio', path: '/dashboard/audio' },
         ...(videoEnabled ? [{ icon: MdMovie, label: 'Videos', path: '/dashboard/videos' }] : []),
+        { icon: MdOndemandVideo, label: 'Tutorials', path: '/dashboard/tutorial' },
+        { icon: MdHelp, label: 'Support', path: '/dashboard/support' },
         { icon: MdBook, label: 'Documentation', path: '/documentation' },
         { icon: MdSettings, label: 'Settings', path: '/dashboard/settings' },
     ];
@@ -95,20 +134,29 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                     {topItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
+                        const locked = isLocked(item.label);
 
                         return (
                             <Link key={item.path}
-                                href={item.path}
+                                href={locked ? '/dashboard/plans' : item.path}
                                 onClick={() => setMenuOpen(false)}
                                 className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'
                                     } gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
                                         ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
                                         : 'text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:hover:text-gray-900 dark:text-white'
-                                    }`}
+                                    } ${locked ? 'opacity-65' : ''}`}
                                 title={collapsed ? item.label : ''}
                             >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
+                                <div className="relative flex items-center">
+                                    <Icon className="w-4 h-4 flex-shrink-0" />
+                                    {locked && collapsed && (
+                                        <MdLock className="absolute -top-1 -right-1 w-2.5 h-2.5 text-amber-500 bg-white dark:bg-[#111111] rounded-full" />
+                                    )}
+                                </div>
                                 {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                {locked && !collapsed && (
+                                    <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
+                                )}
                             </Link>
                         );
                     })}
@@ -129,19 +177,28 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const active = isActive(item.path);
+                                const locked = isLocked(item.label);
                                 return (
                                     <Link key={item.path}
-                                        href={item.path}
+                                        href={locked ? '/dashboard/plans' : item.path}
                                         onClick={() => setMenuOpen(false)}
                                         className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'
                                             } gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
                                                 ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
                                                 : 'text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:hover:text-gray-900 dark:text-white'
-                                            }`}
+                                            } ${locked ? 'opacity-65' : ''}`}
                                         title={collapsed ? item.label : ''}
                                     >
-                                        <Icon className="w-4 h-4 flex-shrink-0" />
+                                        <div className="relative flex items-center">
+                                            <Icon className="w-4 h-4 flex-shrink-0" />
+                                            {locked && collapsed && (
+                                                <MdLock className="absolute -top-1 -right-1 w-2.5 h-2.5 text-amber-500 bg-white dark:bg-[#111111] rounded-full" />
+                                            )}
+                                        </div>
                                         {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                        {locked && !collapsed && (
+                                            <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
+                                        )}
                                     </Link>
                                 );
                             })}
@@ -317,12 +374,15 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             </Link>
 
                             {/* YouTube Analyzer */}
-                            <Link href="/dashboard/youtube-analyzer"
+                            <Link href={isLocked('YT Analyzer') ? '/dashboard/plans' : '/dashboard/youtube-analyzer'}
                                 onClick={() => setMenuOpen(false)}
-                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/youtube-analyzer') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                                className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/youtube-analyzer') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('YT Analyzer') ? 'opacity-65' : ''}`}
                             >
-                                <MdTrendingUp className="w-5 h-5 flex-shrink-0 text-red-500" />
-                                <span className="text-xs font-semibold">YT Analyzer</span>
+                                <div className="flex items-center gap-3">
+                                    <MdTrendingUp className="w-5 h-5 flex-shrink-0 text-red-500" />
+                                    <span className="text-xs font-semibold">YT Analyzer</span>
+                                </div>
+                                {isLocked('YT Analyzer') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                             </Link>
 
                             {/* Affiliates */}
@@ -348,22 +408,56 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             {/* Story Writer & Story to Script */}
                             {storyLabEnabled && (
                                 <>
-                                    <Link href="/dashboard/story-writer"
+                                    <Link href={isLocked('Story Writer') ? '/dashboard/plans' : '/dashboard/story-writer'}
                                         onClick={() => setMenuOpen(false)}
-                                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-writer') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                                        className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-writer') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Story Writer') ? 'opacity-65' : ''}`}
                                     >
-                                        <MdMovie className="w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-semibold">Story Writer</span>
+                                        <div className="flex items-center gap-3">
+                                            <MdMovie className="w-5 h-5 flex-shrink-0" />
+                                            <span className="text-xs font-semibold">Story Writer</span>
+                                        </div>
+                                        {isLocked('Story Writer') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                                     </Link>
-                                    <Link href="/dashboard/story-to-script"
+                                    <Link href={isLocked('Story to Script') ? '/dashboard/plans' : '/dashboard/story-to-script'}
                                         onClick={() => setMenuOpen(false)}
-                                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-to-script') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                                        className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-to-script') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Story to Script') ? 'opacity-65' : ''}`}
                                     >
-                                        <MdDescription className="w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-semibold">Story to Script</span>
+                                        <div className="flex items-center gap-3">
+                                            <MdDescription className="w-5 h-5 flex-shrink-0" />
+                                            <span className="text-xs font-semibold">Story to Script</span>
+                                        </div>
+                                        {isLocked('Story to Script') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
+                                    </Link>
+                                    <Link href={isLocked('Blog to Script') ? '/dashboard/plans' : '/dashboard/blog-to-script'}
+                                        onClick={() => setMenuOpen(false)}
+                                        className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/blog-to-script') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Blog to Script') ? 'opacity-65' : ''}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <MdLink className="w-5 h-5 flex-shrink-0" />
+                                            <span className="text-xs font-semibold">Blog to Script</span>
+                                        </div>
+                                        {isLocked('Blog to Script') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                                     </Link>
                                 </>
                             )}
+
+                            {/* Tutorials */}
+                            <Link href="/dashboard/tutorial"
+                                onClick={() => setMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/tutorial') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                            >
+                                <MdOndemandVideo className="w-5 h-5 flex-shrink-0" />
+                                <span className="text-xs font-semibold">Tutorials</span>
+                            </Link>
+
+                            {/* Support */}
+                            <Link href="/dashboard/support"
+                                onClick={() => setMenuOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/support') ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
+                            >
+                                <MdHelp className="w-5 h-5 flex-shrink-0" />
+                                <span className="text-xs font-semibold">Support</span>
+                            </Link>
 
                             {/* Settings */}
                             <Link href="/dashboard/settings"

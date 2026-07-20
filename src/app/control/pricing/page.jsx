@@ -8,10 +8,10 @@ import {
 import AdminSidebar from '@/components/AdminSidebar';
 
 const PLAN_STYLES = {
-    Free: { ring: 'ring-gray-200', header: 'bg-white dark:bg-[#0a0a0a]   border-white/5', dot: 'bg-gray-400' },
-    Starter: { ring: 'ring-blue-200', header: 'bg-blue-500/10   border-blue-100', dot: 'bg-blue-500/100' },
+    Free: { ring: 'ring-gray-200', header: 'bg-white dark:bg-[#0a0a0a] border-white/5', dot: 'bg-gray-400' },
+    Starter: { ring: 'ring-blue-200', header: 'bg-blue-500/10 border-blue-100', dot: 'bg-blue-500/100' },
     Pookie: { ring: 'ring-purple-200', header: 'bg-purple-50 border-purple-100', dot: 'bg-purple-500' },
-    Pro: { ring: 'ring-red-200', header: 'bg-red-50    border-red-100', dot: 'bg-red-500' },
+    Pro: { ring: 'ring-red-200', header: 'bg-red-50 border-red-100', dot: 'bg-red-500' },
 };
 
 export default function AdminPricing() {
@@ -21,6 +21,7 @@ export default function AdminPricing() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [saveStatus, setSaveStatus] = useState({ id: null, status: '' });
+    const [activePlanTab, setActivePlanTab] = useState(null);
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const adminData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -35,7 +36,13 @@ export default function AdminPricing() {
         try {
             const res = await fetch(`${API_URL}/admin/pricing`, { headers: authHeader });
             const data = await res.json();
-            if (data.success) setPlans(data.plans || []);
+            if (data.success) {
+                const fetchedPlans = data.plans || [];
+                setPlans(fetchedPlans);
+                if (fetchedPlans.length > 0) {
+                    setActivePlanTab(fetchedPlans[0].id);
+                }
+            }
             else setError(data.message);
         } catch { setError('Failed to load subscription plans.'); }
         finally { setLoading(false); }
@@ -69,6 +76,11 @@ export default function AdminPricing() {
                     max_voiceovers: plan.max_voiceovers ?? 0,
                     affiliate_reward: plan.affiliate_reward ?? 0,
                     voice_pack_id: plan.voice_pack_id ?? null,
+                    max_blog_to_script: plan.max_blog_to_script ?? 0,
+                    max_story_to_script: plan.max_story_to_script ?? 0,
+                    max_youtube_analyzer: plan.max_youtube_analyzer ?? 0,
+                    max_siliconflow_images: plan.max_siliconflow_images ?? 0,
+                    max_youtube_competitors: plan.max_youtube_competitors ?? 3,
                 }),
             });
             const data = await res.json();
@@ -88,8 +100,8 @@ export default function AdminPricing() {
     // ── Reusable field ─────────────────────────────────────────────────────
     const Field = ({ label, icon: Icon, planId, field, value, placeholder, type = 'number' }) => (
         <div>
-            <label className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                {Icon && <Icon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500 dark:text-gray-400" />}
+            <label className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                {Icon && <Icon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500 dark:text-gray-455" />}
                 {label}
             </label>
             <input
@@ -97,7 +109,7 @@ export default function AdminPricing() {
                 value={value ?? ''}
                 onChange={e => handleChange(planId, field, e.target.value)}
                 placeholder={placeholder || '999999 = unlimited'}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg focus:ring-1 focus:ring-red-400 focus:border-red-400 text-sm bg-gray-50 dark:bg-[#111111] transition-colors"
+                className="w-full px-3 py-2 border border-gray-250 dark:border-white/5 rounded-xl focus:ring-1 focus:ring-red-400 focus:border-red-400 text-xs bg-gray-50 dark:bg-[#15151b] text-gray-900 dark:text-white transition-colors focus:outline-none"
             />
         </div>
     );
@@ -117,146 +129,155 @@ export default function AdminPricing() {
     }
 
     return (
-        <div className="flex h-screen bg-white dark:bg-[#0a0a0a]">
+        <div className="flex h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <AdminSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
             <div className="flex-1 overflow-y-auto">
 
                 {/* Header */}
-                <div className="bg-gray-50 dark:bg-[#111111] border-b border-gray-200 dark:border-white/10 sticky top-0 z-10">
+                <div className="bg-white dark:bg-[#111111] border-b border-gray-200 dark:border-white/10 sticky top-0 z-10">
                     <div className="px-6 py-4">
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Pricing &amp; Limits Control</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                            Configure plan pricing, generation limits, video quotas, premium voiceover counts, and voice pack assignments.
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Redesign &amp; monetize plans: Configure duration, pricing, generation limits, and specific feature quotas.
                         </p>
                     </div>
                 </div>
 
-                <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+                <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
 
                     {error && (
-                        <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2 text-sm">
-                            <MdWarning className="flex-shrink-0" /> {error}
+                        <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                            <MdWarning className="flex-shrink-0 w-4 h-4" /> {error}
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                        {plans.map(plan => {
-                            const style = PLAN_STYLES[plan.name] || PLAN_STYLES.Free;
-                            const isFree = plan.name === 'Free';
-                            const saving = saveStatus.id === plan.id && saveStatus.status === 'saving';
-                            const success = saveStatus.id === plan.id && saveStatus.status === 'success';
+                    {/* Plan Tabs */}
+                    <div className="flex gap-2 border-b border-gray-200 dark:border-white/5 pb-4 overflow-x-auto">
+                        {plans.map(plan => (
+                            <button
+                                key={plan.id}
+                                onClick={() => setActivePlanTab(plan.id)}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0 ${
+                                    activePlanTab === plan.id
+                                        ? 'bg-red-600 text-white shadow-lg shadow-red-600/15'
+                                        : 'bg-white dark:bg-[#111111] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/10'
+                                }`}
+                            >
+                                {plan.name} Plan
+                            </button>
+                        ))}
+                    </div>
 
-                            return (
-                                <div
-                                    key={plan.id}
-                                    className={`bg-gray-50 dark:bg-[#111111] rounded-2xl shadow-sm ring-1 ${style.ring} overflow-hidden flex flex-col`}
-                                >
-                                    {/* Card header */}
-                                    <div className={`p-4 border-b ${style.header} flex items-center justify-center gap-2`}>
-                                        <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
-                                        <h2 className="text-base font-bold text-gray-900 dark:text-white">{plan.name} Plan</h2>
+                    {/* Active Plan Tab Configuration Pane */}
+                    {(() => {
+                        const plan = plans.find(p => p.id === activePlanTab);
+                        if (!plan) return null;
+                        const isFree = plan.name === 'Free';
+                        const saving = saveStatus.id === plan.id && saveStatus.status === 'saving';
+                        const success = saveStatus.id === plan.id && saveStatus.status === 'success';
+
+                        return (
+                            <div className="bg-white dark:bg-[#111111] rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-xl animate-in fade-in duration-300">
+                                {/* Header banner */}
+                                <div className="p-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-gradient-to-r from-red-600/5 to-purple-600/5">
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-red-650 animate-pulse" />
+                                        <h2 className="text-sm font-black uppercase tracking-wider text-gray-900 dark:text-white">{plan.name} Plan Settings</h2>
                                     </div>
+                                    <span className="text-[10px] font-mono font-black text-gray-450 dark:text-gray-400">PLAN ID: {plan.id}</span>
+                                </div>
 
-                                    {/* Body */}
-                                    <div className="p-5 flex-1 space-y-4">
-
-                                        {/* Pricing & Affiliate — hidden for Free */}
-                                        {!isFree && (
-                                            <div className="flex flex-col gap-3">
-                                                <Field label="Price (₦)" icon={MdAttachMoney} planId={plan.id} field="price_naira" value={plan.price_naira} />
-                                                <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl relative">
-                                                    <div className="absolute top-2 right-2 flex space-x-1">
-                                                        <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></span>
-                                                    </div>
-                                                    <Field label="Affiliate Referral Reward (₦)" icon={MdAttachMoney} planId={plan.id} field="affiliate_reward" value={plan.affiliate_reward} placeholder="Amount referrer gets..." />
-                                                    <p className="text-[10.5px] text-gray-700 dark:text-gray-300 mt-2 font-medium ml-1">If a user buys this plan, their referrer earns this amount.</p>
-                                                </div>
-                                            </div>
-                                        )}
-
+                                <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    {/* Column 1: Pricing & Info */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Plan Setup & Info</h3>
                                         <Field label="Duration (Days)" planId={plan.id} field="duration_days" value={plan.duration_days} placeholder="e.g. 30" />
-
-                                        {/* Generation limits */}
-                                        <div>
-                                            <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Generation Limits</p>
-                                            <div className="space-y-3">
-                                                <Field label="Max Scripts" planId={plan.id} field="max_scripts" value={plan.max_scripts} />
-                                                <Field label="Max Images" planId={plan.id} field="max_images" value={plan.max_images} />
-                                                <Field label="Max Audio Renders" planId={plan.id} field="max_audio" value={plan.max_audio} />
-                                            </div>
-                                        </div>
-
-                                        {/* Premium features */}
-                                        <div>
-                                            <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Premium Features</p>
-                                            <div className="space-y-3">
-                                                <Field
-                                                    label="Max Videos"
-                                                    icon={MdVideoLibrary}
-                                                    planId={plan.id}
-                                                    field="max_videos"
-                                                    value={plan.max_videos ?? 0}
-                                                    placeholder="0 = disabled"
-                                                />
-                                                <Field
-                                                    label="Max Premium Voiceovers"
-                                                    icon={MdRecordVoiceOver}
-                                                    planId={plan.id}
-                                                    field="max_voiceovers"
-                                                    value={plan.max_voiceovers ?? 0}
-                                                    placeholder="0 = disabled"
-                                                />
-
-                                                {/* Voice Pack dropdown */}
-                                                <div>
-                                                    <label className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                        <MdHeadset className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500 dark:text-gray-400" />
-                                                        Voice Pack
-                                                    </label>
-                                                    <select
-                                                        value={plan.voice_pack_id ?? ''}
-                                                        onChange={e => handleChange(plan.id, 'voice_pack_id', e.target.value || null)}
-                                                        className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-gray-50 dark:bg-[#111111] focus:ring-1 focus:ring-red-400 focus:border-red-400 transition-colors"
-                                                    >
-                                                        <option value="">— No premium voices —</option>
-                                                        {packs.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                        ))}
-                                                    </select>
-                                                    {plan.voice_pack_id ? (
-                                                        <p className="text-[10px] text-emerald-500 mt-1">
-                                                            ✓ Users on this plan get SiliconFlow voices from <strong>{plan.voice_pack_name || `Pack ${plan.voice_pack_id}`}</strong>
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-[10px] text-gray-600 dark:text-gray-500 dark:text-gray-400 mt-1">
-                                                            Users on this plan use Edge TTS only
-                                                        </p>
-                                                    )}
+                                        
+                                        {!isFree && (
+                                            <>
+                                                <Field label="Price (₦ Naira)" icon={MdAttachMoney} planId={plan.id} field="price_naira" value={plan.price_naira} />
+                                                <Field label="Price ($ USD)" icon={MdAttachMoney} planId={plan.id} field="price_dollar" value={plan.price_dollar} />
+                                                
+                                                <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl space-y-4">
+                                                    <Field label="Affiliate Referral Reward (₦)" icon={MdAttachMoney} planId={plan.id} field="affiliate_reward" value={plan.affiliate_reward} placeholder="Referrer reward..." />
+                                                    <p className="text-[10.5px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">Referrer earns this flat reward when a user upgrades/subscribes to this plan.</p>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            </>
+                                        )}
                                     </div>
 
-                                    {/* Footer */}
-                                    <div className="p-4 bg-white dark:bg-[#0a0a0a] border-t border-white/5">
-                                        <button
-                                            onClick={() => savePlan(plan)}
-                                            disabled={saving}
-                                            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-all ${success
-                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-gray-900 dark:text-white'
-                                                    : 'bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50'
-                                                }`}
-                                        >
-                                            {saving && <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Saving...</span></>}
-                                            {success && <><MdCheckCircle className="w-4 h-4" /><span>Saved!</span></>}
-                                            {!saving && !success && <><MdSave className="w-4 h-4" /><span>Save Configuration</span></>}
-                                        </button>
+                                    {/* Column 2: Core Generation Limits */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Creation Quotas</h3>
+                                        <Field label="Max Scripts" planId={plan.id} field="max_scripts" value={plan.max_scripts} />
+                                        <Field label="Max Images (All Providers)" planId={plan.id} field="max_images" value={plan.max_images} />
+                                        <Field label="Max Audio Renders" planId={plan.id} field="max_audio" value={plan.max_audio} />
+                                    </div>
+
+                                    {/* Column 3: Premium Feature Quotas */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Premium Features</h3>
+                                        <Field label="Max Videos" icon={MdVideoLibrary} planId={plan.id} field="max_videos" value={plan.max_videos ?? 0} placeholder="0 = disabled" />
+                                        <Field label="Max ElevenLabs Voiceovers" icon={MdRecordVoiceOver} planId={plan.id} field="max_voiceovers" value={plan.max_voiceovers ?? 0} placeholder="0 = disabled" />
+                                        
+                                        <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-4">
+                                            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Monetized Add-ons (0 = locked)</h4>
+                                            <Field label="Max Blog to Script conversions" planId={plan.id} field="max_blog_to_script" value={plan.max_blog_to_script ?? 0} placeholder="0 = locked" />
+                                            <Field label="Max Story to Script conversions" planId={plan.id} field="max_story_to_script" value={plan.max_story_to_script ?? 0} placeholder="0 = locked" />
+                                            <Field label="Max YouTube channel audits" planId={plan.id} field="max_youtube_analyzer" value={plan.max_youtube_analyzer ?? 0} placeholder="0 = locked" />
+                                            <Field label="Max SiliconFlow images" planId={plan.id} field="max_siliconflow_images" value={plan.max_siliconflow_images ?? 0} placeholder="0 = locked" />
+                                            <Field label="Max YouTube competitors" planId={plan.id} field="max_youtube_competitors" value={plan.max_youtube_competitors ?? 3} placeholder="e.g. 3" />
+                                        </div>
+
+                                        {/* Voice Pack Dropdown */}
+                                        <div className="pt-4 border-t border-gray-100 dark:border-white/5">
+                                            <label className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                                                <MdHeadset className="w-4 h-4 text-gray-650" />
+                                                SiliconFlow Voice Pack
+                                            </label>
+                                            <select
+                                                value={plan.voice_pack_id ?? ''}
+                                                onChange={e => handleChange(plan.id, 'voice_pack_id', e.target.value || null)}
+                                                className="w-full px-3 py-2 border border-gray-250 dark:border-white/5 rounded-xl text-xs bg-gray-50 dark:bg-[#15151b] focus:ring-1 focus:ring-red-400 focus:border-red-400 transition-colors text-gray-900 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="">— No premium voices —</option>
+                                                {packs.map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                            {plan.voice_pack_id ? (
+                                                <p className="text-[10px] text-emerald-500 mt-1.5 font-semibold uppercase tracking-wider">
+                                                    ✓ SiliconFlow voices from: {plan.voice_pack_name || `Pack ${plan.voice_pack_id}`}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[10px] text-gray-500 mt-1.5 font-medium">
+                                                    Users on this plan are limited to Edge TTS voices.
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+
+                                {/* Footer Save Button */}
+                                <div className="p-6 bg-gray-50 dark:bg-[#0d0d12] border-t border-gray-200 dark:border-white/5 flex justify-end">
+                                    <button
+                                        onClick={() => savePlan(plan)}
+                                        disabled={saving}
+                                        className={`px-8 py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all min-w-[220px] shadow-lg ${
+                                            success
+                                                ? 'bg-emerald-600 text-gray-900 dark:text-white shadow-emerald-600/15'
+                                                : 'bg-red-650 hover:bg-red-700 text-white disabled:opacity-50 shadow-red-600/15'
+                                        }`}
+                                    >
+                                        {saving && <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Saving...</span></>}
+                                        {success && <><MdCheckCircle className="w-4 h-4" /><span>Saved Config!</span></>}
+                                        {!saving && !success && <><MdSave className="w-4 h-4" /><span>Save {plan.name} Settings</span></>}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
         </div>

@@ -27,6 +27,7 @@ export default function AdminUsers() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [reason, setReason] = useState('');
+    const [banType, setBanType] = useState('inactive');
 
     // Upgrade plan state
     const [plans, setPlans] = useState([]);
@@ -92,7 +93,8 @@ export default function AdminUsers() {
 
     const confirmBan = (user) => {
         setSelectedUser(user);
-        setReason('');
+        setBanType('inactive');
+        setReason('User has been inactive for more than 3 months');
         setShowBanModal(true);
     };
 
@@ -413,15 +415,44 @@ export default function AdminUsers() {
                             You are about to permanently ban <strong>{selectedUser.full_name}</strong>.
                             All their content will be erased and they will be emailed the reason.
                         </p>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason for ban *</label>
-                            <textarea
-                                rows={3}
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                                placeholder="e.g. Repeated violation of our content policy..."
-                                className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-red-500 resize-none"
-                            />
+                        <div className="mb-4 space-y-3">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Reason for ban *</label>
+                            <div className="space-y-2">
+                                {[
+                                    { value: 'inactive', label: 'User has been inactive for more than 3 months' },
+                                    { value: 'policy', label: 'Repeated violation of our content/generation policy' },
+                                    { value: 'fraud', label: 'Suspicious, abusive, or fraudulent billing activity' },
+                                    { value: 'custom', label: 'Other/Custom reason...' }
+                                ].map(opt => (
+                                    <label key={opt.value} className="flex items-start gap-2.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-red-500 transition-colors font-medium">
+                                        <input
+                                            type="radio"
+                                            name="banReason"
+                                            checked={banType === opt.value}
+                                            onChange={() => {
+                                                setBanType(opt.value);
+                                                if (opt.value === 'custom') {
+                                                    setReason('');
+                                                } else {
+                                                    setReason(opt.label);
+                                                }
+                                            }}
+                                            className="mt-0.5 accent-red-600"
+                                        />
+                                        <span>{opt.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            {banType === 'custom' && (
+                                <textarea
+                                    rows={3}
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    placeholder="Please describe the custom reason..."
+                                    className="w-full px-3 py-2 mt-2 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl text-xs text-gray-950 dark:text-white focus:outline-none focus:border-red-500 transition-all resize-none font-medium animate-in fade-in duration-200"
+                                />
+                            )}
                         </div>
                         <div className="flex gap-3">
                             <button

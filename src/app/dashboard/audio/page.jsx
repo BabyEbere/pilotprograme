@@ -98,6 +98,137 @@ function VoiceCard({ modelId, voiceId, displayName, isSelected, onSelect,
     );
 }
 
+// ── CustomAudioPlayer Component ──
+function CustomAudioPlayer({ src, onPlayChange }) {
+    const audioRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [volume, setVolume] = useState(1);
+    const [showVolume, setShowVolume] = useState(false);
+
+    useEffect(() => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+        setDuration(0);
+        if (audioRef.current) {
+            audioRef.current.load();
+        }
+    }, [src]);
+
+    const togglePlay = () => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+            if (onPlayChange) onPlayChange(false);
+        } else {
+            audioRef.current.play().catch(() => {});
+            setIsPlaying(true);
+            if (onPlayChange) onPlayChange(true);
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (!audioRef.current) return;
+        setCurrentTime(audioRef.current.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+        if (!audioRef.current) return;
+        setDuration(audioRef.current.duration);
+    };
+
+    const handleSeek = (e) => {
+        if (!audioRef.current || duration === 0) return;
+        const newTime = parseFloat(e.target.value);
+        audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+    };
+
+    const handleVolumeChange = (e) => {
+        if (!audioRef.current) return;
+        const val = parseFloat(e.target.value);
+        audioRef.current.volume = val;
+        setVolume(val);
+    };
+
+    const formatTime = (secs) => {
+        if (isNaN(secs)) return '00:00';
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
+    return (
+        <div className="w-full bg-[#161616] border border-white/5 rounded-xl p-3 flex items-center gap-3 transition-all">
+            <audio
+                ref={audioRef}
+                src={src}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onEnded={() => {
+                    setIsPlaying(false);
+                    if (onPlayChange) onPlayChange(false);
+                }}
+            />
+            
+            <button
+                type="button"
+                onClick={togglePlay}
+                className="w-8 h-8 rounded-full bg-amber-400 hover:bg-amber-500 flex items-center justify-center text-black hover:scale-105 transition-all shrink-0"
+            >
+                {isPlaying ? <MdPause className="w-4 h-4" /> : <MdPlayArrow className="w-4 h-4" />}
+            </button>
+
+            <div className="flex-1 flex flex-col gap-1 min-w-0">
+                <div className="flex justify-between items-center text-[9px] text-gray-500 font-mono font-medium">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    value={currentTime}
+                    onChange={handleSeek}
+                    className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-400 outline-none"
+                    style={{
+                        background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${
+                            duration ? (currentTime / duration) * 100 : 0
+                        }%, rgba(255,255,255,0.1) ${
+                            duration ? (currentTime / duration) * 100 : 0
+                        }%, rgba(255,255,255,0.1) 100%)`,
+                    }}
+                />
+            </div>
+
+            <div className="relative flex items-center gap-1.5 shrink-0">
+                <button
+                    type="button"
+                    onClick={() => setShowVolume(!showVolume)}
+                    className="p-1 text-gray-500 hover:text-white transition-colors"
+                >
+                    <MdVolumeUp className="w-3.5 h-3.5" />
+                </button>
+                {showVolume && (
+                    <div className="absolute bottom-6 right-0 bg-[#202020] border border-white/5 p-2 rounded-lg shadow-xl flex items-center z-20">
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={volume}
+                            onChange={handleVolumeChange}
+                            className="w-16 h-1 accent-amber-400 cursor-pointer"
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Audio() {
@@ -115,6 +246,7 @@ export default function Audio() {
 
     const [viewMode, setViewMode] = useState('albums');
     const [selectedAlbumId, setSelectedAlbumId] = useState(null);
+    const [isStitching, setIsStitching] = useState(false);
 
     // Subscription / plan
     const [subscription, setSubscription] = useState(null);
@@ -505,6 +637,29 @@ export default function Audio() {
         } catch { window.open(url, '_blank'); }
     };
 
+    const handleStitchAudios = async (voiceName) => {
+        if (!selectedAlbumId) return;
+        setIsStitching(true);
+        try {
+            const res = await fetch(`${API_URL}/scripts/${selectedAlbumId}/stitch-audios`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, voice: voiceName }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Audios merged successfully into a single Full Story track!');
+                fetchAudios();
+            } else {
+                alert('Stitching failed: ' + data.message);
+            }
+        } catch (err) {
+            alert('Stitching failed due to network error.');
+        } finally {
+            setIsStitching(false);
+        }
+    };
+
     // ── Generate ──────────────────────────────────────────────────────────────
 
     const handleGenerateAudio = async (e) => {
@@ -525,6 +680,100 @@ export default function Audio() {
         }
 
         stopAllPreviews();
+
+        if (formData.provider === 'siliconflow' && formData.scene_number === 'all') {
+            const selectedScript = scripts.find(s => String(s.id) === String(formData.script_id));
+            const sceneCount = selectedScript?.content?.scenes?.length || 0;
+            if (sceneCount === 0) {
+                alert('No scenes found in this script.');
+                return;
+            }
+
+            try {
+                setIsGenerating(true);
+                for (let currentScene = 1; currentScene <= sceneCount; currentScene++) {
+                    setGenerationProgress(Math.round(((currentScene - 1) / sceneCount) * 100));
+                    setGenerationStage(`Processing scene ${currentScene} of ${sceneCount}...`);
+                    setChunkProgress(0);
+                    setChunkStage(`Initializing scene ${currentScene}`);
+
+                    const payload = {
+                        user_id: user.id,
+                        provider: formData.provider,
+                        voice_id: formData.voice_id,
+                        speed: parseFloat(formData.speed),
+                        model_id: formData.model_id,
+                        scene_number: currentScene
+                    };
+
+                    const response = await fetch(`${API_URL}/scripts/${formData.script_id}/audio`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '', finalAudio = null, hitError = false;
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n\n');
+                        buffer = lines.pop();
+                        for (const line of lines) {
+                            if (!line.startsWith('data: ')) continue;
+                            try {
+                                const event = JSON.parse(line.replace('data: ', ''));
+                                setChunkProgress(event.progress !== undefined ? event.progress : 0);
+                                setChunkStage(event.stage || '');
+                                if (event.error) {
+                                    hitError = true;
+                                    throw new Error(event.error);
+                                }
+                                if (event.done && event.audio) finalAudio = event.audio;
+                            } catch (e) {
+                                if (e.message && e.message.includes('SiliconFlow error')) {
+                                    throw e;
+                                }
+                            }
+                        }
+                    }
+
+                    if (hitError || !finalAudio) {
+                        throw new Error(`Scene ${currentScene} failed to generate.`);
+                    }
+
+                    if (finalAudio && finalAudio.credit_deducted) {
+                        setVoiceoversUsed(prev => prev + 1);
+                    }
+                }
+
+                setGenerationProgress(100);
+                setGenerationStage('All scenes generated successfully!');
+                setChunkProgress(100);
+                setChunkStage('Complete!');
+                
+                setTimeout(() => {
+                    setShowModal(false);
+                    fetchAudios();
+                    fetchSubscriptionAndPremiumVoices();
+                    if (viewMode === 'albums') {
+                        setSelectedAlbumId(parseInt(formData.script_id));
+                        setViewMode('album-details');
+                    }
+                }, 600);
+
+            } catch (err) {
+                setGenerationProgress(0);
+                setGenerationStage('');
+                alert('Generation failed: ' + err.message);
+            } finally {
+                setIsGenerating(false);
+            }
+            return;
+        }
 
         try {
             setIsGenerating(true);
@@ -583,10 +832,13 @@ export default function Audio() {
                 setGenerationStage('Complete!');
                 setChunkProgress(100);
                 setChunkStage('Complete!');
-                if (formData.provider === 'siliconflow') setVoiceoversUsed(prev => prev + 1);
+                if (formData.provider === 'siliconflow' && finalAudio.credit_deducted) {
+                    setVoiceoversUsed(prev => prev + 1);
+                }
                 setTimeout(() => {
                     setShowModal(false);
                     fetchAudios();
+                    fetchSubscriptionAndPremiumVoices();
                     if (viewMode === 'albums') {
                         setSelectedAlbumId(parseInt(formData.script_id));
                         setViewMode('album-details');
@@ -657,6 +909,32 @@ export default function Audio() {
                                         {remainingVoiceovers} / {maxVoiceovers} premium left
                                     </div>
                                 )}
+                                {/* Merge Scenes Button */}
+                                {viewMode === 'album-details' && (() => {
+                                    const mergeableAudios = activeAlbumAudios.filter(
+                                        a => a.provider === 'siliconflow' && a.voice_name?.includes(' - Scene ')
+                                    );
+                                    const voiceGroups = {};
+                                    mergeableAudios.forEach(a => {
+                                        const baseVoice = a.voice_name.split(' - ')[0];
+                                        if (!voiceGroups[baseVoice]) voiceGroups[baseVoice] = [];
+                                        voiceGroups[baseVoice].push(a);
+                                    });
+                                    const mergeableVoices = Object.keys(voiceGroups).filter(v => voiceGroups[v].length >= 2);
+                                    
+                                    return mergeableVoices.map(voice => (
+                                        <button
+                                            key={voice}
+                                            disabled={isStitching}
+                                            onClick={() => handleStitchAudios(voice)}
+                                            className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2"
+                                        >
+                                            <MdGraphicEq className="w-4 h-4" />
+                                            {isStitching ? 'Merging...' : `Merge ${voice} Scenes`}
+                                        </button>
+                                    ));
+                                })()}
+
                                 <button
                                     onClick={() => setShowModal(true)}
                                     className="bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 justify-center"
@@ -725,10 +1003,15 @@ export default function Audio() {
                                                 </div>
                                             </div>
                                             <div className="mt-4 w-full">
-                                                <audio controls src={audio.url} className="w-full h-10 outline-none" 
-                                                    onPlay={() => setCurrentAudio({ id: audio.id, url: audio.url, isPlaying: true })}
-                                                    onPause={() => setCurrentAudio(prev => prev?.id === audio.id ? { ...prev, isPlaying: false } : prev)}
-                                                    onEnded={() => setCurrentAudio(prev => prev?.id === audio.id ? { ...prev, isPlaying: false } : prev)}
+                                                <CustomAudioPlayer
+                                                    src={audio.url}
+                                                    onPlayChange={(playing) => {
+                                                        if (playing) {
+                                                            setCurrentAudio({ id: audio.id, url: audio.url, isPlaying: true });
+                                                        } else {
+                                                            setCurrentAudio(prev => prev?.id === audio.id ? { ...prev, isPlaying: false } : prev);
+                                                        }
+                                                    }}
                                                 />
                                             </div>
                                             <div className="mt-2 text-[11px] text-gray-600 dark:text-gray-500 dark:text-gray-400 flex justify-between">
@@ -992,44 +1275,78 @@ export default function Audio() {
                                                 a => String(a.script_id) === String(formData.script_id) && a.provider === 'siliconflow'
                                             );
                                             return sceneCount > 0 ? (
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Scene to Generate</label>
-                                                        {scriptHasAudio && (
-                                                            <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                                                ✓ Extra scenes are free
-                                                            </span>
-                                                        )}
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Generation Mode</label>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData(prev => ({ ...prev, scene_number: 1 }))}
+                                                                className={`py-2 px-3 rounded-xl border-2 text-center text-xs font-bold transition-all ${formData.scene_number !== 'all'
+                                                                        ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
+                                                                    }`}
+                                                            >
+                                                                Single Scene
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData(prev => ({ ...prev, scene_number: 'all' }))}
+                                                                className={`py-2 px-3 rounded-xl border-2 text-center text-xs font-bold transition-all ${formData.scene_number === 'all'
+                                                                        ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
+                                                                    }`}
+                                                            >
+                                                                Stitch All Scenes
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="grid grid-cols-4 gap-2">
-                                                        {Array.from({ length: sceneCount }, (_, i) => i + 1).map(n => {
-                                                            const hasAudio = audios.some(
-                                                                a => String(a.script_id) === String(formData.script_id) &&
-                                                                    a.provider === 'siliconflow' &&
-                                                                    a.voice_name?.includes(`Scene ${n}`)
-                                                            );
-                                                            return (
-                                                                <button
-                                                                    key={n}
-                                                                    type="button"
-                                                                    onClick={() => setFormData({ ...formData, scene_number: n })}
-                                                                    className={`relative py-2 rounded-lg text-sm font-bold border-2 transition-all ${formData.scene_number === n
-                                                                            ? 'border-amber-400 bg-amber-500/10 text-amber-400'
-                                                                            : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:border-amber-200'
-                                                                        }`}
-                                                                >
-                                                                    {n}
-                                                                    {hasAudio && (
-                                                                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500/100 rounded-full border border-white" title="Already generated" />
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                    <p className="text-[10px] text-gray-600 dark:text-gray-500 dark:text-gray-400 mt-1">
-                                                        Generating scene {formData.scene_number} of {sceneCount} •{' '}
-                                                        {scriptHasAudio ? 'No credit used' : '1 credit will be used for this script'}
-                                                    </p>
+
+                                                    {formData.scene_number !== 'all' ? (
+                                                        <div className="space-y-2 animate-in fade-in duration-200">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Scene to Generate</label>
+                                                                {scriptHasAudio && (
+                                                                    <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                                        ✓ Extra scenes are free
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="grid grid-cols-4 gap-2">
+                                                                {Array.from({ length: sceneCount }, (_, i) => i + 1).map(n => {
+                                                                    const hasAudio = audios.some(
+                                                                        a => String(a.script_id) === String(formData.script_id) &&
+                                                                            a.provider === 'siliconflow' &&
+                                                                            a.voice_name?.includes(`Scene ${n}`)
+                                                                    );
+                                                                    return (
+                                                                        <button
+                                                                            key={n}
+                                                                            type="button"
+                                                                            onClick={() => setFormData({ ...formData, scene_number: n })}
+                                                                            className={`relative py-2 rounded-lg text-sm font-bold border-2 transition-all ${formData.scene_number === n
+                                                                                    ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                                    : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:border-amber-200'
+                                                                                }`}
+                                                                        >
+                                                                            {n}
+                                                                            {hasAudio && (
+                                                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500/100 rounded-full border border-white" title="Already generated" />
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-600 dark:text-gray-500 dark:text-gray-400 mt-1">
+                                                                Generating scene {formData.scene_number} of {sceneCount} •{' '}
+                                                                {scriptHasAudio ? 'No credit used' : '1 credit will be used for this script'}
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-3 bg-amber-500/5 border border-dashed border-amber-500/20 rounded-xl text-xs text-amber-500/90 leading-relaxed animate-in fade-in duration-200">
+                                                            All {sceneCount} scenes will be generated sequentially in the background and stitched together with natural pause intervals. This will consume 1 premium credit (or be free if this script has already been initiated).
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ) : null;
                                         })()}

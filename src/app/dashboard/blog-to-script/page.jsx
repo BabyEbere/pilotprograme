@@ -51,10 +51,28 @@ export default function BlogToScript() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user.id || 1;
 
+    const [subscription, setSubscription] = useState(null);
+    const [loadingPlan, setLoadingPlan] = useState(true);
+
     useEffect(() => {
         document.title = 'Blog to Script | AI Studio';
         fetchSavedItems();
+        fetchSubscription();
     }, []);
+
+    const fetchSubscription = async () => {
+        try {
+            const res = await fetch(`${API_URL}/plans/my-subscription?user_id=${userId}`);
+            const data = await res.json();
+            if (data.success && data.subscription) {
+                setSubscription(data.subscription);
+            }
+        } catch (err) {
+            console.error('Error fetching subscription:', err);
+        } finally {
+            setLoadingPlan(false);
+        }
+    };
 
     const fetchSavedItems = async () => {
         try {
@@ -224,6 +242,8 @@ export default function BlogToScript() {
     const prevDemoSlide = () => {
         setDemoSlide((prev) => (prev - 1 + demoSlides.length) % demoSlides.length);
     };
+    const maxBlogToScript = parseInt(subscription?.max_blog_to_script || 0);
+    const usedBlogToScript = parseInt(subscription?.used_blog_to_script || 0);
 
     return (
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
@@ -237,6 +257,11 @@ export default function BlogToScript() {
                             <MdLink className="text-red-500 w-6 h-6" /> Blog to Script
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Convert any blog post or article webpage into a video presentation script.</p>
+                        {!loadingPlan && (
+                            <span className="text-[10px] bg-red-500/10 text-red-650 dark:text-red-400 border border-red-500/15 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider mt-1.5 inline-block">
+                                Usage: {usedBlogToScript} / {maxBlogToScript} conversions
+                            </span>
+                        )}
                     </div>
                     
                     <button
@@ -270,76 +295,100 @@ export default function BlogToScript() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div className="lg:col-span-3 space-y-6">
-                        <form onSubmit={handleBlogToScript} className="space-y-6">
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Blog Webpage to Presentation Script</h3>
-                                
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Webpage URL</label>
-                                    <div className="flex gap-2">
-                                        <div className="bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 flex items-center gap-2 w-full">
-                                            <MdLink className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                                            <input
-                                                type="url"
-                                                required
-                                                placeholder="https://example.com/blog-post-article"
-                                                value={blogUrl}
-                                                onChange={(e) => setBlogUrl(e.target.value)}
-                                                className="bg-transparent border-none text-xs w-full focus:outline-none text-gray-700 dark:text-white"
-                                            />
+                        {(!loadingPlan && (maxBlogToScript === 0 || usedBlogToScript >= maxBlogToScript)) ? (
+                            <div className="min-h-[380px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-250 dark:border-white/10 relative overflow-hidden">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] bg-red-600/5 rounded-full blur-[70px] pointer-events-none"></div>
+                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 z-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xs font-black uppercase tracking-wider mb-2 text-gray-900 dark:text-white z-10">Blog to Script Locked</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6 z-10">
+                                    {maxBlogToScript === 0
+                                        ? `Your current plan (${subscription?.plan_name || 'Free'}) does not support Blog to Script conversion.`
+                                        : `You have reached your limit of ${maxBlogToScript} Blog to Script conversions on your current plan.`}
+                                    {" "}Upgrade to a premium plan to convert articles and webpage URLs into presentation scripts.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/dashboard/plans')}
+                                    className="bg-red-650 hover:bg-red-750 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md z-10"
+                                >
+                                    Upgrade Plan
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleBlogToScript} className="space-y-6">
+                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Blog Webpage to Presentation Script</h3>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Webpage URL</label>
+                                        <div className="flex gap-2">
+                                            <div className="bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 flex items-center gap-2 w-full">
+                                                <MdLink className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                                <input
+                                                    type="url"
+                                                    required
+                                                    placeholder="https://example.com/blog-post-article"
+                                                    value={blogUrl}
+                                                    onChange={(e) => setBlogUrl(e.target.value)}
+                                                    className="bg-transparent border-none text-xs w-full focus:outline-none text-gray-700 dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Target Duration</label>
+                                            <select
+                                                value={blogDuration}
+                                                onChange={(e) => setBlogDuration(Number(e.target.value))}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value={1}>1 Minute (TikTok/Short)</option>
+                                                <option value={3}>3 Minutes (Medium video)</option>
+                                                <option value={5}>5 Minutes (Full presentation)</option>
+                                                <option value={10}>10 Minutes (Deep dive)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Video Style / Format</label>
+                                            <select
+                                                value={videoStyle}
+                                                onChange={(e) => setVideoStyle(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="faceless">Faceless YouTube / Presenter Monologue</option>
+                                                <option value="narrator">Storytelling / Character Dialogues</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Visual Scene Style</label>
+                                            <select
+                                                value={visualStyle}
+                                                onChange={(e) => setVisualStyle(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="content_based">Content-Based Slides & Title Graphics</option>
+                                                <option value="character_based">Character-Based Cinematic Photos</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Target Duration</label>
-                                        <select
-                                            value={blogDuration}
-                                            onChange={(e) => setBlogDuration(Number(e.target.value))}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        >
-                                            <option value={1}>1 Minute (TikTok/Short)</option>
-                                            <option value={3}>3 Minutes (Medium video)</option>
-                                            <option value={5}>5 Minutes (Full presentation)</option>
-                                            <option value={10}>10 Minutes (Deep dive)</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Video Style / Format</label>
-                                        <select
-                                            value={videoStyle}
-                                            onChange={(e) => setVideoStyle(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        >
-                                            <option value="faceless">Faceless YouTube / Presenter Monologue</option>
-                                            <option value="narrator">Storytelling / Character Dialogues</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Visual Scene Style</label>
-                                        <select
-                                            value={visualStyle}
-                                            onChange={(e) => setVisualStyle(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        >
-                                            <option value="content_based">Content-Based Slides & Title Graphics</option>
-                                            <option value="character_based">Character-Based Cinematic Photos</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-                            >
-                                <MdAutoAwesome className="w-4 h-4" /> Synthesize Article into Script
-                            </button>
-                        </form>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-red-605 hover:bg-red-750 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                >
+                                    <MdAutoAwesome className="w-4 h-4" /> Synthesize Article into Script
+                                </button>
+                            </form>
+                        )}
 
                         {blogResult && (
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">

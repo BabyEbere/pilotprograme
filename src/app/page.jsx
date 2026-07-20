@@ -171,7 +171,7 @@ function PlanCard({ plan }) {
                         <>
                             <div className="flex items-end gap-1">
                                 <span className={`text-3xl font-black ${plan.highlight ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'}`}>₦{plan.ngn}</span>
-                                <span className={`text-xs mb-1.5 ${plan.highlight ? 'text-red-200' : 'text-gray-500 dark:text-gray-400 dark:text-gray-400'}`}>/period</span>
+                                <span className={`text-xs mb-1.5 ${plan.highlight ? 'text-red-200' : 'text-gray-500 dark:text-gray-400 dark:text-gray-400'}`}>/30days</span>
                             </div>
                         </>
                     )}
@@ -180,17 +180,73 @@ function PlanCard({ plan }) {
 
             {/* Features */}
             <div className="flex-1 flex flex-col bg-white dark:bg-[#111111] p-5">
-                <ul className="space-y-2.5 flex-1">
-                    {plan.features?.map((f, i) => (
-                        <li key={i} className="flex items-start gap-2.5">
-                            {f.ok
-                                ? <MdCheck className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                : <MdClose className="w-4 h-4 text-gray-700 dark:text-gray-300 dark:text-white/15 flex-shrink-0 mt-0.5" />
-                            }
-                            <span className={`text-xs leading-relaxed ${f.ok ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-white/20'}`}>{f.t}</span>
-                        </li>
-                    ))}
-                </ul>
+                {plan.features && plan.features.core ? (
+                    <>
+                        {/* Core Features */}
+                        <div className="mb-4">
+                            <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Core Features</p>
+                            <ul className="space-y-2">
+                                {plan.features.core?.map((f, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        {f.ok
+                                            ? <MdCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                                            : <MdClose className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300 dark:text-white/15 flex-shrink-0 mt-0.5" />
+                                        }
+                                        <span className={`text-xs leading-relaxed ${f.ok ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-white/20'}`}>{f.t}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Premium Features */}
+                        {plan.features.premium?.length > 0 && (
+                            <div className="mb-4">
+                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Premium Features</p>
+                                <ul className="space-y-2">
+                                    {plan.features.premium.map((f, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                            {f.ok
+                                                ? <MdCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                : <MdClose className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300 dark:text-white/15 flex-shrink-0 mt-0.5" />
+                                            }
+                                            <span className={`text-xs leading-relaxed ${f.ok ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-white/20'}`}>{f.t}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* AI Tools */}
+                        {plan.features.aiTools?.length > 0 && (
+                            <div className="mb-4">
+                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">AI Tools</p>
+                                <ul className="space-y-2">
+                                    {plan.features.aiTools.map((f, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                            {f.ok
+                                                ? <MdCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                : <MdClose className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300 dark:text-white/15 flex-shrink-0 mt-0.5" />
+                                            }
+                                            <span className={`text-xs leading-relaxed ${f.ok ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-white/20'}`}>{f.t}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <ul className="space-y-2.5 flex-1">
+                        {plan.features?.map((f, i) => (
+                            <li key={i} className="flex items-start gap-2.5">
+                                {f.ok
+                                    ? <MdCheck className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                    : <MdClose className="w-4 h-4 text-gray-700 dark:text-gray-300 dark:text-white/15 flex-shrink-0 mt-0.5" />
+                                }
+                                <span className={`text-xs leading-relaxed ${f.ok ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-white/20'}`}>{f.t}</span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
 
                 <div className="mt-6">
                     <Link href='/register'
@@ -219,34 +275,74 @@ function formatLimit(val) {
 }
 
 function buildFeatures(dbPlan) {
-    const features = [];
+    const features = {
+        core: [],
+        premium: [],
+        aiTools: []
+    };
     
-    // Scripts
+    // Core Features
     const scriptVal = formatLimit(dbPlan.max_scripts);
-    features.push({ t: scriptVal === 'Unlimited' ? 'Unlimited scripts' : `${scriptVal} script generations`, ok: parseInt(dbPlan.max_scripts) > 0 });
+    features.core.push({ t: scriptVal === 'Unlimited' ? 'Unlimited scripts' : `${scriptVal} script generations`, ok: parseInt(dbPlan.max_scripts) > 0 });
     
-    // Audio
     const audioVal = formatLimit(dbPlan.max_audio);
-    features.push({ t: audioVal === 'Unlimited' ? 'Unlimited audio renders' : `${audioVal} audio renders`, ok: parseInt(dbPlan.max_audio) > 0 });
+    features.core.push({ t: audioVal === 'Unlimited' ? 'Unlimited audio renders' : `${audioVal} audio renders`, ok: parseInt(dbPlan.max_audio) > 0 });
     
-    // Voices
-    if (dbPlan.voice_pack_name) {
-        features.push({ t: `Premium voices (${dbPlan.voice_pack_name})`, ok: true });
-    } else {
-        features.push({ t: 'Premium SiliconFlow voices', ok: false });
-    }
-    
-    // Images
     const imageVal = formatLimit(dbPlan.max_images);
     if (parseInt(dbPlan.max_images) > 0) {
-        features.push({ t: imageVal === 'Unlimited' ? 'Unlimited scene images' : `${imageVal} scene images`, ok: true });
+        features.core.push({ t: imageVal === 'Unlimited' ? 'Unlimited scene images' : `${imageVal} scene images`, ok: true });
     } else {
-        features.push({ t: 'Scene image generation', ok: false });
+        features.core.push({ t: 'Scene image generation', ok: false });
     }
-
+    
+    // Premium Features
+    const voiceoverVal = formatLimit(dbPlan.max_voiceovers);
+    if (parseInt(dbPlan.max_voiceovers) > 0) {
+        features.premium.push({ t: voiceoverVal === 'Unlimited' ? 'Unlimited voiceovers' : `${voiceoverVal} premium voiceovers`, ok: true });
+    } else {
+        features.premium.push({ t: 'Premium voiceovers', ok: false });
+    }
+    
+    const videoVal = formatLimit(dbPlan.max_videos);
+    if (parseInt(dbPlan.max_videos) > 0) {
+        features.premium.push({ t: videoVal === 'Unlimited' ? 'Unlimited videos' : `${videoVal} video generations`, ok: true });
+    }
+    
+    const siliconflowVal = formatLimit(dbPlan.max_siliconflow_images);
+    if (parseInt(dbPlan.max_siliconflow_images) > 0) {
+        features.premium.push({ t: siliconflowVal === 'Unlimited' ? 'Unlimited SiliconFlow images' : `${siliconflowVal} SiliconFlow images`, ok: true });
+    }
+    
+    if (dbPlan.voice_pack_name) {
+        features.premium.push({ t: `Premium voices (${dbPlan.voice_pack_name})`, ok: true });
+    } else {
+        features.premium.push({ t: 'Premium SiliconFlow voices', ok: false });
+    }
+    
+    // AI Tools
+    const blogVal = formatLimit(dbPlan.max_blog_to_script);
+    if (parseInt(dbPlan.max_blog_to_script) > 0) {
+        features.aiTools.push({ t: blogVal === 'Unlimited' ? 'Unlimited blog to script' : `${blogVal} blog to script`, ok: true });
+    }
+    
+    const storyVal = formatLimit(dbPlan.max_story_to_script);
+    if (parseInt(dbPlan.max_story_to_script) > 0) {
+        features.aiTools.push({ t: storyVal === 'Unlimited' ? 'Unlimited story to script' : `${storyVal} story to script`, ok: true });
+    }
+    
+    const youtubeVal = formatLimit(dbPlan.max_youtube_analyzer);
+    if (parseInt(dbPlan.max_youtube_analyzer) > 0) {
+        features.aiTools.push({ t: youtubeVal === 'Unlimited' ? 'Unlimited YouTube audits' : `${youtubeVal} YouTube channel audits`, ok: true });
+    }
+    
+    const competitorsVal = formatLimit(dbPlan.max_youtube_competitors);
+    if (parseInt(dbPlan.max_youtube_competitors) > 0) {
+        features.aiTools.push({ t: `${competitorsVal} YouTube competitors analysis`, ok: true });
+    }
+    
     // Default inclusions
-    features.push({ t: 'AI Content generation', ok: true });
-    features.push({ t: 'Niche management', ok: true });
+    features.core.push({ t: 'AI Content generation', ok: true });
+    features.core.push({ t: 'Niche management', ok: true });
     
     return features;
 }
@@ -633,7 +729,7 @@ function Home() {
                         <p className="text-sm text-gray-500 dark:text-gray-400">Fast & Secure payment via Paystack (NGN)</p>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
                         {displayPlans.map(plan => <PlanCard key={plan.name} plan={plan} />)}
                     </div>
 

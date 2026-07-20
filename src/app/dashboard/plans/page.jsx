@@ -25,6 +25,12 @@ const FEATURE_LABELS = {
     max_audio: 'Audio Renders',
     max_voiceovers: 'Premium Voiceovers',
     max_images: 'Image Generations',
+    max_videos: 'Video Generations',
+    max_blog_to_script: 'Blog to Script',
+    max_story_to_script: 'Story to Script',
+    max_youtube_analyzer: 'YouTube Channel Audits',
+    max_siliconflow_images: 'SiliconFlow Images',
+    max_youtube_competitors: 'YouTube Competitors',
 };
 
 function formatLimit(val) {
@@ -300,7 +306,7 @@ export default function Plans() {
                         </div>
 
                         {/* ── Plans grid ── */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                             {plans.map((plan) => {
                                 const meta = PLAN_META[plan.name] || PLAN_META['Free'];
                                 const { Icon } = meta;
@@ -323,7 +329,7 @@ export default function Plans() {
                                         {(meta.badge || isCurrent) && (
                                             <div className="absolute top-4 right-4 z-10">
                                                 <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full tracking-wide ${isCurrent
-                                                        ? 'bg-green-100 text-green-700 border border-green-200'
+                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700'
                                                         : `bg-gradient-to-r ${meta.gradient} text-gray-900 dark:text-white`
                                                     }`}>
                                                     {isCurrent ? '✓ Active' : meta.badge}
@@ -333,7 +339,7 @@ export default function Plans() {
 
                                         {/* Gradient header */}
                                         <div className={`bg-gradient-to-br ${meta.gradient} p-6`}>
-                                            <div className="w-10 h-10 bg-black/20 rounded-xl flex items-center justify-center mb-4">
+                                            <div className="w-10 h-10 bg-black/20 dark:bg-white/10 rounded-xl flex items-center justify-center mb-4">
                                                 <Icon className="w-5 h-5 text-gray-900 dark:text-white" />
                                             </div>
                                             <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">{plan.name}</h3>
@@ -345,56 +351,124 @@ export default function Plans() {
                                                         <span className="text-3xl font-black text-gray-900 dark:text-white">
                                                             {currency}{Number(price).toLocaleString()}
                                                         </span>
-                                                        <span className="text-gray-900 dark:text-white/60 text-xs mb-1.5">/{plan.duration_days} days</span>
+                                                        <span className="text-gray-900/70 dark:text-white/70 text-xs mb-1.5">/{plan.duration_days} days</span>
                                                     </div>
                                                 )}
                                             </div>
                                             {!isFree && (
-                                                <p className="text-gray-900 dark:text-white/60 text-[11px] mt-1 font-medium">
+                                                <p className="text-gray-900/70 dark:text-white/70 text-[11px] mt-1 font-medium">
                                                     Billed via {processor}
                                                 </p>
                                             )}
                                         </div>
 
                                         {/* Features */}
-                                        <div className="flex-1 flex flex-col p-5">
-                                            <ul className="space-y-3 flex-1">
-                                                {Object.entries(FEATURE_LABELS).map(([key, label]) => {
-                                                    const val = formatLimit(plan[key]);
-                                                    if (val === null) return null;
-                                                    const isUnlimited = val === 'Unlimited';
-                                                    return (
-                                                        <li key={key} className="flex items-center gap-3 text-sm">
-                                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${isUnlimited
-                                                                    ? `bg-gradient-to-br ${meta.gradient}`
-                                                                    : 'bg-gray-100 dark:bg-white/5'
-                                                                }`}>
-                                                                <MdCheck className={`w-3 h-3 ${isUnlimited ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        <div className="flex-1 flex flex-col p-5 bg-gray-50/50 dark:bg-[#0d0d0d]">
+                                            {/* Core Features */}
+                                            <div className="mb-4">
+                                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Core Features</p>
+                                                <ul className="space-y-2">
+                                                    {['max_scripts', 'max_audio', 'max_images'].map((key) => {
+                                                        const val = formatLimit(plan[key]);
+                                                        if (val === null) return null;
+                                                        const isUnlimited = val === 'Unlimited';
+                                                        return (
+                                                            <li key={key} className="flex items-center gap-2 text-xs">
+                                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${isUnlimited
+                                                                        ? `bg-gradient-to-br ${meta.gradient}`
+                                                                        : 'bg-gray-200 dark:bg-white/10'
+                                                                    }`}>
+                                                                    <MdCheck className={`w-2.5 h-2.5 ${isUnlimited ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} />
+                                                                </div>
+                                                                <span className="text-gray-700 dark:text-gray-300">
+                                                                    <span className="font-semibold">{val}</span>{' '}
+                                                                    <span className="text-gray-500 dark:text-gray-400 font-normal">{FEATURE_LABELS[key]}</span>
+                                                                </span>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </div>
+
+                                            {/* Premium Features */}
+                                            <div className="mb-4">
+                                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Premium Features</p>
+                                                <ul className="space-y-2">
+                                                    {['max_voiceovers', 'max_videos', 'max_siliconflow_images'].map((key) => {
+                                                        const val = formatLimit(plan[key]);
+                                                        if (val === null || val === '0') return null;
+                                                        const isUnlimited = val === 'Unlimited';
+                                                        return (
+                                                            <li key={key} className="flex items-center gap-2 text-xs">
+                                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${isUnlimited
+                                                                        ? `bg-gradient-to-br ${meta.gradient}`
+                                                                        : 'bg-gray-200 dark:bg-white/10'
+                                                                    }`}>
+                                                                    <MdCheck className={`w-2.5 h-2.5 ${isUnlimited ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} />
+                                                                </div>
+                                                                <span className="text-gray-700 dark:text-gray-300">
+                                                                    <span className="font-semibold">{val}</span>{' '}
+                                                                    <span className="text-gray-500 dark:text-gray-400 font-normal">{FEATURE_LABELS[key]}</span>
+                                                                </span>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                    {plan.voice_pack_name && (
+                                                        <li className="flex items-center gap-2 text-xs">
+                                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${meta.gradient}`}>
+                                                                <MdCheck className="w-2.5 h-2.5 text-gray-900 dark:text-white" />
                                                             </div>
-                                                            <span className="text-gray-700 dark:text-gray-200">
-                                                                <span className="font-semibold">{val}</span>{' '}
-                                                                <span className="text-gray-500 dark:text-gray-400 dark:text-gray-400 font-normal">{label}</span>
+                                                            <span className="text-gray-700 dark:text-gray-300">
+                                                                <span className="font-semibold">Premium Voices</span>{' '}
+                                                                <span className="text-gray-500 dark:text-gray-400 font-normal">({plan.voice_pack_name})</span>
                                                             </span>
                                                         </li>
-                                                    );
-                                                })}
+                                                    )}
+                                                </ul>
+                                            </div>
 
-                                                <li className="flex items-center gap-3 text-sm pt-2 mt-1 border-t border-gray-150 dark:border-white/5">
-                                                    <MdLock className="w-4 h-4 text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                                                    <span className="text-gray-500 dark:text-gray-400 dark:text-gray-400 text-xs">
-                                                        {isFree ? 'No credit card required' : `Secure ${processor} checkout`}
-                                                    </span>
-                                                </li>
-                                            </ul>
+                                            {/* AI Tools */}
+                                            <div className="mb-4">
+                                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">AI Tools</p>
+                                                <ul className="space-y-2">
+                                                    {['max_blog_to_script', 'max_story_to_script', 'max_youtube_analyzer', 'max_youtube_competitors'].map((key) => {
+                                                        const val = formatLimit(plan[key]);
+                                                        if (val === null || val === '0') return null;
+                                                        const isUnlimited = val === 'Unlimited';
+                                                        return (
+                                                            <li key={key} className="flex items-center gap-2 text-xs">
+                                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${isUnlimited
+                                                                        ? `bg-gradient-to-br ${meta.gradient}`
+                                                                        : 'bg-gray-200 dark:bg-white/10'
+                                                                    }`}>
+                                                                    <MdCheck className={`w-2.5 h-2.5 ${isUnlimited ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} />
+                                                                </div>
+                                                                <span className="text-gray-700 dark:text-gray-300">
+                                                                    <span className="font-semibold">{val}</span>{' '}
+                                                                    <span className="text-gray-500 dark:text-gray-400 font-normal">{FEATURE_LABELS[key]}</span>
+                                                                </span>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </div>
+
+                                            {/* Security Info */}
+                                            <div className="flex items-center gap-2 text-xs pt-2 mt-1 border-t border-gray-200 dark:border-white/10">
+                                                <MdLock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                                <span className="text-gray-500 dark:text-gray-400">
+                                                    {isFree ? 'No credit card required' : `Secure ${processor} checkout`}
+                                                </span>
+                                            </div>
 
                                             {/* CTA */}
                                             <div className="mt-5">
                                                 {isFree ? (
-                                                    <div className="w-full py-2.5 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 dark:text-gray-400 rounded-xl text-sm font-medium text-center cursor-default">
+                                                    <div className="w-full py-2.5 bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-400 rounded-xl text-sm font-medium text-center cursor-default">
                                                         Always Free
                                                     </div>
                                                 ) : isCurrent ? (
-                                                    <div className="w-full py-2.5 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-bold text-center cursor-default flex items-center justify-center gap-2">
+                                                    <div className="w-full py-2.5 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 rounded-xl text-sm font-bold text-center cursor-default flex items-center justify-center gap-2">
                                                         <MdVerified className="w-4 h-4" /> Current Plan
                                                     </div>
                                                 ) : (
@@ -424,7 +498,7 @@ export default function Plans() {
 
                         {/* ── Trust strip ── */}
                         <div className="mt-10 pt-6 border-t border-gray-200 dark:border-white/10">
-                            <div className="flex flex-wrap items-center justify-center gap-6 text-gray-500 dark:text-gray-400 dark:text-gray-400 text-xs">
+                            <div className="flex flex-wrap items-center justify-center gap-6 text-gray-500 dark:text-gray-400 text-xs">
                                 <div className="flex items-center gap-1.5">
                                     <MdLock className="w-3.5 h-3.5" />
                                     <span>Encrypted checkout</span>

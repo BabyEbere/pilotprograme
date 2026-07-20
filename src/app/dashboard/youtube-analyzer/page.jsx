@@ -185,6 +185,37 @@ export default function CreatorOverview() {
         );
     }
 
+    const subscription = data?.subscription;
+    const maxYoutubeAnalyzer = parseInt(subscription?.max_youtube_analyzer || 0);
+    const usedYoutubeAnalyzer = parseInt(subscription?.used_youtube_analyzer || 0);
+    const isLocked = maxYoutubeAnalyzer === 0 || (usedYoutubeAnalyzer >= maxYoutubeAnalyzer);
+
+    if (isLocked) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center text-white relative overflow-hidden bg-gradient-to-br from-[#0c0c10] to-[#08080c] rounded-3xl border border-white/5">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-red-655/5 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 text-red-500 rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-wider mb-2 z-10">YouTube Analyzer Locked</h2>
+                <p className="text-xs text-gray-400 max-w-sm leading-relaxed mb-6 z-10">
+                    {maxYoutubeAnalyzer === 0 
+                        ? `The YouTube Channel Analyzer feature is not included in your current plan (${subscription?.plan_name || 'Free'}).`
+                        : `You have reached your limit of ${maxYoutubeAnalyzer} YouTube audits on your current plan.`}
+                    {" "}Upgrade to unlock full keyword research, competitor feeds, and video diagnostic audits.
+                </p>
+                <button
+                    onClick={() => router.push('/dashboard/plans')}
+                    className="bg-red-650 hover:bg-red-750 text-white font-bold px-8 py-3 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-red-500/15 z-10"
+                >
+                    Upgrade Plan
+                </button>
+            </div>
+        );
+    }
+
     const linkedChannel = data?.youtube_channels && data.youtube_channels[0];
 
     // If no channel linked, show promotional setup layout
@@ -255,9 +286,14 @@ export default function CreatorOverview() {
                     )}
                     <div>
                         <h2 className="text-lg font-black text-white leading-tight uppercase tracking-tight">{linkedChannel.title}</h2>
-                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Smart advisory linked
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Smart advisory linked
+                            </div>
+                            <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                Audits: {usedYoutubeAnalyzer} / {maxYoutubeAnalyzer}
+                            </span>
                         </div>
                     </div>
                 </div>

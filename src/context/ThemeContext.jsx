@@ -5,13 +5,15 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
-    // Initialize state based on localStorage, default to light mode
+    // Initialize state based on localStorage, defaulting to system preference or light mode
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined') {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) return savedTheme;
-            // Default to light mode
-            return 'light';
+            
+            // Check user's device/system theme preference
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return prefersDark ? 'dark' : 'light';
         }
         return 'light'; // Default to light if window is undefined (e.g., SSR)
     });

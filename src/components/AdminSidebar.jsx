@@ -30,6 +30,7 @@ import {
     MdCampaign,
     MdEmail,
     MdSupportAgent,
+    MdOndemandVideo,
 } from 'react-icons/md';
 
 export default function AdminSidebar({ collapsed, setCollapsed }) {
@@ -76,7 +77,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
             badge: openTickets > 0 ? openTickets : null,
         },
         { icon: MdAttachMoney, label: 'Affiliates', path: '/control/affiliates' },
-
+        { icon: MdOndemandVideo, label: 'Upload Tutorial', path: '/control/tutorials' },
     ];
 
     const blogItems = [

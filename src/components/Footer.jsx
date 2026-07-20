@@ -76,7 +76,7 @@ export default function Footer() {
                         <div>
                             <h3 className="text-gray-900 dark:text-white text-xs font-semibold mb-4 uppercase tracking-widest">Product</h3>
                             <ul className="space-y-2.5 text-xs">
-                                {[['Features', '/features'], ['Pricing', '/pricing'], ['Affiliate Program', '/affiliate'], ['Documentation', '/documentation'], ['Changelog', '#'], ['Roadmap', '#']].map(([label, to]) => (
+                                {[['Features', '/features'], ['Pricing', '/pricing'], ['Affiliate Program', '/affiliate'], ['Documentation', '/documentation'], ['Tutorial', '/tutorial'], ['Changelog', '#'], ['Roadmap', '#']].map(([label, to]) => (
                                     <li key={label}><Link href={to} className="hover:text-gray-900 dark:text-white transition-colors">{label}</Link></li>
                                 ))}
                             </ul>

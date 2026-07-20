@@ -4,14 +4,13 @@ import Footer from '@/components/Footer';
 import DynamicSEO from '@/components/DynamicSEO';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
-
 import Link from 'next/link';
 
 import {
     MdDescription, MdRecordVoiceOver, MdImage,
     MdAutoAwesome, MdTrendingUp, MdFolder,
     MdCheck, MdPlayArrow, MdArrowForward,
-    MdBolt, MdSettings,
+    MdBolt, MdSettings, MdLink, MdPeople,
 } from 'react-icons/md';
 
 const FEATURES = [
@@ -27,7 +26,7 @@ const FEATURES = [
         icon: MdRecordVoiceOver,
         label: '02 — Voiceover Audio',
         title: 'Three TTS engines, 24 premium voices',
-        desc: 'Convert each scene to audio using the engine that fits your plan. Edge TTS is free and reliable. Upgrade to SiliconFlow for CosyVoice2\'s emotion-aware narration, Fish Speech\'s natural delivery, or IndexTTS-2\'s high-fidelity output.',
+        desc: 'Convert each scene to audio using the engine that fits your plan. Edge TTS is free and reliable. Upgrade to SiliconFlow for CosyVoice2\'s emotion-aware narration, Fish Speech 1.5\'s natural delivery, or IndexTTS-2\'s high-fidelity output.',
         points: ['Edge TTS — free for all plans, clean narration', 'CosyVoice2 — expressive, emotion-prefix storytelling', 'Fish Speech 1.5 — natural, multilingual', 'IndexTTS-2 — consistent, high-fidelity'],
         flip: true,
     },
@@ -41,26 +40,42 @@ const FEATURES = [
     },
     {
         icon: MdAutoAwesome,
-        label: '04 — AI Content Generator',
-        title: 'Trending topic fetching and bulk generation',
-        desc: 'The AI Content Generator fetches trending topics in your niche, generates a Gemini-powered script, and queues it — all in one click. Built for creators who want volume without manual research.',
-        points: ['Trending topic detection per niche', 'One-click bulk script creation', 'Gemini 2.5 Flash for high-quality output', 'Queued generation to avoid rate limits'],
+        label: '04 — Story to Script & Movie Lab',
+        title: 'Advanced dialogue screenplay compiler',
+        desc: 'Write custom chapter treatments with complex plot structures (Inciting Incident, Midpoint stakes, Climax & Resolution) and character casts sheet details. Auto-suggest AI dialogue guidelines for consistent speaker voiceovers, and generate scene-by-scene script dialogues.',
+        points: ['Progressive multi-chapter story outlines', 'Dynamic actor cast sheet integration', 'AI Dialect and guidelines suggestion', 'Dialogue-driven screenplay scenes generator'],
         flip: true,
     },
     {
-        icon: MdFolder,
-        label: '05 — Niche & Project Management',
-        title: 'Organise everything by channel or niche',
-        desc: 'Create unlimited niches to organise your scripts, audio files, and images by channel. Every asset is grouped so you can find, replay, or download anything at a glance.',
-        points: ['Unlimited niches per account', 'Scripts, audio, and images all grouped', 'Quick access to past generations', 'Usage tracked per billing cycle'],
+        icon: MdLink,
+        label: '05 — Blog to Script URL Ingestion',
+        title: 'Scrape articles directly into presentation scripts',
+        desc: 'Ingest any standard article or blog post URL to crawl the webpage text. Transform the content in seconds into presenter monologue faceless scripts or storytelling dialogue treatments.',
+        points: ['URL scraping with built-in text parser', 'Presenter monologue or storyteller formats', 'Content-based visual slide suggestions', 'Automatic citation links indexing'],
         flip: false,
     },
     {
         icon: MdTrendingUp,
-        label: '06 — Usage & Subscription Dashboard',
-        title: 'Real-time quota tracking per plan',
-        desc: 'Every plan has clear limits. The dashboard shows live usage bars for scripts, audio renders, voiceovers, and images — so you always know where you stand before you hit a wall.',
-        points: ['Live usage bars — scripts, audio, images, voiceovers', 'LOW and EXHAUSTED badges at 80%/100%', 'Plan expiry tracking with renewal prompt', 'Paystack (NGN) secure checkout'],
+        label: '06 — YouTube Channel Analyzer',
+        title: 'Competitor benchmarking and stats auditing',
+        desc: 'Securely link your YouTube channel to analyze historical trends, fetch daily niche idea compilations, add competitors, and benchmark statistics with interactive comparison charts.',
+        points: ['Niche daily idea lists generation', 'Competitor benchmarking analytics', 'Channel stats audits and metrics graphs', 'Automatic niche trend comparisons'],
+        flip: true,
+    },
+    {
+        icon: MdSettings,
+        label: '07 — Live Quota & Usage Dashboard',
+        title: 'Real-time billing indicators & constraints',
+        desc: 'Manage your workflow with real-time usage meters for all core features. Clear low-quota and exhaustion alerts keep you informed about your limits for scripts, images, audio, voiceovers, blog scraping, and competitor slots.',
+        points: ['Live usage bars for all features', 'Low quota warnings and exhausted locks', 'Flexible admin plan editor limits', 'Secure Paystack NGN checkout integration'],
+        flip: false,
+    },
+    {
+        icon: MdPeople,
+        label: '08 — Affiliates Rewards Program',
+        title: 'Spread the word and earn recurring rewards',
+        desc: 'Join the Pilot Programme affiliate program. Share your custom referral link, track referrals, and monitor commission payouts in real-time on your dashboard.',
+        points: ['Unique referral link generation', 'Live tracking of signups and paid subscriptions', 'Configurable percentage reward per plan', 'Payout requests and history ledger'],
         flip: true,
     },
 ];
@@ -87,7 +102,7 @@ function Features() {
                         <span className="block bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-clip-text text-transparent">a faceless YouTube channel</span>
                     </h1>
                     <p className="text-base md:text-lg text-gray-600 dark:text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-normal">
-                        Scripts, voiceovers, and scene images — generated by AI, organised by niche, downloadable in one place.
+                        Scripts, voiceovers, scene images, blog scraping, and YouTube audits — generated by AI, organised by niche, downloadable in one place. Learn more about our mission on the <Link href="/about" className="text-red-500 hover:underline">About Us</Link> page.
                     </p>
                 </div>
             </section>
@@ -168,7 +183,7 @@ function Features() {
             <section className="py-20 bg-white dark:bg-[#0a0a0a]">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <div className="text-center mb-12">
-                        <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-3">What's included</p>
+                        <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-3">What&apos;s included</p>
                         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Features by plan</h2>
                     </div>
                     <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10">
@@ -189,10 +204,12 @@ function Features() {
                                     { f: 'Script generation', vals: ['2/mo', '20/mo', '50/mo', 'Unlimited'] },
                                     { f: 'Audio renders', vals: ['2/mo', '20/mo', '50/mo', 'Unlimited'] },
                                     { f: 'Edge TTS (free voice)', vals: ['✓', '✓', '✓', '✓'] },
-                                    { f: 'Premium SiliconFlow', vals: ['—', '✓', '✓', '✓'] },
-                                    { f: 'Scene image gen', vals: ['—', '✓', '✓', '✓'] },
+                                    { f: 'Premium SiliconFlow Voices', vals: ['—', '✓', '✓', '✓'] },
+                                    { f: 'Scene image gen (FLUX)', vals: ['—', '✓', '✓', '✓'] },
                                     { f: 'AI content generator', vals: ['—', '✓', '✓', '✓'] },
-                                    { f: 'Voiceovers quota', vals: ['—', 'Limited', 'Higher', 'Highest'] },
+                                    { f: 'Blog to Script Ingestion', vals: ['—', '✓', '✓', '✓'] },
+                                    { f: 'Story to Script & Movie Lab', vals: ['—', '✓', '✓', '✓'] },
+                                    { f: 'YouTube Audits & Analyzer', vals: ['—', '✓', '✓', '✓'] },
                                     { f: 'Support priority', vals: ['AI only', 'AI + human', 'AI + human', 'Priority'] },
                                 ].map(({ f, vals }) => (
                                     <tr key={f} className="hover:bg-gray-100/50 dark:bg-white/3 transition-colors">
@@ -222,7 +239,7 @@ function Features() {
                 <div className="max-w-3xl mx-auto px-4 text-center">
                     <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-4">Get Started</p>
                     <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">Ready to start creating?</h2>
-                    <p className="text-base text-gray-600 dark:text-gray-500 dark:text-gray-400 mb-10 font-normal">Free plan available — no credit card required</p>
+                    <p className="text-base text-gray-600 dark:text-gray-500 dark:text-gray-400 mb-10 font-normal">Free plan available — no credit card required. Read our <Link href="/terms" className="text-red-500 hover:underline">Terms of Service</Link> or start today.</p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white px-8 py-3 rounded-lg text-base font-semibold transition-all shadow-lg shadow-red-900/40 hover:scale-105">
                             <MdPlayArrow className="w-5 h-5" />

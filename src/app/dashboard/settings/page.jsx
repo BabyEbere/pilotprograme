@@ -31,6 +31,8 @@ export default function Settings() {
     // YouTube channel linking states
     const [youtubeChannels, setYoutubeChannels] = useState([]);
     const [fetchingYoutube, setFetchingYoutube] = useState(false);
+    const [maxYoutubeAnalyzer, setMaxYoutubeAnalyzer] = useState(0);
+    const [loadingPlan, setLoadingPlan] = useState(true);
 
     // Password change states
     const [passwordData, setPasswordData] = useState({
@@ -105,10 +107,26 @@ export default function Settings() {
         }
     };
 
+    const fetchPlan = async () => {
+        setLoadingPlan(true);
+        try {
+            const res = await fetch(`${API_URL}/plans/my-subscription?user_id=${user.id}`);
+            const data = await res.json();
+            if (data.success && data.subscription) {
+                setMaxYoutubeAnalyzer(data.subscription.max_youtube_analyzer || 0);
+            }
+        } catch (e) {
+            console.error('Error fetching plan limits in settings page:', e);
+        } finally {
+            setLoadingPlan(false);
+        }
+    };
+
     useEffect(() => { 
         fetchSettings(); 
         fetch2faStatus();
         fetchYoutubeChannels();
+        fetchPlan();
     }, []);
 
     // ── Google Link/Unlink ──────────────────────────────────────────────
@@ -1086,7 +1104,27 @@ export default function Settings() {
                                     <div className="mt-4 border-t border-gray-200 dark:border-white/5 pt-4">
                                         <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3">YouTube Integration</h3>
                                         
-                                        {youtubeChannels.length > 0 ? (
+                                        {!loadingPlan && maxYoutubeAnalyzer === 0 ? (
+                                            <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 flex-shrink-0">
+                                                        <Lock className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-950 dark:text-white">YouTube Analyzer Locked</p>
+                                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                                            Your current plan does not include YouTube Channel Analyzer & daily content suggestions.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <a
+                                                    href="/dashboard/plans"
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 active:scale-95 cursor-pointer"
+                                                >
+                                                    Upgrade Plan
+                                                </a>
+                                            </div>
+                                        ) : youtubeChannels.length > 0 ? (
                                             <div className="space-y-3">
                                                 {youtubeChannels.map((chan) => (
                                                     <div key={chan.channel_id} className="flex items-center justify-between p-4 rounded-xl border bg-emerald-500/5 border-emerald-500/20 transition-all">

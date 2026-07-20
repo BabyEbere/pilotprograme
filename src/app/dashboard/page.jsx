@@ -416,6 +416,24 @@ export default function Dashboard() {
                                                 : left > 0 ? `${left} remaining` : 'Limit reached'
                                         }
                                     />
+                                    <UsageBar
+                                        icon={MdAutoAwesome} label="Blog to Script"
+                                        used={sub?.used_blog_to_script || 0} max={sub?.max_blog_to_script || 0}
+                                        color="bg-red-500"
+                                        sublabel={(left, used, max) => max === 0 ? 'Locked on current plan' : left > 0 ? `${left} remaining` : 'Limit reached'}
+                                    />
+                                    <UsageBar
+                                        icon={MdTrendingUp} label="YouTube Channel Audits"
+                                        used={sub?.used_youtube_analyzer || 0} max={sub?.max_youtube_analyzer || 0}
+                                        color="bg-blue-500"
+                                        sublabel={(left, used, max) => max === 0 ? 'Locked on current plan' : left > 0 ? `${left} remaining` : 'Limit reached'}
+                                    />
+                                    <UsageBar
+                                        icon={MdImage} label="SiliconFlow Images"
+                                        used={sub?.used_siliconflow_images || 0} max={sub?.max_siliconflow_images || 0}
+                                        color="bg-amber-500"
+                                        sublabel={(left, used, max) => max === 0 ? 'Locked on current plan' : left > 0 ? `${left} remaining` : 'Limit reached'}
+                                    />
                                 </div>
                             )}
                         </div>

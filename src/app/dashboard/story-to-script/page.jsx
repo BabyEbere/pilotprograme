@@ -66,10 +66,28 @@ export default function StoryToScript() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user.id || 1;
 
+    const [subscription, setSubscription] = useState(null);
+    const [loadingPlan, setLoadingPlan] = useState(true);
+
     useEffect(() => {
         document.title = 'Story to Script | AI Studio';
         fetchSavedItems();
+        fetchSubscription();
     }, []);
+
+    const fetchSubscription = async () => {
+        try {
+            const res = await fetch(`${API_URL}/plans/my-subscription?user_id=${userId}`);
+            const data = await res.json();
+            if (data.success && data.subscription) {
+                setSubscription(data.subscription);
+            }
+        } catch (err) {
+            console.error('Error fetching subscription:', err);
+        } finally {
+            setLoadingPlan(false);
+        }
+    };
 
     const fetchSavedItems = async () => {
         try {
@@ -419,6 +437,9 @@ export default function StoryToScript() {
         setDemoSlide((prev) => (prev - 1 + demoSlides.length) % demoSlides.length);
     };
 
+    const maxStoryToScript = parseInt(subscription?.max_story_to_script || 0);
+    const usedStoryToScript = parseInt(subscription?.used_story_to_script || 0);
+
     return (
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
@@ -464,8 +485,31 @@ export default function StoryToScript() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div className="lg:col-span-3 space-y-6">
-                        <form onSubmit={(e) => handleGenerateScript(e, false)} className="space-y-6">
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                        {(!loadingPlan && (maxStoryToScript === 0 || usedStoryToScript >= maxStoryToScript)) ? (
+                            <div className="min-h-[380px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-250 dark:border-white/10 relative overflow-hidden">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] bg-red-600/5 rounded-full blur-[70px] pointer-events-none"></div>
+                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 z-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-gray-900 dark:text-white z-10">Story to Script Locked</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6 z-10">
+                                    {maxStoryToScript === 0
+                                        ? `Your current plan (${subscription?.plan_name || 'Free'}) does not support Story to Script conversion.`
+                                        : `You have reached your limit of ${maxStoryToScript} Story to Script conversions on your current plan.`}
+                                    {" "}Upgrade to a premium plan to convert outline summaries or treatments into full dialogues screenplays.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/dashboard/plans')}
+                                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md z-10 animate-pulse"
+                                >
+                                    Upgrade Plan
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={(e) => handleGenerateScript(e, false)} className="space-y-6">
+                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
                                 <h3 className="text-sm font-bold text-gray-900 dark:text-white">Convert Outline to Script Dialogue</h3>
                                 
                                 <div>
@@ -574,6 +618,7 @@ export default function StoryToScript() {
                                 <MdAutoAwesome className="w-4 h-4" /> Convert Treatment to Script
                             </button>
                         </form>
+                        )}
 
                         {scriptResult && (
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">

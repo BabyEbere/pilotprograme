@@ -47,6 +47,36 @@ const InputField = ({ label, id, type = "text", value, onChange, onSave, placeho
     </div>
 );
 
+const SelectField = ({ label, id, value, options, onChange, onSave, description, saving }) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6 last:border-0 last:pb-0">
+        <div className="md:col-span-1">
+            <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">{label}</label>
+            <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">{description}</p>
+        </div>
+        <div className="md:col-span-2 flex gap-3">
+            <select 
+                value={value || ''}
+                onChange={(e) => onChange(id, e.target.value)}
+                className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium appearance-none"
+            >
+                {options.map(opt => (
+                    <option key={opt.value} value={opt.value} className="bg-gray-900 text-white">
+                        {opt.label}
+                    </option>
+                ))}
+            </select>
+            <button 
+                onClick={() => onSave(id, value)}
+                disabled={saving}
+                className="p-3 bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 rounded-xl transition-all disabled:opacity-50"
+                title="Save current field"
+            >
+                <MdSave className="text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors w-5 h-5" />
+            </button>
+        </div>
+    </div>
+);
+
 const AdminSettings = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [settings, setSettings] = useState({});
@@ -276,6 +306,19 @@ const AdminSettings = () => {
                             {/* ── TAB: SYSTEM SMTP ──────────────────────────────── */}
                             {activeTab === 'system_smtp' && (
                                 <Section title="✉ System SMTP Server (Registrations, OTPs, Transactions)" icon={MdEmail}>
+                                    <SelectField
+                                        label="Primary Mailer Provider"
+                                        id="system_email_provider"
+                                        value={settings.system_email_provider}
+                                        options={[
+                                            { value: 'smtp', label: 'SMTP Server (Outgoing Mail Server)' },
+                                            { value: 'brevo', label: 'Brevo API (HTTP API Mode)' }
+                                        ]}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        description="Select the primary provider to route transactional system emails (OTPs, Welcome, notifications)."
+                                        saving={saving}
+                                    />
                                     <InputField
                                         label="SMTP Host"
                                         id="system_smtp_host"
@@ -337,12 +380,36 @@ const AdminSettings = () => {
                                         description="Display sender name in email client."
                                         saving={saving}
                                     />
+                                    <InputField
+                                        label="Brevo API Key (Fallback)"
+                                        id="brevo_api_key"
+                                        type="password"
+                                        value={settings.brevo_api_key}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="xkeysib-..."
+                                        description="If SMTP connection fails, system emails will automatically fallback to Brevo API."
+                                        saving={saving}
+                                    />
                                 </Section>
                             )}
 
                             {/* ── TAB: MARKETING SMTP ───────────────────────────── */}
                             {activeTab === 'marketing_smtp' && (
                                 <Section title="📣 Marketing SMTP Server (Audience Outreach Campaigns)" icon={MdVpnKey}>
+                                    <SelectField
+                                        label="Primary Mailer Provider"
+                                        id="marketing_email_provider"
+                                        value={settings.marketing_email_provider}
+                                        options={[
+                                            { value: 'smtp', label: 'SMTP Server (Outgoing Mail Server)' },
+                                            { value: 'brevo', label: 'Brevo API (HTTP API Mode)' }
+                                        ]}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        description="Select the primary provider to route outreach and newsletter campaign emails."
+                                        saving={saving}
+                                    />
                                     <InputField
                                         label="SMTP Host"
                                         id="marketing_smtp_host"
@@ -414,6 +481,17 @@ const AdminSettings = () => {
                                         description="Email address used for testing campaigns."
                                         saving={saving}
                                     />
+                                    <InputField
+                                        label="Brevo API Key (Fallback)"
+                                        id="brevo_api_key"
+                                        type="password"
+                                        value={settings.brevo_api_key}
+                                        onChange={handleSettingChange}
+                                        onSave={handleSave}
+                                        placeholder="xkeysib-..."
+                                        description="If SMTP connection fails, marketing campaigns will automatically fallback to Brevo API."
+                                        saving={saving}
+                                    />
                                 </Section>
                             )}
 
@@ -451,7 +529,7 @@ const AdminSettings = () => {
                                         </div>
 
                                         <InputField 
-                                            label="Pollinations API Key (FREE)" 
+                                            label="Pollinations Video API Key (FREE)" 
                                             id="pollinations_video_key" 
                                             type="password"
                                             value={settings.pollinations_video_key}
@@ -459,6 +537,18 @@ const AdminSettings = () => {
                                             onSave={handleSave}
                                             placeholder="sk_... or pk_..."
                                             description="Free API key from enter.pollinations.ai — enables 4 free video models."
+                                            saving={saving}
+                                        />
+
+                                        <InputField 
+                                            label="Pollinations Image API Key (FREE)" 
+                                            id="pollinations_image_key" 
+                                            type="password"
+                                            value={settings.pollinations_image_key}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="sk_... or pk_..."
+                                            description="API key from enter.pollinations.ai used for image generation."
                                             saving={saving}
                                         />
 

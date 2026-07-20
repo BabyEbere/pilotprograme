@@ -107,9 +107,24 @@ export default function Images() {
         }
     };
 
+    const [subscription, setSubscription] = useState(null);
+
+    const fetchSubscription = async () => {
+        try {
+            const res = await fetch(`${API_URL}/plans/my-subscription?user_id=${user.id}`);
+            const data = await res.json();
+            if (data.success && data.subscription) {
+                setSubscription(data.subscription);
+            }
+        } catch (err) {
+            console.error('Error fetching subscription:', err);
+        }
+    };
+
     useEffect(() => {
         fetchScripts();
         fetchPrompts();
+        fetchSubscription();
     }, []);
 
     const getAvailableScenes = () => {
@@ -295,6 +310,7 @@ export default function Images() {
                         ? { ...img, status: 'completed', image_url: data.image_url }
                         : img
                 ));
+                fetchSubscription();
                 return true;
             } else {
                 // Check if it's a limit/plan error — show modal instead of console
@@ -428,11 +444,18 @@ export default function Images() {
                                     <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                                         {viewMode === 'albums' ? 'Image Albums' : activeAlbum?.title || 'Album Details'}
                                     </h1>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                        {viewMode === 'albums'
-                                            ? 'Organized grouped frames for your scripts'
-                                            : `${activeAlbumImages.length} Prompts • Generated sequentially`}
-                                    </p>
+                                    <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            {viewMode === 'albums'
+                                                ? 'Organized grouped frames for your scripts'
+                                                : `${activeAlbumImages.length} Prompts • Generated sequentially`}
+                                        </p>
+                                        {subscription && (
+                                            <span className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/15 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                                Images: {subscription.used_images} / {subscription.max_images}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -441,6 +464,17 @@ export default function Images() {
                                     value={preferredEngine}
                                     onChange={(e) => {
                                         const val = e.target.value;
+                                        const maxSf = parseInt(subscription?.max_siliconflow_images || 0);
+                                        const usedSf = parseInt(subscription?.used_siliconflow_images || 0);
+                                        const isSfLocked = maxSf === 0 || (usedSf >= maxSf);
+                                        if (val === 'siliconflow' && isSfLocked) {
+                                            if (maxSf === 0) {
+                                                showToast("Flux.1 Schnell (SiliconFlow) is not included in your current plan. Please upgrade to unlock.", "error");
+                                            } else {
+                                                showToast(`You have exhausted your limit of ${maxSf} SiliconFlow images. Please upgrade to continue.`, "error");
+                                            }
+                                            return;
+                                        }
                                         setPreferredEngine(val);
                                         localStorage.setItem('preferred_image_engine', val);
                                         showToast(`Image generator switched to ${val === 'auto' ? 'Auto (Flux/Pollinations)' : val.toUpperCase()}`, 'info');
@@ -449,7 +483,13 @@ export default function Images() {
                                 >
                                     <option value="auto">🤖 Auto (Flux/Pollinations)</option>
                                     <option value="gemini">♊ Gemini Imagen 3</option>
-                                    <option value="siliconflow">⚡ Flux.1 Schnell (SiliconFlow)</option>
+                                    <option value="siliconflow">
+                                        {(parseInt(subscription?.max_siliconflow_images || 0) === 0)
+                                            ? "🔒 Flux.1 Schnell (Premium)"
+                                            : (parseInt(subscription?.used_siliconflow_images || 0) >= parseInt(subscription?.max_siliconflow_images || 0))
+                                                ? "🔒 Flux.1 Schnell (Limit Reached)"
+                                                : `⚡ Flux.1 Schnell (${subscription?.used_siliconflow_images || 0}/${subscription?.max_siliconflow_images || 0})`}
+                                    </option>
                                     <option value="pollinations">🎨 Pollinations AI</option>
                                 </select>
 
