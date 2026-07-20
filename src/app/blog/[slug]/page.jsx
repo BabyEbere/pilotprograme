@@ -1,112 +1,76 @@
-"use client";
-
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import DynamicSEO from '@/components/DynamicSEO';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Link from 'next/link';
-import { Calendar, Clock, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 
-export default function BlogPostPage() {
-    const params = useParams();
-    const slug = decodeURIComponent(params.slug);
-    const [post, setPost] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const API_URL = 'https://s1.pilotprograme.com/api';
 
-    useEffect(() => {
-        if (slug) {
-            fetchPost();
-        }
-    }, [slug]);
-
-    const fetchPost = async () => {
-        try {
-            const API_URL = (typeof window !== 'undefined' 
-                ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                    ? 'http://localhost:5000' 
-                    : 'https://s1.pilotprograme.com/api') 
-                : 'http://localhost:5000');
-            
-            const res = await fetch(`${API_URL}/blog/posts/${encodeURIComponent(slug)}`);
-            const data = await res.json();
-            
-            if (data.success && data.post) {
-                const sanitizedPost = {
-                    ...data.post,
-                    featured_image: data.post.featured_image ? data.post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
-                };
-                setPost(sanitizedPost);
-            } else {
-                setError(data.message || 'Post not found');
-            }
-        } catch (err) {
-            console.error('Error fetching blog post:', err);
-            setError('Failed to load post');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
+async function getPost(slug) {
+    try {
+        const res = await fetch(`${API_URL}/blog/posts/${encodeURIComponent(slug)}`, {
+            next: { revalidate: 3600 } // Cache blog fetches for 1 hour
         });
-    };
+        const data = await res.json();
+        
+        if (data.success && data.post) {
+            return {
+                ...data.post,
+                featured_image: data.post.featured_image ? data.post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+            };
+        }
+    } catch (err) {
+        console.error('Error fetching blog post:', err);
+    }
+    return null;
+}
 
-    const getReadingTime = (content) => {
-        const wordsPerMinute = 200;
-        const wordCount = content.split(/\s+/).length;
-        return Math.ceil(wordCount / wordsPerMinute);
-    };
-
-    const sharePost = () => {
-        if (typeof window !== 'undefined' && navigator.share) {
-            navigator.share({
-                title: post.title,
-                text: post.excerpt,
-                url: window.location.href
-            });
-        } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+export async function generateMetadata({ params }) {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
+    const post = await getPost(decodedSlug);
+    
+    if (!post) {
+        return {
+            title: 'Post Not Found — Pilot Programme',
+        };
+    }
+    
+    return {
+        title: post.meta_title || `${post.title} — Pilot Programme`,
+        description: post.meta_description || post.excerpt || '',
+        keywords: post.keywords || '',
+        openGraph: {
+            title: post.meta_title || post.title,
+            description: post.meta_description || post.excerpt || '',
+            url: `https://pilotprograme.com/blog/${decodedSlug}`,
+            images: post.featured_image ? [{ url: post.featured_image }] : [],
+            type: 'article',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.meta_title || post.title,
+            description: post.meta_description || post.excerpt || '',
+            images: post.featured_image ? [post.featured_image] : [],
         }
     };
+}
 
-    if (loading) {
+export default async function BlogPostPage({ params }) {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
+    const post = await getPost(decodedSlug);
+
+    if (!post) {
         return (
             <>
-                <Navbar />
-                <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center">
-                    <div className="animate-pulse space-y-4">
-                        <div className="h-8 bg-gray-200 dark:bg-[#1a1a1a] rounded w-48"></div>
-                        <div className="h-4 bg-gray-200 dark:bg-[#1a1a1a] rounded w-96"></div>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    if (error || !post) {
-        return (
-            <>
-                <DynamicSEO 
-                    pageSlug="blog"
-                    fallbackTitle="Blog — Pilot Programme"
-                    fallbackDescription="Blog posts and articles"
-                />
                 <Navbar />
                 <Breadcrumbs />
                 <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Post Not Found</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'The blog post you are looking for does not exist.'}</p>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">The blog post you are looking for does not exist.</p>
                         <Link 
                             href="/blog"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-gray-900 dark:text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -121,25 +85,83 @@ export default function BlogPostPage() {
         );
     }
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    };
+
+    const getReadingTime = (content) => {
+        const wordsPerMinute = 200;
+        const wordCount = (content || '').split(/\s+/).length;
+        return Math.ceil(wordCount / wordsPerMinute);
+    };
+
+    // Build structured data schemas
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'headline': post.title,
+        'description': post.excerpt || post.meta_description || '',
+        'url': `https://pilotprograme.com/blog/${decodedSlug}`,
+        'datePublished': post.created_at,
+        'dateModified': post.updated_at || post.created_at,
+        'author': {
+            '@type': 'Organization',
+            'name': 'Pilot Programme'
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'Pilot Programme',
+            'logo': {
+                '@type': 'ImageObject',
+                'url': 'https://pilotprograme.com/pilotprograme-logo.jpg'
+            }
+        }
+    };
+
+    let faqSchema = null;
+    let faqs = [];
+    if (post.faq_json) {
+        try {
+            let parsed = typeof post.faq_json === 'string' ? JSON.parse(post.faq_json) : post.faq_json;
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+            faqs = Array.isArray(parsed) ? parsed : [];
+            if (faqs.length > 0) {
+                faqSchema = {
+                    '@context': 'https://schema.org',
+                    '@type': 'FAQPage',
+                    'mainEntity': faqs.map(faq => ({
+                        '@type': 'Question',
+                        'name': faq.q || faq.question,
+                        'acceptedAnswer': {
+                            '@type': 'Answer',
+                            'text': faq.a || faq.answer
+                        }
+                    }))
+                };
+            }
+        } catch (e) {
+            faqs = [];
+        }
+    }
+
     return (
         <>
-            <DynamicSEO 
-                pageSlug={`blog-${slug}`}
-                fallbackTitle={post.meta_title || post.title}
-                fallbackDescription={post.meta_description || post.excerpt}
-                fallbackKeywords={post.keywords}
-                schemaType="Article"
-                faqData={(() => {
-                    if (!post.faq_json) return [];
-                    try {
-                        let parsed = typeof post.faq_json === 'string' ? JSON.parse(post.faq_json) : post.faq_json;
-                        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
-                        return Array.isArray(parsed) ? parsed : [];
-                    } catch (e) {
-                        return [];
-                    }
-                })()}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
             />
+            {faqSchema && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+                />
+            )}
+            
             <Navbar />
             <Breadcrumbs />
             
@@ -180,13 +202,7 @@ export default function BlogPostPage() {
                                 {post.category_name}
                             </span>
                         )}
-                        <button
-                            onClick={sharePost}
-                            className="ml-auto flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 transition-colors"
-                        >
-                            <Share2 className="w-4 h-4" />
-                            Share
-                        </button>
+                        <ShareButton title={post.title} excerpt={post.excerpt} />
                     </div>
                     
                     {/* Title */}
@@ -208,31 +224,19 @@ export default function BlogPostPage() {
                     />
                     
                     {/* FAQ Section */}
-                    {(() => {
-                        if (!post.faq_json) return null;
-                        let faqs = [];
-                        try {
-                            let parsed = typeof post.faq_json === 'string' ? JSON.parse(post.faq_json) : post.faq_json;
-                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
-                            faqs = Array.isArray(parsed) ? parsed : [];
-                        } catch (e) {
-                            faqs = [];
-                        }
-                        if (faqs.length === 0) return null;
-                        return (
-                            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10">
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
-                                <div className="space-y-4">
-                                    {faqs.map((faq, index) => (
-                                        <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-lg p-6">
-                                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
-                                            <p className="text-gray-600 dark:text-gray-400">{faq.a}</p>
-                                        </div>
-                                    ))}
-                                </div>
+                    {faqs.length > 0 && (
+                        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
+                            <div className="space-y-4">
+                                {faqs.map((faq, index) => (
+                                    <div key={index} className="bg-gray-55 dark:bg-[#111111] rounded-lg p-6">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
+                                        <p className="text-gray-655 dark:text-gray-400">{faq.a}</p>
+                                    </div>
+                                ))}
                             </div>
-                        );
-                    })()}
+                        </div>
+                    )}
                 </div>
             </article>
             <Footer />
