@@ -129,7 +129,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+                <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
                     {/* Render Top items */}
                     {topItems.map((item) => {
                         const Icon = item.icon;
@@ -140,11 +140,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             <Link key={item.path}
                                 href={locked ? '/dashboard/plans' : item.path}
                                 onClick={() => setMenuOpen(false)}
-                                className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'
-                                    } gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                        ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
-                                        : 'text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:hover:text-gray-900 dark:text-white'
-                                    } ${locked ? 'opacity-65' : ''}`}
+                                className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
+                                    } gap-3 rounded-xl transition-all duration-200 ${active
+                                        ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-950 dark:hover:text-white font-medium'
+                                    } ${locked ? 'opacity-60' : ''}`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <div className="relative flex items-center">
@@ -153,7 +153,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                         <MdLock className="absolute -top-1 -right-1 w-2.5 h-2.5 text-amber-500 bg-white dark:bg-[#111111] rounded-full" />
                                     )}
                                 </div>
-                                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
                                 {locked && !collapsed && (
                                     <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
                                 )}
@@ -165,11 +165,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                     {storyLabEnabled && (
                         <>
                             {!collapsed ? (
-                                <div className="text-[9px] font-black text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest px-3 pt-3 pb-1 border-t border-gray-100 dark:border-white/5 mt-2">
+                                <div className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest px-4 pt-4 pb-1.5 mt-2">
                                     Movie Production
                                 </div>
                             ) : (
-                                <div className="border-t border-gray-100 dark:border-white/5 my-2" />
+                                <div className="border-t border-gray-200 dark:border-white/5 my-2" />
                             )}
                             {[
                                 { icon: MdMovie, label: 'Story Writer', path: '/dashboard/story-writer' },
@@ -182,11 +182,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                     <Link key={item.path}
                                         href={locked ? '/dashboard/plans' : item.path}
                                         onClick={() => setMenuOpen(false)}
-                                        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'
-                                            } gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                                ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
-                                                : 'text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:hover:text-gray-900 dark:text-white'
-                                            } ${locked ? 'opacity-65' : ''}`}
+                                        className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
+                                            } gap-3 rounded-xl transition-all duration-200 ${active
+                                                ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-950 dark:hover:text-white font-medium'
+                                            } ${locked ? 'opacity-60' : ''}`}
                                         title={collapsed ? item.label : ''}
                                     >
                                         <div className="relative flex items-center">
@@ -195,7 +195,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                                 <MdLock className="absolute -top-1 -right-1 w-2.5 h-2.5 text-amber-500 bg-white dark:bg-[#111111] rounded-full" />
                                             )}
                                         </div>
-                                        {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                        {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
                                         {locked && !collapsed && (
                                             <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
                                         )}
@@ -203,9 +203,9 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                 );
                             })}
                             {!collapsed ? (
-                                <div className="border-t border-gray-100 dark:border-white/5 pt-2 mt-1" />
+                                <div className="border-t border-gray-200 dark:border-white/5 pt-2 mt-1" />
                             ) : (
-                                <div className="border-t border-gray-100 dark:border-white/5 my-2" />
+                                <div className="border-t border-gray-200 dark:border-white/5 my-2" />
                             )}
                         </>
                     )}
@@ -219,30 +219,30 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             <Link key={item.path}
                                 href={item.path}
                                 onClick={() => setMenuOpen(false)}
-                                className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'
-                                    } gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                        ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
-                                        : 'text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:hover:text-gray-900 dark:text-white'
+                                className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
+                                    } gap-3 rounded-xl transition-all duration-200 ${active
+                                        ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-950 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
-                                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
                             </Link>
                         );
                     })}
                 </nav>
 
                 {/* User Profile */}
-                <div className="p-2 border-t border-gray-200 dark:border-white/5">
+                <div className="p-3 border-t border-gray-200 dark:border-white/5">
                     <div
                         className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'
-                            } gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white dark:bg-[#0a0a0a] transition-colors cursor-pointer`}
+                            } gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100/60 dark:hover:bg-white/5 transition-colors cursor-pointer`}
                     >
                         {!collapsed ? (
                             <>
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-gray-900 dark:text-white text-xs font-semibold flex-shrink-0">
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                         {JSON.parse(localStorage.getItem('user') || '{}').full_name?.charAt(0) || 'U'}
                                     </div>
                                     <div className="flex-1 min-w-0">

@@ -148,7 +148,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+                <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
@@ -156,24 +156,24 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                             <Link key={item.path}
                                 href={item.path}
                                 onClick={() => setMobileOpen(false)}
-                                className={`relative flex items-center ${collapsed ? 'justify-center' : 'justify-start'} gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                    ? 'bg-red-600 text-gray-900 dark:text-white shadow-lg shadow-red-900/20'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                                className={`relative flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
+                                    ? 'bg-red-500/10 text-red-650 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
                                 {!collapsed && (
-                                    <span className="text-sm font-medium flex-1">{item.label}</span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider flex-1">{item.label}</span>
                                 )}
                                 {/* Badge */}
                                 {item.badge && (
                                     collapsed ? (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-gray-900 dark:text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-550 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                                             {item.badge > 9 ? '9+' : item.badge}
                                         </span>
                                     ) : (
-                                        <span className="ml-auto text-[10px] font-bold bg-red-500 text-gray-900 dark:text-white px-1.5 py-0.5 rounded-full">
+                                        <span className="ml-auto text-[10px] font-bold bg-red-550 text-white px-1.5 py-0.5 rounded-full">
                                             {item.badge > 99 ? '99+' : item.badge}
                                         </span>
                                     )
@@ -184,7 +184,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
 
                     {/* Blog Section */}
                     {!collapsed && (
-                        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4">
+                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-450 dark:text-gray-600 uppercase tracking-widest">
                             Blog Content
                         </div>
                     )}
@@ -195,21 +195,21 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                             <Link key={item.path}
                                 href={item.path}
                                 onClick={() => setMobileOpen(false)}
-                                className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'} gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                    ? 'bg-red-600 text-gray-900 dark:text-white shadow-lg shadow-red-900/20'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                                className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
+                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
-                                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
                             </Link>
                         );
                     })}
 
                     {/* Intelligence Section */}
                     {!collapsed && (
-                        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4">
+                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-450 dark:text-gray-600 uppercase tracking-widest">
                             Intelligence
                         </div>
                     )}
@@ -220,31 +220,31 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                             <Link key={item.path}
                                 href={item.path}
                                 onClick={() => setMobileOpen(false)}
-                                className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'} gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${active
-                                    ? 'bg-red-600 text-gray-900 dark:text-white shadow-lg shadow-red-900/20'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                                className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
+                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
-                                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
                             </Link>
                         );
                     })}
 
                     {/* Contents Generated Dropdown */}
                     {!collapsed && (
-                        <div>
+                        <div className="space-y-1">
                             <button
                                 onClick={() => setContentDropdownOpen(!contentDropdownOpen)}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 ${isContentActive
-                                    ? 'bg-red-600 text-gray-900 dark:text-white shadow-lg shadow-red-900/20'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 ${isContentActive
+                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold'
+                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                             >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     <MdDescription className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm font-medium">Contents Generated</span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider">Contents Generated</span>
                                 </div>
                                 {contentDropdownOpen
                                     ? <MdExpandLess className="w-4 h-4" />
@@ -252,7 +252,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                                 }
                             </button>
                             {contentDropdownOpen && (
-                                <div className="ml-6 mt-1 space-y-1">
+                                <div className="ml-4 mt-1.5 space-y-1 border-l border-gray-100 dark:border-white/5 pl-2">
                                     {contentItems.map((item) => {
                                         const Icon = item.icon;
                                         const active = isActive(item.path);
@@ -260,13 +260,13 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                                             <Link key={item.path}
                                                 href={item.path}
                                                 onClick={() => setMobileOpen(false)}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 text-sm ${active
-                                                    ? 'bg-red-500 text-gray-900 dark:text-white'
-                                                    : 'text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                                                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs ${active
+                                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold'
+                                                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
                                                     }`}
                                             >
                                                 <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                                                <span>{item.label}</span>
+                                                <span className="font-medium">{item.label}</span>
                                             </Link>
                                         );
                                     })}
@@ -277,17 +277,17 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                 </nav>
 
                 {/* Settings */}
-                <div className="p-2 border-t border-gray-800">
+                <div className="p-3 border-t border-gray-800">
                     <Link href="/control/settings"
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-start'} gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive('/control/settings')
-                            ? 'bg-red-600 text-gray-900 dark:text-white shadow-lg shadow-red-900/20'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-[#1a1a1a] hover:text-gray-900 dark:text-white'
+                        className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${isActive('/control/settings')
+                            ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                            : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                             }`}
                         title={collapsed ? 'Settings' : ''}
                     >
                         <MdSettings className="w-4 h-4 flex-shrink-0" />
-                        {!collapsed && <span className="text-sm font-medium">Settings</span>}
+                        {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">Settings</span>}
                     </Link>
                 </div>
 

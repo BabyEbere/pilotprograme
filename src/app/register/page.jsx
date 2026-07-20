@@ -10,6 +10,7 @@ import { Mail, Lock, User, Building2, Briefcase, Eye, EyeOff, Globe, Shield, Che
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import Loader from '@/components/Loader';
+import DynamicSEO from '@/components/DynamicSEO';
 
 export default function Register() {
     const router = useRouter();
@@ -368,7 +369,15 @@ export default function Register() {
     });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#07070a] py-8 px-4 sm:px-6 lg:px-8">
+        <>
+            <DynamicSEO 
+                pageSlug="register"
+                fallbackTitle="Create Account — Pilot Programme"
+                fallbackDescription="Start for free. Create your Pilot Programme account and generate your first AI YouTube script in minutes."
+                fallbackKeywords="Register, Create Account, Pilot Programme register, Pilot Programme create account"
+                schemaType="WebPage"
+            />
+            <div className="min-h-screen flex items-center justify-center bg-gray-55 dark:bg-[#07070a] py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl w-full bg-white/90 dark:bg-[#111115]/50 border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 min-h-[750px] backdrop-blur-xl">
                 
                 {/* ── Left Side: Brand Panel ────────────────────────────────── */}
@@ -913,5 +922,6 @@ export default function Register() {
                 <Loader message="Creating your PILOTPROGRAME account..." fullScreen={true} />
             )}
         </div>
+        </>
     );
 }

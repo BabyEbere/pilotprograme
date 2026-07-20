@@ -8,6 +8,7 @@ import { useGoogleAuth } from '@/components/GoogleAuthProvider';
 
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Shield, User, Globe, Check, Loader2 } from 'lucide-react';
 import Loader from '@/components/Loader';
+import DynamicSEO from '@/components/DynamicSEO';
 
 function LoginContent() {
     const router = useRouter();
@@ -239,7 +240,15 @@ function LoginContent() {
     });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#07070a] py-8 px-4 sm:px-6 lg:px-8">
+        <>
+            <DynamicSEO 
+                pageSlug="login"
+                fallbackTitle="Sign In — Pilot Programme"
+                fallbackDescription="Sign in to your Pilot Programme account and continue creating AI-powered YouTube content."
+                fallbackKeywords="Sign In, Login, Pilot Programme sign in, Pilot Programme login"
+                schemaType="WebPage"
+            />
+            <div className="min-h-screen flex items-center justify-center bg-gray-55 dark:bg-[#07070a] py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl w-full bg-white/90 dark:bg-[#111115]/50 border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 min-h-[700px] backdrop-blur-xl">
                 
                 {/* ── Left Side: Brand Panel ────────────────────────────────── */}
@@ -610,6 +619,7 @@ function LoginContent() {
                 <Loader message="Signing in with Google..." fullScreen={true} />
             )}
         </div>
+        </>
     );
 }
 
