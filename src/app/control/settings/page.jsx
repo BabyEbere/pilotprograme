@@ -614,6 +614,42 @@ const AdminSettings = () => {
                                         </div>
                                     </Section>
 
+                                    {/* Image Generation API Keys Section */}
+                                    <Section title="🖼️ Image Generation API Keys" icon={MdVpnKey}>
+                                        <InputField
+                                            label="SiliconFlow API Key"
+                                            id="siliconflow_api_key"
+                                            type="password"
+                                            value={settings.siliconflow_api_key}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="sk-..."
+                                            description="API key for SiliconFlow FLUX.1-schnell image generation. Get it from siliconflow.cn."
+                                            saving={saving}
+                                        />
+
+                                        <InputField
+                                            label="Ideogram API Key"
+                                            id="ideogram_api_key"
+                                            type="password"
+                                            value={settings.ideogram_api_key}
+                                            onChange={handleSettingChange}
+                                            onSave={handleSave}
+                                            placeholder="Your Ideogram API key"
+                                            description="API key for Ideogram V2 image generation. Get it from ideogram.ai/manage-api."
+                                            saving={saving}
+                                        />
+
+                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
+                                            <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <span className="text-blue-300 not-italic">Image Generation Limits:</span>{' '}
+                                                SiliconFlow and Ideogram usage are tracked per-user based on their subscription plan.
+                                                Configure limits under <span className="text-blue-300">Pricing &amp; Limits Control</span>.
+                                            </div>
+                                        </div>
+                                    </Section>
+
                                     {/* Experimental Local Models Section */}
                                     <Section title="🧪 Experimental Local Models" icon={MdSettings}>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-b border-white/5 pb-6">

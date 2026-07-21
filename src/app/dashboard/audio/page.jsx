@@ -84,8 +84,8 @@ function VoiceCard({ modelId, voiceId, displayName, isSelected, onSelect,
                     onClick={() => onPreview(modelId, voiceId)}
                     disabled={isLoading}
                     className={`w-full flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-semibold transition-all border ${isPlaying ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
-                            : isLoading ? 'bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 cursor-wait'
-                                : 'bg-gray-50 dark:bg-[#111111] border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-gray-400 hover:text-gray-700 dark:text-gray-300'
+                        : isLoading ? 'bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 cursor-wait'
+                            : 'bg-gray-50 dark:bg-[#111111] border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-gray-400 hover:text-gray-700 dark:text-gray-300'
                         }`}
                 >
                     {isLoading && <div className="w-2.5 h-2.5 border border-gray-400 border-t-transparent rounded-full animate-spin" />}
@@ -123,7 +123,7 @@ function CustomAudioPlayer({ src, onPlayChange }) {
             setIsPlaying(false);
             if (onPlayChange) onPlayChange(false);
         } else {
-            audioRef.current.play().catch(() => {});
+            audioRef.current.play().catch(() => { });
             setIsPlaying(true);
             if (onPlayChange) onPlayChange(true);
         }
@@ -172,7 +172,7 @@ function CustomAudioPlayer({ src, onPlayChange }) {
                     if (onPlayChange) onPlayChange(false);
                 }}
             />
-            
+
             <button
                 type="button"
                 onClick={togglePlay}
@@ -194,11 +194,9 @@ function CustomAudioPlayer({ src, onPlayChange }) {
                     onChange={handleSeek}
                     className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-400 outline-none"
                     style={{
-                        background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${
-                            duration ? (currentTime / duration) * 100 : 0
-                        }%, rgba(255,255,255,0.1) ${
-                            duration ? (currentTime / duration) * 100 : 0
-                        }%, rgba(255,255,255,0.1) 100%)`,
+                        background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${duration ? (currentTime / duration) * 100 : 0
+                            }%, rgba(255,255,255,0.1) ${duration ? (currentTime / duration) * 100 : 0
+                            }%, rgba(255,255,255,0.1) 100%)`,
                     }}
                 />
             </div>
@@ -754,7 +752,7 @@ export default function Audio() {
                 setGenerationStage('All scenes generated successfully!');
                 setChunkProgress(100);
                 setChunkStage('Complete!');
-                
+
                 setTimeout(() => {
                     setShowModal(false);
                     fetchAudios();
@@ -902,8 +900,8 @@ export default function Audio() {
                             <div className="flex items-center gap-3">
                                 {hasPremiumVoices && !loadingPlan && (
                                     <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${remainingVoiceovers > 0
-                                            ? 'bg-amber-500/10 border-amber-200 text-amber-300'
-                                            : 'bg-gray-200 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400'
+                                        ? 'bg-amber-500/10 border-amber-200 text-amber-300'
+                                        : 'bg-gray-200 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400'
                                         }`}>
                                         <MdStar className="w-3.5 h-3.5" />
                                         {remainingVoiceovers} / {maxVoiceovers} premium left
@@ -921,7 +919,7 @@ export default function Audio() {
                                         voiceGroups[baseVoice].push(a);
                                     });
                                     const mergeableVoices = Object.keys(voiceGroups).filter(v => voiceGroups[v].length >= 2);
-                                    
+
                                     return mergeableVoices.map(voice => (
                                         <button
                                             key={voice}
@@ -1104,9 +1102,9 @@ export default function Audio() {
                                             onClick={() => { if (canUsePremium) switchToPremium(); }}
                                             disabled={!hasPremiumVoices}
                                             className={`p-3 rounded-xl border-2 text-left transition-all ${!hasPremiumVoices ? 'border-white/5 bg-white dark:bg-[#0a0a0a] opacity-60 cursor-not-allowed'
-                                                    : remainingVoiceovers <= 0 ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] cursor-not-allowed'
-                                                        : formData.provider === 'siliconflow' ? 'border-amber-400 bg-amber-500/10'
-                                                            : 'border-gray-200 dark:border-white/10 hover:border-amber-300 bg-[#111]'
+                                                : remainingVoiceovers <= 0 ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] cursor-not-allowed'
+                                                    : formData.provider === 'siliconflow' ? 'border-amber-400 bg-amber-500/10'
+                                                        : 'border-gray-200 dark:border-white/10 hover:border-amber-300 bg-[#111]'
                                                 }`}>
                                             <div className="flex items-center gap-1">
                                                 <MdStar className={`w-3.5 h-3.5 ${hasPremiumVoices ? 'text-amber-500' : 'text-gray-700 dark:text-gray-300'}`} />
@@ -1283,8 +1281,8 @@ export default function Audio() {
                                                                 type="button"
                                                                 onClick={() => setFormData(prev => ({ ...prev, scene_number: 1 }))}
                                                                 className={`py-2 px-3 rounded-xl border-2 text-center text-xs font-bold transition-all ${formData.scene_number !== 'all'
-                                                                        ? 'border-amber-400 bg-amber-500/10 text-amber-400'
-                                                                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
+                                                                    ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                    : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
                                                                     }`}
                                                             >
                                                                 Single Scene
@@ -1293,8 +1291,8 @@ export default function Audio() {
                                                                 type="button"
                                                                 onClick={() => setFormData(prev => ({ ...prev, scene_number: 'all' }))}
                                                                 className={`py-2 px-3 rounded-xl border-2 text-center text-xs font-bold transition-all ${formData.scene_number === 'all'
-                                                                        ? 'border-amber-400 bg-amber-500/10 text-amber-400'
-                                                                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
+                                                                    ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                    : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-amber-200'
                                                                     }`}
                                                             >
                                                                 Stitch All Scenes
@@ -1325,8 +1323,8 @@ export default function Audio() {
                                                                             type="button"
                                                                             onClick={() => setFormData({ ...formData, scene_number: n })}
                                                                             className={`relative py-2 rounded-lg text-sm font-bold border-2 transition-all ${formData.scene_number === n
-                                                                                    ? 'border-amber-400 bg-amber-500/10 text-amber-400'
-                                                                                    : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:border-amber-200'
+                                                                                ? 'border-amber-400 bg-amber-500/10 text-amber-400'
+                                                                                : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:border-amber-200'
                                                                                 }`}
                                                                         >
                                                                             {n}
@@ -1375,7 +1373,7 @@ export default function Audio() {
                                         <div className="space-y-5 p-5 bg-gradient-to-br from-purple-900/10 via-amber-900/5 to-black border border-purple-500/20 rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.15)] relative overflow-hidden backdrop-blur-md">
                                             {/* Micro-sparkle ambient background lights */}
                                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-amber-500 to-cyan-500 animate-pulse" />
-                                            
+
                                             {/* Loader 1: Overall progress */}
                                             <div className="space-y-2 relative">
                                                 <div className="flex justify-between items-center text-xs font-semibold tracking-wider text-purple-300 uppercase">
@@ -1386,8 +1384,8 @@ export default function Audio() {
                                                     <span className="font-mono text-purple-400 font-bold">{Math.round(generationProgress)}%</span>
                                                 </div>
                                                 <div className="w-full bg-purple-950/40 rounded-full h-3 overflow-hidden border border-purple-500/10 shadow-inner">
-                                                    <div className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out relative shadow-[0_0_10px_rgba(168,85,247,0.5)]" 
-                                                         style={{ width: `${generationProgress}%` }}>
+                                                    <div className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out relative shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                                                        style={{ width: `${generationProgress}%` }}>
                                                         <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[move-stripes_1.5s_linear_infinite]" />
                                                     </div>
                                                 </div>
@@ -1408,14 +1406,14 @@ export default function Audio() {
                                                         <span className="font-mono text-amber-400 font-bold">{Math.round(chunkProgress)}%</span>
                                                     </div>
                                                     <div className="w-full bg-amber-950/20 rounded-full h-2 overflow-hidden border border-amber-500/10">
-                                                        <div className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(245,158,11,0.4)]" 
-                                                             style={{ width: `${chunkProgress}%` }} />
+                                                        <div className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                                                            style={{ width: `${chunkProgress}%` }} />
                                                     </div>
                                                 </div>
                                             )}
 
                                             <div className="text-[10px] text-gray-500 text-center select-none pt-1">
-                                                <span>You can close this tab/website. Rendering will finish securely in the background!</span>
+                                                <span>PLEASE DO NOT LEAVE THIS PAGE UNTIL CONVERSION IS DONE!</span>
                                             </div>
                                             <style>{`
                                                 @keyframes move-stripes {
@@ -1428,8 +1426,8 @@ export default function Audio() {
                                         <button type="submit"
                                             disabled={!formData.script_id || (formData.provider === 'siliconflow' && !formData.voice_id)}
                                             className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${formData.provider === 'siliconflow'
-                                                    ? 'bg-amber-500/100 hover:bg-amber-600 text-gray-900 dark:text-white'
-                                                    : 'bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
+                                                ? 'bg-amber-500/100 hover:bg-amber-600 text-gray-900 dark:text-white'
+                                                : 'bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white'
                                                 }`}>
                                             {formData.provider === 'siliconflow'
                                                 ? <><MdStar className="w-4 h-4" /> Render Premium Audio Track</>

@@ -14,6 +14,24 @@ const PLAN_STYLES = {
     Pro: { ring: 'ring-red-200', header: 'bg-red-50 border-red-100', dot: 'bg-red-500' },
 };
 
+// Defined OUTSIDE the component to prevent React from re-mounting inputs on every
+// state change (which was causing the focus-loss bug when typing numbers).
+const Field = ({ label, icon: Icon, planId, field, value, placeholder, type = 'number', onChange }) => (
+    <div>
+        <label className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+            {Icon && <Icon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500" />}
+            {label}
+        </label>
+        <input
+            type={type}
+            value={value ?? ''}
+            onChange={e => onChange(planId, field, e.target.value)}
+            placeholder={placeholder || '999999 = unlimited'}
+            className="w-full px-3 py-2 border border-gray-250 dark:border-white/5 rounded-xl focus:ring-1 focus:ring-red-400 focus:border-red-400 text-xs bg-gray-50 dark:bg-[#15151b] text-gray-900 dark:text-white transition-colors focus:outline-none"
+        />
+    </div>
+);
+
 export default function AdminPricing() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [plans, setPlans] = useState([]);
@@ -22,6 +40,10 @@ export default function AdminPricing() {
     const [error, setError] = useState('');
     const [saveStatus, setSaveStatus] = useState({ id: null, status: '' });
     const [activePlanTab, setActivePlanTab] = useState(null);
+
+    // Stable handleChange — defined once, never recreated
+    const handleChange = (id, field, value) =>
+        setPlans(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const adminData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -56,8 +78,9 @@ export default function AdminPricing() {
         } catch { /* non-critical */ }
     };
 
-    const handleChange = (id, field, value) =>
-        setPlans(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+    // Field is defined OUTSIDE of this component (see top of file) to prevent
+    // React from re-mounting the input on every keystroke, which was causing
+    // the focus bug the user reported.
 
     const savePlan = async (plan) => {
         setSaveStatus({ id: plan.id, status: 'saving' });
@@ -81,6 +104,7 @@ export default function AdminPricing() {
                     max_youtube_analyzer: plan.max_youtube_analyzer ?? 0,
                     max_siliconflow_images: plan.max_siliconflow_images ?? 0,
                     max_youtube_competitors: plan.max_youtube_competitors ?? 3,
+                    max_ideogram_images: plan.max_ideogram_images ?? 0,
                 }),
             });
             const data = await res.json();
@@ -96,23 +120,6 @@ export default function AdminPricing() {
             setError('Network error. Try again.');
         }
     };
-
-    // ── Reusable field ─────────────────────────────────────────────────────
-    const Field = ({ label, icon: Icon, planId, field, value, placeholder, type = 'number' }) => (
-        <div>
-            <label className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
-                {Icon && <Icon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500 dark:text-gray-455" />}
-                {label}
-            </label>
-            <input
-                type={type}
-                value={value ?? ''}
-                onChange={e => handleChange(planId, field, e.target.value)}
-                placeholder={placeholder || '999999 = unlimited'}
-                className="w-full px-3 py-2 border border-gray-250 dark:border-white/5 rounded-xl focus:ring-1 focus:ring-red-400 focus:border-red-400 text-xs bg-gray-50 dark:bg-[#15151b] text-gray-900 dark:text-white transition-colors focus:outline-none"
-            />
-        </div>
-    );
 
     if (loading) {
         return (
@@ -192,15 +199,15 @@ export default function AdminPricing() {
                                     {/* Column 1: Pricing & Info */}
                                     <div className="space-y-6">
                                         <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Plan Setup & Info</h3>
-                                        <Field label="Duration (Days)" planId={plan.id} field="duration_days" value={plan.duration_days} placeholder="e.g. 30" />
+                                        <Field label="Duration (Days)" planId={plan.id} field="duration_days" value={plan.duration_days} placeholder="e.g. 30" onChange={handleChange} />
                                         
                                         {!isFree && (
                                             <>
-                                                <Field label="Price (₦ Naira)" icon={MdAttachMoney} planId={plan.id} field="price_naira" value={plan.price_naira} />
-                                                <Field label="Price ($ USD)" icon={MdAttachMoney} planId={plan.id} field="price_dollar" value={plan.price_dollar} />
+                                                <Field label="Price (₦ Naira)" icon={MdAttachMoney} planId={plan.id} field="price_naira" value={plan.price_naira} onChange={handleChange} />
+                                                <Field label="Price ($ USD)" icon={MdAttachMoney} planId={plan.id} field="price_dollar" value={plan.price_dollar} onChange={handleChange} />
                                                 
                                                 <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl space-y-4">
-                                                    <Field label="Affiliate Referral Reward (₦)" icon={MdAttachMoney} planId={plan.id} field="affiliate_reward" value={plan.affiliate_reward} placeholder="Referrer reward..." />
+                                                    <Field label="Affiliate Referral Reward (₦)" icon={MdAttachMoney} planId={plan.id} field="affiliate_reward" value={plan.affiliate_reward} placeholder="Referrer reward..." onChange={handleChange} />
                                                     <p className="text-[10.5px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">Referrer earns this flat reward when a user upgrades/subscribes to this plan.</p>
                                                 </div>
                                             </>
@@ -210,24 +217,25 @@ export default function AdminPricing() {
                                     {/* Column 2: Core Generation Limits */}
                                     <div className="space-y-6">
                                         <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Creation Quotas</h3>
-                                        <Field label="Max Scripts" planId={plan.id} field="max_scripts" value={plan.max_scripts} />
-                                        <Field label="Max Images (All Providers)" planId={plan.id} field="max_images" value={plan.max_images} />
-                                        <Field label="Max Audio Renders" planId={plan.id} field="max_audio" value={plan.max_audio} />
+                                        <Field label="Max Scripts" planId={plan.id} field="max_scripts" value={plan.max_scripts} onChange={handleChange} />
+                                        <Field label="Max Images (All Providers)" planId={plan.id} field="max_images" value={plan.max_images} onChange={handleChange} />
+                                        <Field label="Max Audio Renders" planId={plan.id} field="max_audio" value={plan.max_audio} onChange={handleChange} />
                                     </div>
 
                                     {/* Column 3: Premium Feature Quotas */}
                                     <div className="space-y-6">
                                         <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-2">Premium Features</h3>
-                                        <Field label="Max Videos" icon={MdVideoLibrary} planId={plan.id} field="max_videos" value={plan.max_videos ?? 0} placeholder="0 = disabled" />
-                                        <Field label="Max ElevenLabs Voiceovers" icon={MdRecordVoiceOver} planId={plan.id} field="max_voiceovers" value={plan.max_voiceovers ?? 0} placeholder="0 = disabled" />
+                                        <Field label="Max Videos" icon={MdVideoLibrary} planId={plan.id} field="max_videos" value={plan.max_videos ?? 0} placeholder="0 = disabled" onChange={handleChange} />
+                                        <Field label="Max ElevenLabs Voiceovers" icon={MdRecordVoiceOver} planId={plan.id} field="max_voiceovers" value={plan.max_voiceovers ?? 0} placeholder="0 = disabled" onChange={handleChange} />
                                         
                                         <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-4">
                                             <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Monetized Add-ons (0 = locked)</h4>
-                                            <Field label="Max Blog to Script conversions" planId={plan.id} field="max_blog_to_script" value={plan.max_blog_to_script ?? 0} placeholder="0 = locked" />
-                                            <Field label="Max Story to Script conversions" planId={plan.id} field="max_story_to_script" value={plan.max_story_to_script ?? 0} placeholder="0 = locked" />
-                                            <Field label="Max YouTube channel audits" planId={plan.id} field="max_youtube_analyzer" value={plan.max_youtube_analyzer ?? 0} placeholder="0 = locked" />
-                                            <Field label="Max SiliconFlow images" planId={plan.id} field="max_siliconflow_images" value={plan.max_siliconflow_images ?? 0} placeholder="0 = locked" />
-                                            <Field label="Max YouTube competitors" planId={plan.id} field="max_youtube_competitors" value={plan.max_youtube_competitors ?? 3} placeholder="e.g. 3" />
+                                            <Field label="Max Blog to Script conversions" planId={plan.id} field="max_blog_to_script" value={plan.max_blog_to_script ?? 0} placeholder="0 = locked" onChange={handleChange} />
+                                            <Field label="Max Story to Script conversions" planId={plan.id} field="max_story_to_script" value={plan.max_story_to_script ?? 0} placeholder="0 = locked" onChange={handleChange} />
+                                            <Field label="Max YouTube channel audits" planId={plan.id} field="max_youtube_analyzer" value={plan.max_youtube_analyzer ?? 0} placeholder="0 = locked" onChange={handleChange} />
+                                            <Field label="Max SiliconFlow images" planId={plan.id} field="max_siliconflow_images" value={plan.max_siliconflow_images ?? 0} placeholder="0 = locked" onChange={handleChange} />
+                                            <Field label="Max Ideogram images" planId={plan.id} field="max_ideogram_images" value={plan.max_ideogram_images ?? 0} placeholder="0 = locked" onChange={handleChange} />
+                                            <Field label="Max YouTube competitors" planId={plan.id} field="max_youtube_competitors" value={plan.max_youtube_competitors ?? 3} placeholder="e.g. 3" onChange={handleChange} />
                                         </div>
 
                                         {/* Voice Pack Dropdown */}
