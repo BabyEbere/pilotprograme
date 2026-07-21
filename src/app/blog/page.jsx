@@ -16,6 +16,9 @@ export default function BlogPage() {
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
+        // Set title immediately (synchronous) to prevent flicker caused by
+        // the root layout default title showing before DynamicSEO fetches
+        document.title = 'Blog — Pilot Programme | Faceless YouTube Automation Tips & Guides';
         fetchPosts();
         fetchCategories();
     }, []);
@@ -33,7 +36,12 @@ export default function BlogPage() {
             if (data.success) {
                 const sanitized = (data.posts || []).map(post => ({
                     ...post,
-                    featured_image: post.featured_image ? post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+                    // Strip data: URIs and localhost URLs — both cause hydration issues in production
+                    featured_image: post.featured_image
+                        ? (post.featured_image.startsWith('data:')
+                            ? ''
+                            : post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com'))
+                        : ''
                 }));
                 setPosts(sanitized);
             }
@@ -88,9 +96,9 @@ export default function BlogPage() {
         <>
             <DynamicSEO 
                 pageSlug="blog"
-                fallbackTitle="Blog — Pilot Programme AI YouTube Automation"
-                fallbackDescription="Tips, tutorials, and insights to help you create better faceless YouTube content with AI automation."
-                fallbackKeywords="Pilot Programme blog, YouTube automation tips, AI content creation, faceless YouTube tutorials"
+                fallbackTitle="Blog — Pilot Programme | Faceless YouTube Automation Tips & Guides"
+                fallbackDescription="Read the latest tips, guides, and insights on faceless YouTube automation, AI content creation, and growing your channel from the Pilot Programme blog."
+                fallbackKeywords="Pilot Programme blog, faceless YouTube tips, AI content creation guides, YouTube automation blog, faceless YouTube strategy"
                 schemaType="Article"
             />
             <Navbar />
@@ -156,11 +164,13 @@ export default function BlogPage() {
                                     key={post.id} 
                                     className="bg-gray-50 dark:bg-[#111111] rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden hover:shadow-lg transition-shadow duration-300"
                                 >
-                                    {post.featured_image && (
+                                    {post.featured_image && !post.featured_image.startsWith('data:') && (
                                         <div className="aspect-video overflow-hidden">
                                             <img 
                                                 src={post.featured_image} 
                                                 alt={post.title}
+                                                loading="lazy"
+                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                             />
                                         </div>

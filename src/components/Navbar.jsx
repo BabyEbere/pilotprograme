@@ -11,7 +11,7 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, mounted } = useTheme();
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 10);
@@ -67,11 +67,15 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-3">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200/50 dark:bg-white/8 transition-all flex items-center justify-center"
+                            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/8 transition-all flex items-center justify-center"
                             aria-label="Toggle theme"
-                            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                            title={mounted ? (theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode') : 'Toggle theme'}
+                            suppressHydrationWarning
                         >
-                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            {/* Only render the real icon after mount to prevent hydration mismatch */}
+                            {mounted
+                                ? (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)
+                                : <span className="w-5 h-5 block" />}
                         </button>
                         <Link href="/login"
                             className="text-sm font-medium text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 dark:text-white px-3 py-2 transition-colors"
@@ -89,10 +93,13 @@ export default function Navbar() {
                     <div className="md:hidden flex items-center gap-2">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200/50 dark:bg-white/8 transition-colors"
+                            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
                             aria-label="Toggle theme"
+                            suppressHydrationWarning
                         >
-                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            {mounted
+                                ? (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)
+                                : <span className="w-5 h-5 block" />}
                         </button>
                         <button
                             onClick={() => setIsOpen(!isOpen)}

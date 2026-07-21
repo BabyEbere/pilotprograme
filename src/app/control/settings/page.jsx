@@ -2,7 +2,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { 
+import {
     MdSettings, MdSave, MdEmail, MdVpnKey, MdDns, MdPerson,
     MdCheckCircle, MdError, MdRefresh, MdInfo, MdLink
 } from 'react-icons/md';
@@ -28,14 +28,14 @@ const InputField = ({ label, id, type = "text", value, onChange, onSave, placeho
             <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">{description}</p>
         </div>
         <div className="md:col-span-2 flex gap-3">
-            <input 
+            <input
                 type={type}
                 value={value || ''}
                 onChange={(e) => onChange(id, e.target.value)}
                 placeholder={placeholder}
                 className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium"
             />
-            <button 
+            <button
                 onClick={() => onSave(id, value)}
                 disabled={saving}
                 className="p-3 bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 rounded-xl transition-all disabled:opacity-50"
@@ -54,7 +54,7 @@ const SelectField = ({ label, id, value, options, onChange, onSave, description,
             <p className="text-[10px] text-gray-600 dark:text-gray-500 leading-relaxed italic">{description}</p>
         </div>
         <div className="md:col-span-2 flex gap-3">
-            <select 
+            <select
                 value={value || ''}
                 onChange={(e) => onChange(id, e.target.value)}
                 className="flex-1 bg-black/40 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500/30 transition-all font-medium appearance-none"
@@ -65,7 +65,7 @@ const SelectField = ({ label, id, value, options, onChange, onSave, description,
                     </option>
                 ))}
             </select>
-            <button 
+            <button
                 onClick={() => onSave(id, value)}
                 disabled={saving}
                 className="p-3 bg-gray-200 dark:bg-white/5 hover:bg-gray-200/50 dark:bg-white/10 rounded-xl transition-all disabled:opacity-50"
@@ -156,7 +156,7 @@ const AdminSettings = () => {
                             </h1>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-black tracking-widest">Global configurations & infrastructure</p>
                         </div>
-                        <button 
+                        <button
                             onClick={fetchSettings}
                             className="p-2 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-all bg-gray-200 dark:bg-white/5 rounded-lg"
                         >
@@ -180,11 +180,10 @@ const AdminSettings = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`py-4 px-1 text-xs font-black uppercase tracking-widest border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
-                                        isActive 
-                                            ? 'border-red-500 text-red-500' 
+                                    className={`py-4 px-1 text-xs font-black uppercase tracking-widest border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${isActive
+                                            ? 'border-red-500 text-red-500'
                                             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                    }`}
+                                        }`}
                                 >
                                     <Icon size={16} />
                                     {tab.name}
@@ -197,10 +196,10 @@ const AdminSettings = () => {
                 {/* Content */}
                 <div className="p-6 max-w-5xl mx-auto">
                     {loading ? (
-                         <div className="flex flex-col items-center justify-center p-20">
+                        <div className="flex flex-col items-center justify-center p-20">
                             <div className="animate-spin w-10 h-10 border-2 border-red-500 border-t-transparent rounded-full mb-4"></div>
                             <p className="text-xs text-gray-600 dark:text-gray-500 font-bold uppercase tracking-widest">Loading secure configurations...</p>
-                         </div>
+                        </div>
                     ) : (
                         <>
                             {/* ── TAB: GENERAL ─────────────────────────────────── */}
@@ -220,17 +219,14 @@ const AdminSettings = () => {
                                                         handleSettingChange('google_oauth_enabled', newVal);
                                                         handleSave('google_oauth_enabled', newVal, 'Enable/disable Google OAuth sign-in on register and login pages');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.google_oauth_enabled === 'true' ? 'bg-blue-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.google_oauth_enabled === 'true' ? 'bg-blue-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.google_oauth_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.google_oauth_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.google_oauth_enabled === 'true' ? 'text-blue-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.google_oauth_enabled === 'true' ? 'text-blue-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.google_oauth_enabled === 'true' ? 'Active — Google button visible to users' : 'Disabled — Google button hidden'}
                                                 </span>
                                             </div>
@@ -284,17 +280,14 @@ const AdminSettings = () => {
                                                         handleSettingChange('registration_disabled', newVal);
                                                         handleSave('registration_disabled', newVal, 'Pause registrations and show waitlist/maintenance page');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.registration_disabled === 'true' ? 'bg-red-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.registration_disabled === 'true' ? 'bg-red-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.registration_disabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.registration_disabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.registration_disabled === 'true' ? 'text-red-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.registration_disabled === 'true' ? 'text-red-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.registration_disabled === 'true' ? 'Paused — Waitlist / Maintenance message shown' : 'Active — Standard registration open'}
                                                 </span>
                                             </div>
@@ -512,25 +505,22 @@ const AdminSettings = () => {
                                                         handleSettingChange('video_tool_enabled', newVal);
                                                         handleSave('video_tool_enabled', newVal, 'Enable/disable video generation for users');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.video_tool_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.video_tool_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.video_tool_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.video_tool_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.video_tool_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.video_tool_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.video_tool_enabled === 'true' ? 'Active — Users can generate videos' : 'Disabled — Video page hidden'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <InputField 
-                                            label="Pollinations Video API Key (FREE)" 
-                                            id="pollinations_video_key" 
+                                        <InputField
+                                            label="Pollinations Video API Key (FREE)"
+                                            id="pollinations_video_key"
                                             type="password"
                                             value={settings.pollinations_video_key}
                                             onChange={handleSettingChange}
@@ -540,9 +530,9 @@ const AdminSettings = () => {
                                             saving={saving}
                                         />
 
-                                        <InputField 
-                                            label="Pollinations Image API Key (FREE)" 
-                                            id="pollinations_image_key" 
+                                        <InputField
+                                            label="Pollinations Image API Key (FREE)"
+                                            id="pollinations_image_key"
                                             type="password"
                                             value={settings.pollinations_image_key}
                                             onChange={handleSettingChange}
@@ -552,9 +542,9 @@ const AdminSettings = () => {
                                             saving={saving}
                                         />
 
-                                        <InputField 
-                                            label="LTX API Key (Premium, Optional)" 
-                                            id="ltx_api_key" 
+                                        <InputField
+                                            label="LTX API Key (Premium, Optional)"
+                                            id="ltx_api_key"
                                             type="password"
                                             value={settings.ltx_api_key}
                                             onChange={handleSettingChange}
@@ -664,25 +654,22 @@ const AdminSettings = () => {
                                                         handleSettingChange('xtts_enabled', newVal);
                                                         handleSave('xtts_enabled', newVal, 'Enable/disable experimental XTTS v2 engine');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.xtts_enabled === 'true' ? 'bg-purple-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.xtts_enabled === 'true' ? 'bg-purple-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.xtts_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.xtts_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.xtts_enabled === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.xtts_enabled === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.xtts_enabled === 'true' ? 'Active — XTTS is visible to users' : 'Disabled — Hidden from UI'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <InputField 
-                                            label="XTTS Server API URL" 
-                                            id="xtts_api_url" 
+                                        <InputField
+                                            label="XTTS Server API URL"
+                                            id="xtts_api_url"
                                             value={settings.xtts_api_url}
                                             onChange={handleSettingChange}
                                             onSave={handleSave}
@@ -706,17 +693,14 @@ const AdminSettings = () => {
                                                         handleSettingChange('story_lab_enabled', newVal);
                                                         handleSave('story_lab_enabled', newVal, 'Enable/disable Story Lab interface for users');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.story_lab_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.story_lab_enabled === 'true' ? 'bg-green-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.story_lab_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.story_lab_enabled === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.story_lab_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.story_lab_enabled === 'true' ? 'text-green-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.story_lab_enabled === 'true' ? 'Active — Story Lab active' : 'Disabled — Story Lab hidden'}
                                                 </span>
                                             </div>
@@ -737,17 +721,14 @@ const AdminSettings = () => {
                                                         handleSettingChange('enable_background_audio_rendering', newVal);
                                                         handleSave('enable_background_audio_rendering', newVal, 'Enable/disable offline persistent background rendering for audio');
                                                     }}
-                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${
-                                                        settings.enable_background_audio_rendering === 'true' ? 'bg-purple-600' : 'bg-gray-700'
-                                                    }`}
+                                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 ${settings.enable_background_audio_rendering === 'true' ? 'bg-purple-600' : 'bg-gray-700'
+                                                        }`}
                                                 >
-                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        settings.enable_background_audio_rendering === 'true' ? 'translate-x-8' : 'translate-x-1'
-                                                    }`} />
+                                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${settings.enable_background_audio_rendering === 'true' ? 'translate-x-8' : 'translate-x-1'
+                                                        }`} />
                                                 </button>
-                                                <span className={`text-xs font-bold uppercase tracking-widest ${
-                                                    settings.enable_background_audio_rendering === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
-                                                }`}>
+                                                <span className={`text-xs font-bold uppercase tracking-widest ${settings.enable_background_audio_rendering === 'true' ? 'text-purple-400' : 'text-gray-600 dark:text-gray-500'
+                                                    }`}>
                                                     {settings.enable_background_audio_rendering === 'true' ? 'Active — Async background processing enabled (VPS mode)' : 'Inactive — Synchronous inline processing active (Shared/DirectAdmin mode)'}
                                                 </span>
                                             </div>
@@ -762,9 +743,8 @@ const AdminSettings = () => {
 
             {/* Toast */}
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl animate-in slide-in-from-right-2 border flex items-center gap-2 ${
-                    toast.type === 'error' ? 'bg-red-600/10 text-red-500 border-red-500/20' : 'bg-green-600/10 text-green-500 border-green-500/20'
-                }`}>
+                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl animate-in slide-in-from-right-2 border flex items-center gap-2 ${toast.type === 'error' ? 'bg-red-600/10 text-red-500 border-red-500/20' : 'bg-green-600/10 text-green-500 border-green-500/20'
+                    }`}>
                     {toast.type === 'error' ? <MdError /> : <MdCheckCircle />}
                     {toast.msg}
                 </div>

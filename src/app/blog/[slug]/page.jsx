@@ -15,9 +15,14 @@ async function getPost(slug) {
         const data = await res.json();
         
         if (data.success && data.post) {
+            const rawImage = data.post.featured_image || '';
+            // Strip data: URIs — social crawlers need real HTTPS URLs, not base64
+            const cleanImage = rawImage.startsWith('data:')
+                ? ''
+                : rawImage.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com');
             return {
                 ...data.post,
-                featured_image: data.post.featured_image ? data.post.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+                featured_image: cleanImage
             };
         }
     } catch (err) {
@@ -37,6 +42,10 @@ export async function generateMetadata({ params }) {
         };
     }
     
+    const ogImage = post.featured_image && !post.featured_image.startsWith('data:')
+        ? [{ url: post.featured_image, width: 1200, height: 630, alt: post.title }]
+        : [];
+
     return {
         title: post.meta_title || `${post.title} — Pilot Programme`,
         description: post.meta_description || post.excerpt || '',
@@ -45,14 +54,15 @@ export async function generateMetadata({ params }) {
             title: post.meta_title || post.title,
             description: post.meta_description || post.excerpt || '',
             url: `https://pilotprograme.com/blog/${decodedSlug}`,
-            images: post.featured_image ? [{ url: post.featured_image }] : [],
+            images: ogImage,
             type: 'article',
+            siteName: 'Pilot Programme',
         },
         twitter: {
-            card: 'summary_large_image',
+            card: ogImage.length > 0 ? 'summary_large_image' : 'summary',
             title: post.meta_title || post.title,
             description: post.meta_description || post.excerpt || '',
-            images: post.featured_image ? [post.featured_image] : [],
+            images: ogImage.map(i => i.url),
         }
     };
 }
