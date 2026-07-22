@@ -28,8 +28,12 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
         };
 
         const applySEOSettings = (seoData) => {
-            // Set page title
-            document.title = seoData.title || fallbackTitle || 'Pilot Programme';
+            // Set page title to Admin defined title
+            if (seoData.title) {
+                document.title = seoData.title;
+            } else if (fallbackTitle) {
+                document.title = fallbackTitle;
+            }
             
             // Set or update meta description
             let desc = document.querySelector('meta[name="description"]');
@@ -219,7 +223,9 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
         };
 
         const applyFallbackSEO = () => {
-            document.title = fallbackTitle || 'Pilot Programme';
+            if (fallbackTitle) {
+                document.title = fallbackTitle;
+            }
             
             let desc = document.querySelector('meta[name="description"]');
             if (!desc) { 

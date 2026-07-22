@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "PilotPrograme - AI-Powered YouTube Content Creation",
-  description: "Create viral YouTube content in minutes with AI-powered automation from PilotPrograme",
+  title: {
+    template: "%s",
+    default: "Pilot Programme — AI-Powered Faceless YouTube Automation",
+  },
+  description: "Create viral YouTube content in minutes with AI-powered automation from Pilot Programme",
   icons: {
     icon: "/pilotprograme-logo.jpg",
   },
