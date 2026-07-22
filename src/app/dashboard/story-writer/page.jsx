@@ -9,7 +9,10 @@ import {
     MdChevronLeft, 
     MdChevronRight, 
     MdAutoAwesome,
-    MdAdd
+    MdAdd,
+    MdFolder,
+    MdCreate,
+    MdDownload
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
@@ -20,21 +23,24 @@ export default function StoryWriter() {
     const [savedItems, setSavedItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
 
+    // Active Section Tab: 'generator' or 'library'
+    const [activeTab, setActiveTab] = useState('generator');
+
     // Tutorial Carousel
     const [showDemo, setShowDemo] = useState(true);
     const [demoSlide, setDemoSlide] = useState(0);
     const demoSlides = [
         {
             title: "⚡ Step 1: Auto-Brainstorm Cast & Concept",
-            desc: "Select your genre & style, type a 1-sentence basic idea (e.g. 'A traveler misses their train in Lagos'), and click 'Auto-Brainstorm Cast'. The AI will map out character cards and motives!"
+            desc: "Select your genre & style, type a 1-sentence basic idea, and click 'Auto-Brainstorm Concept & Cast'. The AI will map out character cards and motives!"
         },
         {
             title: "✍️ Step 2: Custom Character Management",
-            desc: "Review character cards. You can edit names, change flaws/motivations, add new actors, or remove supporting cast dynamically before compiling the story."
+            desc: "Review character cards. You can edit names, change flaws/motivations, add new actors, or remove supporting cast dynamically."
         },
         {
             title: "📖 Step 3: Progressive Chapter Extension",
-            desc: "Generate Chapter 1. Then, use the progressive builder input at the bottom to tell the AI what should happen next (e.g. 'The traveler loses their passport'). Build your story chapter by chapter!"
+            desc: "Generate Chapter 1. Then, use the progressive builder input at the bottom to tell the AI what should happen next. Build your story chapter by chapter!"
         }
     ];
 
@@ -83,86 +89,6 @@ export default function StoryWriter() {
             }
         } catch (err) {
             console.error('Error fetching presets:', err);
-        }
-    };
-
-    const handleAddNichePreset = async () => {
-        const val = prompt('Enter new Niche / Genre name:');
-        if (!val || !val.trim()) return;
-        try {
-            const res = await fetch(`${API_URL}/admin/story/presets/niche`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: val.trim() })
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchPresets();
-                setNiche(val.trim());
-            } else {
-                alert(data.message || 'Failed to add niche');
-            }
-        } catch {
-            alert('Error adding niche preset');
-        }
-    };
-
-    const handleDeleteNichePreset = async () => {
-        if (!niche || niche === 'custom') return;
-        if (!confirm(`Are you sure you want to delete preset: "${niche}"?`)) return;
-        try {
-            const res = await fetch(`${API_URL}/admin/story/presets/niche/${encodeURIComponent(niche)}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchPresets();
-                setNiche('Drama');
-            } else {
-                alert(data.message || 'Failed to delete niche');
-            }
-        } catch {
-            alert('Error deleting niche preset');
-        }
-    };
-
-    const handleAddStylePreset = async () => {
-        const val = prompt('Enter new Writing Style name:');
-        if (!val || !val.trim()) return;
-        try {
-            const res = await fetch(`${API_URL}/admin/story/presets/style`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: val.trim() })
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchPresets();
-                setStyle(val.trim());
-            } else {
-                alert(data.message || 'Failed to add style');
-            }
-        } catch {
-            alert('Error adding style preset');
-        }
-    };
-
-    const handleDeleteStylePreset = async () => {
-        if (!style || style === 'custom') return;
-        if (!confirm(`Are you sure you want to delete preset: "${style}"?`)) return;
-        try {
-            const res = await fetch(`${API_URL}/admin/story/presets/style/${encodeURIComponent(style)}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchPresets();
-                setStyle('Nollywood / African Drama');
-            } else {
-                alert(data.message || 'Failed to delete style');
-            }
-        } catch {
-            alert('Error deleting style preset');
         }
     };
 
@@ -240,6 +166,8 @@ export default function StoryWriter() {
                 } else {
                     setActiveChapters([{ chapter_number: 1, title: 'Chapter 1', content: item.content }]);
                 }
+                // Switch to generator view to show the loaded story
+                setActiveTab('generator');
             }
         } catch (err) {
             alert('Failed to load story detail');
@@ -426,11 +354,12 @@ export default function StoryWriter() {
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-6 mb-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
                     <div>
-                        <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
                             <MdMovie className="text-red-500 w-6 h-6" /> Story Writer
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Generate progressive treatments, brainstorm characters, and build your story chapters.</p>
@@ -438,26 +367,53 @@ export default function StoryWriter() {
                     
                     <button
                         onClick={() => setShowDemo(!showDemo)}
-                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-gray-200/50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
+                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
                     >
                         <MdInfoOutline className="text-red-400 w-4 h-4" /> {showDemo ? "Hide Guide" : "View Guide"}
                     </button>
                 </div>
 
+                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
+                <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
+                    <button
+                        onClick={() => setActiveTab('generator')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'generator'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdCreate className="w-4 h-4" />
+                        <span>Story Generator</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'library'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdFolder className="w-4 h-4" />
+                        <span>Story Library ({savedItems.length})</span>
+                    </button>
+                </div>
+
                 {showDemo && (
-                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-5 mb-6 relative overflow-hidden transition-all duration-300">
+                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden transition-all duration-300">
                         <div className="max-w-2xl">
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="bg-red-500 text-gray-900 dark:text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
-                                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
+                                <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
                             <div className="flex items-center gap-2">
-                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronLeft className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                                 <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold">{demoSlide + 1} / {demoSlides.length}</span>
-                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronRight className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                             </div>
@@ -465,18 +421,21 @@ export default function StoryWriter() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-3 space-y-6">
+                {/* Main Content Layout */}
+                {activeTab === 'generator' ? (
+                    <div className="space-y-6">
                         <form onSubmit={handleGenerateStory} className="space-y-6">
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Outline & Concept Details</h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Outline & Concept Details */}
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+                                <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">Outline & Concept Details</h3>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Niche / Genre</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Niche / Genre</label>
                                         <select
                                             value={niche}
                                             onChange={(e) => setNiche(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                         >
                                             {nichesList.map((n) => (
                                                 <option key={n} value={n}>{n}</option>
@@ -495,11 +454,11 @@ export default function StoryWriter() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Writing Style</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Writing Style</label>
                                         <select
                                             value={style}
                                             onChange={(e) => setStyle(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                         >
                                             {stylesList.map((s) => (
                                                 <option key={s} value={s}>{s}</option>
@@ -519,14 +478,14 @@ export default function StoryWriter() {
                                 </div>
 
                                 <div>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Core Story Concept / Seed Idea</label>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Core Story Concept / Seed Idea</label>
                                         <button
                                             type="button"
                                             onClick={handleAutoBrainstorm}
-                                            className="text-[10px] bg-red-500 hover:bg-red-600 text-gray-900 dark:text-white px-2 py-0.5 rounded font-bold uppercase"
+                                            className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow"
                                         >
-                                            Auto-Brainstorm Concept & Cast
+                                            ⚡ Auto-Brainstorm Concept & Cast
                                         </button>
                                     </div>
                                     <textarea
@@ -538,9 +497,9 @@ export default function StoryWriter() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Theme (Overarching Motif)</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Theme (Overarching Motif)</label>
                                         <input
                                             type="text"
                                             placeholder="e.g. Betrayal, Redemption, Greed"
@@ -550,7 +509,7 @@ export default function StoryWriter() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Character Limit Option</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Character Limit Option</label>
                                         <select
                                             value={actorsLimit}
                                             onChange={(e) => setActorsLimit(e.target.value)}
@@ -563,9 +522,9 @@ export default function StoryWriter() {
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-gray-200 dark:border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="pt-3 border-t border-gray-200 dark:border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Est. Duration (minutes)</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Est. Duration (minutes)</label>
                                         <input
                                             type="number"
                                             value={duration}
@@ -573,7 +532,7 @@ export default function StoryWriter() {
                                             className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-2 mt-4">
+                                    <div className="flex items-center gap-2 mt-2 sm:mt-5">
                                         <input
                                             type="checkbox"
                                             id="isSeasonal"
@@ -581,9 +540,9 @@ export default function StoryWriter() {
                                             onChange={(e) => setIsSeasonal(e.target.checked)}
                                             className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                                         />
-                                        <label htmlFor="isSeasonal" className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 font-semibold uppercase">Seasonal (Multi-part)</label>
+                                        <label htmlFor="isSeasonal" className="text-xs text-gray-600 dark:text-gray-400 font-semibold uppercase">Seasonal (Multi-part)</label>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-4">
+                                    <div className="flex items-center gap-2 mt-2 sm:mt-5">
                                         <input
                                             type="checkbox"
                                             id="hasNarrator"
@@ -591,33 +550,34 @@ export default function StoryWriter() {
                                             onChange={(e) => setHasNarrator(e.target.checked)}
                                             className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                                         />
-                                        <label htmlFor="hasNarrator" className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 font-semibold uppercase">Include Narration voiceover</label>
+                                        <label htmlFor="hasNarrator" className="text-xs text-gray-600 dark:text-gray-400 font-semibold uppercase">Include Narration</label>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                            {/* Cast Cards */}
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Cast Card Sheet</h3>
+                                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Cast Card Sheet</h3>
                                     <button
                                         type="button"
                                         onClick={addCharacterCard}
-                                        className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1"
+                                        className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition-all"
                                     >
-                                        <MdAdd className="w-4 h-4" /> Add Character Card
+                                        <MdAdd className="w-4 h-4" /> Add Character
                                     </button>
                                 </div>
 
                                 {characters.length === 0 ? (
                                     <p className="text-xs text-gray-500 dark:text-gray-400 py-4 text-center">No character cards specified. Auto-Brainstorm to generate cast list dynamically.</p>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {characters.map((char, index) => (
                                             <div key={index} className="bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/5 rounded-xl p-4 space-y-3 relative group">
                                                 <button
                                                     type="button"
                                                     onClick={() => removeCharacterCard(index)}
-                                                    className="absolute top-2 right-2 text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
+                                                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors p-1"
                                                 >
                                                     <MdDelete className="w-4 h-4" />
                                                 </button>
@@ -628,7 +588,7 @@ export default function StoryWriter() {
                                                         type="text"
                                                         value={char.name || ''}
                                                         onChange={(e) => updateCharacterCard(index, 'name', e.target.value)}
-                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                                         placeholder="e.g. Chief Amara"
                                                     />
                                                 </div>
@@ -639,7 +599,7 @@ export default function StoryWriter() {
                                                         <select
                                                             value={char.role || 'Supporting'}
                                                             onChange={(e) => updateCharacterCard(index, 'role', e.target.value)}
-                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                                         >
                                                             <option value="Protagonist">Protagonist</option>
                                                             <option value="Antagonist">Antagonist</option>
@@ -653,7 +613,7 @@ export default function StoryWriter() {
                                                             type="text"
                                                             value={char.defect || ''}
                                                             onChange={(e) => updateCharacterCard(index, 'defect', e.target.value)}
-                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                            className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                                             placeholder="e.g. Arrogance"
                                                         />
                                                     </div>
@@ -665,7 +625,7 @@ export default function StoryWriter() {
                                                         type="text"
                                                         value={char.motivation || ''}
                                                         onChange={(e) => updateCharacterCard(index, 'motivation', e.target.value)}
-                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                        className="w-full bg-white dark:bg-[#1a1a24] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                                         placeholder="e.g. Protect family legacy"
                                                     />
                                                 </div>
@@ -678,40 +638,41 @@ export default function StoryWriter() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase py-3.5 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
                             >
-                                <MdAutoAwesome className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} /> Compile & Generate Chapter 1
+                                <MdAutoAwesome className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} />
+                                <span>Compile & Generate Chapter 1</span>
                             </button>
                         </form>
 
                         {activeChapters.length > 0 && (
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
                                     <div>
-                                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full">Active story builder</span>
+                                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2.5 py-0.5 rounded-full">Active story builder</span>
                                         <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{activeStoryTitle || "Untitled Story Outline"}</h3>
                                     </div>
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeStoryUuid, 'txt')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             TXT
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeStoryUuid, 'docx')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             DOCX
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeStoryUuid, 'pdf')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
-                                            PDF (Watermarked)
+                                            PDF
                                         </button>
                                     </div>
                                 </div>
@@ -720,29 +681,29 @@ export default function StoryWriter() {
                                     {activeChapters.map((ch, idx) => (
                                         <div key={idx} className="space-y-2 border-b border-gray-100 dark:border-white/5 pb-4 last:border-none">
                                             <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-                                                <span className="w-4 h-4 rounded bg-red-500/10 text-red-500 flex items-center justify-center text-[10px] font-bold">{ch.chapter_number}</span>
+                                                <span className="w-5 h-5 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center text-[10px] font-bold">{ch.chapter_number}</span>
                                                 {ch.title || `Chapter ${ch.chapter_number}`}
                                             </h4>
-                                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 whitespace-pre-line leading-relaxed">{ch.content}</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line leading-relaxed">{ch.content}</p>
                                         </div>
                                     ))}
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-200 dark:border-white/5 space-y-3">
                                     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tell AI what should happen in Chapter {activeChapters.length + 1}</label>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input
                                             type="text"
                                             placeholder="e.g. Chief Solomon calls an urgent family meeting to announce the heir..."
                                             value={nextInstructions}
                                             onChange={(e) => setNextInstructions(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleExtendStory}
                                             disabled={loading}
-                                            className="bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase px-5 rounded-xl text-xs flex items-center gap-1"
+                                            className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow"
                                         >
                                             <MdAutorenew className="w-4 h-4" /> Extend
                                         </button>
@@ -751,56 +712,84 @@ export default function StoryWriter() {
                             </div>
                         )}
                     </div>
-
-                    <div className="space-y-4">
-                        <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4">
-                            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Saved Story Outlines</h3>
-                            
-                            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-                                {savedItems.length === 0 ? (
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 py-4 text-center">No outlines created yet.</p>
-                                ) : (
-                                    savedItems.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => loadItemDetails(item.uuid)}
-                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-2.5 ${
-                                                selectedItem && selectedItem.uuid === item.uuid
-                                                    ? 'bg-red-500/5 border-red-500/30'
-                                                    : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-[#1b1b22]'
-                                            }`}
-                                        >
-                                            <div className="mt-0.5 flex-shrink-0">
-                                                <MdMovie className="text-rose-400 w-4 h-4" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.title}</p>
-                                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                                    <span className="text-[8px] text-gray-500 dark:text-gray-400 max-w-[80px] truncate">{item.niche}</span>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => deleteItem(item.uuid, e)}
-                                                className="text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors self-center flex-shrink-0"
-                                            >
-                                                <MdDelete className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                ) : (
+                    /* Library Tab */
+                    <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
+                            <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <MdFolder className="text-red-500 w-4 h-4" /> Saved Story Outlines
+                            </h3>
+                            <span className="text-[10px] bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded-full">
+                                {savedItems.length} Saved
+                            </span>
                         </div>
-                    </div>
-                </div>
 
+                        {savedItems.length === 0 ? (
+                            <div className="text-center py-12">
+                                <MdFolder className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                                <p className="text-xs text-gray-500 dark:text-gray-400">No story outlines created yet.</p>
+                                <button
+                                    onClick={() => setActiveTab('generator')}
+                                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase"
+                                >
+                                    Create New Story
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {savedItems.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => loadItemDetails(item.uuid)}
+                                        className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between group ${
+                                            selectedItem && selectedItem.uuid === item.uuid
+                                                ? 'bg-red-500/5 border-red-500/30 ring-1 ring-red-500/20'
+                                                : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-200 dark:border-white/5 hover:border-red-500/30'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full">
+                                                    {item.niche || 'Story'}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => deleteItem(item.uuid, e)}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                    title="Delete Story"
+                                                >
+                                                    <MdDelete className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-500 transition-colors">
+                                                {item.title}
+                                            </h4>
+                                            <p className="text-[10px] text-gray-400">
+                                                Style: {item.style || 'Standard'}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-white/5 flex items-center justify-between">
+                                            <span className="text-[10px] text-gray-400">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                                                Open Story →
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {loading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
                         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Synthesizing content..."}</p>
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Processing..."}</p>
                     </div>
                 </div>
             )}

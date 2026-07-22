@@ -12,7 +12,9 @@ import {
     MdInfoOutline, 
     MdChevronLeft, 
     MdChevronRight, 
-    MdAutoAwesome
+    MdAutoAwesome,
+    MdFolder,
+    MdCreate
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
@@ -23,6 +25,9 @@ export default function StoryToScript() {
     const [loadingText, setLoadingText] = useState('');
     const [savedItems, setSavedItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
+
+    // Active Section Tab: 'compiler' or 'library'
+    const [activeTab, setActiveTab] = useState('compiler');
 
     // Tutorial Carousel
     const [showDemo, setShowDemo] = useState(true);
@@ -145,6 +150,7 @@ export default function StoryToScript() {
                 } else {
                     setScriptHasMore(false);
                 }
+                setActiveTab('compiler');
             }
         } catch (err) {
             alert('Failed to load screenplay detail');
@@ -440,15 +446,18 @@ export default function StoryToScript() {
     const maxStoryToScript = parseInt(subscription?.max_story_to_script || 0);
     const usedStoryToScript = parseInt(subscription?.used_story_to_script || 0);
 
+    const savedDialogueScripts = savedItems.filter(i => i.type === 'script');
+
     return (
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-6 mb-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
                     <div>
-                        <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
                             <MdMovie className="text-red-500 w-6 h-6" /> Story to Script
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Convert your story outline or custom treatments into dialogue-driven screenplays.</p>
@@ -456,26 +465,53 @@ export default function StoryToScript() {
                     
                     <button
                         onClick={() => setShowDemo(!showDemo)}
-                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-gray-200/50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
+                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
                     >
                         <MdInfoOutline className="text-red-400 w-4 h-4" /> {showDemo ? "Hide Guide" : "View Guide"}
                     </button>
                 </div>
 
+                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
+                <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
+                    <button
+                        onClick={() => setActiveTab('compiler')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'compiler'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdCreate className="w-4 h-4" />
+                        <span>Script Compiler</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'library'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdFolder className="w-4 h-4" />
+                        <span>Saved Screenplays ({savedDialogueScripts.length})</span>
+                    </button>
+                </div>
+
                 {showDemo && (
-                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-5 mb-6 relative overflow-hidden transition-all duration-300">
+                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden transition-all duration-300">
                         <div className="max-w-2xl">
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="bg-red-500 text-gray-900 dark:text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
-                                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
+                                <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
                             <div className="flex items-center gap-2">
-                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronLeft className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                                 <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold">{demoSlide + 1} / {demoSlides.length}</span>
-                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronRight className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                             </div>
@@ -483,18 +519,16 @@ export default function StoryToScript() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-3 space-y-6">
+                {/* Tab Content */}
+                {activeTab === 'compiler' ? (
+                    <div className="space-y-6">
                         {(!loadingPlan && (maxStoryToScript === 0 || usedStoryToScript >= maxStoryToScript)) ? (
-                            <div className="min-h-[380px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-250 dark:border-white/10 relative overflow-hidden">
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] bg-red-600/5 rounded-full blur-[70px] pointer-events-none"></div>
-                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 z-10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
+                            <div className="min-h-[350px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden shadow-sm">
+                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/5">
+                                    <MdMovie className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-gray-900 dark:text-white z-10">Story to Script Locked</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6 z-10">
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-gray-900 dark:text-white">Story to Script Locked</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6">
                                     {maxStoryToScript === 0
                                         ? `Your current plan (${subscription?.plan_name || 'Free'}) does not support Story to Script conversion.`
                                         : `You have reached your limit of ${maxStoryToScript} Story to Script conversions on your current plan.`}
@@ -502,129 +536,131 @@ export default function StoryToScript() {
                                 </p>
                                 <button
                                     onClick={() => router.push('/dashboard/plans')}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md z-10 animate-pulse"
+                                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md"
                                 >
                                     Upgrade Plan
                                 </button>
                             </div>
                         ) : (
                             <form onSubmit={(e) => handleGenerateScript(e, false)} className="space-y-6">
-                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Convert Outline to Script Dialogue</h3>
-                                
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Script Title</label>
-                                    <input
-                                        type="text"
-                                        value={scriptTitle}
-                                        onChange={(e) => setScriptTitle(e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Source Treatment Outline</label>
-                                    <div className="flex gap-4 mb-3">
-                                        <label className="flex items-center gap-2 cursor-pointer text-xs">
-                                            <input
-                                                type="radio"
-                                                name="inputSource"
-                                                value="paste"
-                                                checked={inputSource === 'paste'}
-                                                onChange={(e) => setInputSource(e.target.value)}
-                                                className="text-red-500 focus:ring-red-500"
-                                            />
-                                            Paste / Upload Document
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-xs">
-                                            <input
-                                                type="radio"
-                                                name="inputSource"
-                                                value="saved_story"
-                                                checked={inputSource === 'saved_story'}
-                                                onChange={(e) => setInputSource(e.target.value)}
-                                                className="text-red-500 focus:ring-red-500"
-                                            />
-                                            Select Saved Story Outlines
-                                        </label>
+                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+                                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">
+                                        Convert Outline to Script Dialogue
+                                    </h3>
+                                    
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Script Title</label>
+                                        <input
+                                            type="text"
+                                            value={scriptTitle}
+                                            onChange={(e) => setScriptTitle(e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
                                     </div>
 
-                                    {inputSource === 'paste' ? (
-                                        <div className="space-y-3">
-                                            <textarea
-                                                placeholder="Paste story treatment chapters here, or upload a docx/pdf..."
-                                                value={pastedStoryText}
-                                                onChange={(e) => setPastedStoryText(e.target.value)}
-                                                rows="6"
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                            />
-                                            <div className="flex items-center gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Source Treatment Outline</label>
+                                        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+                                            <label className="flex items-center gap-2 cursor-pointer text-xs">
                                                 <input
-                                                    type="file"
-                                                    accept=".docx,.pdf,.txt"
-                                                    ref={fileInputRef}
-                                                    onChange={handleFileUpload}
-                                                    className="hidden"
+                                                    type="radio"
+                                                    name="inputSource"
+                                                    value="paste"
+                                                    checked={inputSource === 'paste'}
+                                                    onChange={(e) => setInputSource(e.target.value)}
+                                                    className="text-red-500 focus:ring-red-500"
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all text-gray-700 dark:text-white"
-                                                >
-                                                    <MdFileUpload className="w-4 h-4 text-red-500" /> Ingest Treatment PDF / DOCX
-                                                </button>
-                                            </div>
+                                                Paste / Upload Document
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer text-xs">
+                                                <input
+                                                    type="radio"
+                                                    name="inputSource"
+                                                    value="saved_story"
+                                                    checked={inputSource === 'saved_story'}
+                                                    onChange={(e) => setInputSource(e.target.value)}
+                                                    className="text-red-500 focus:ring-red-500"
+                                                />
+                                                Select Saved Story Outlines
+                                            </label>
                                         </div>
-                                    ) : (
-                                        <select
-                                            value={selectedSavedStoryId}
-                                            onChange={(e) => handleSourceStorySelect(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        >
-                                            <option value="">-- Choose saved story outline --</option>
-                                            {savedItems.filter(i => i.type === 'story').map(item => (
-                                                <option key={item.id} value={item.id}>{item.title} ({item.niche})</option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
 
-                                <div>
-                                    <div className="flex justify-between items-center mb-1.5">
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Dialogue Guidelines (Tones, Dialects, Dialect Guidelines)</label>
-                                        <button
-                                            type="button"
-                                            onClick={handleGenerateDialogueGuidelines}
-                                            className="text-[10px] bg-red-500 hover:bg-red-600 text-gray-900 dark:text-white px-2 py-0.5 rounded font-bold uppercase"
-                                        >
-                                            Auto-Generate Dialogue Guidelines
-                                        </button>
+                                        {inputSource === 'paste' ? (
+                                            <div className="space-y-3">
+                                                <textarea
+                                                    placeholder="Paste story treatment chapters here, or upload a docx/pdf..."
+                                                    value={pastedStoryText}
+                                                    onChange={(e) => setPastedStoryText(e.target.value)}
+                                                    rows="5"
+                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                />
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="file"
+                                                        accept=".docx,.pdf,.txt"
+                                                        ref={fileInputRef}
+                                                        onChange={handleFileUpload}
+                                                        className="hidden"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                        className="bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all text-gray-700 dark:text-white"
+                                                    >
+                                                        <MdFileUpload className="w-4 h-4 text-red-500" /> Ingest Treatment PDF / DOCX
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <select
+                                                value={selectedSavedStoryId}
+                                                onChange={(e) => handleSourceStorySelect(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="">-- Choose saved story outline --</option>
+                                                {savedItems.filter(i => i.type === 'story').map(item => (
+                                                    <option key={item.id} value={item.id}>{item.title} ({item.niche})</option>
+                                                ))}
+                                            </select>
+                                        )}
                                     </div>
-                                    <textarea
-                                        placeholder="Specify guidelines for characters (e.g. 'Amara speaks with sharp, articulate British accent, never using slang. Tunde speaks colloquial street language...')"
-                                        value={customScriptInstructions}
-                                        onChange={(e) => setCustomScriptInstructions(e.target.value)}
-                                        rows="3"
-                                        className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                    />
-                                </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-                            >
-                                <MdAutoAwesome className="w-4 h-4" /> Convert Treatment to Script
-                            </button>
-                        </form>
+                                    <div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Dialogue Guidelines (Tones, Dialects)</label>
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateDialogueGuidelines}
+                                                className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow"
+                                            >
+                                                ⚡ Auto-Generate Dialogue Guidelines
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            placeholder="Specify guidelines for characters (e.g. 'Amara speaks with sharp British accent...')"
+                                            value={customScriptInstructions}
+                                            onChange={(e) => setCustomScriptInstructions(e.target.value)}
+                                            rows="3"
+                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase py-3.5 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
+                                >
+                                    <MdAutoAwesome className="w-4 h-4" /> Convert Treatment to Script
+                                </button>
+                            </form>
                         )}
 
                         {scriptResult && (
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
                                     <div>
-                                        <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2 py-0.5 rounded-full">Dialogue script</span>
+                                        <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2.5 py-0.5 rounded-full">Dialogue script</span>
                                         <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{scriptTitle}</h3>
                                         {scriptResult.total_duration && (
                                             <p className="text-[10px] text-gray-500 dark:text-gray-400">Duration: {Math.round(scriptResult.total_duration)}s</p>
@@ -634,35 +670,35 @@ export default function StoryToScript() {
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeScriptUuid, 'txt')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             TXT
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeScriptUuid, 'docx')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             DOCX
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(activeScriptUuid, 'pdf')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
-                                            PDF (Watermarked)
+                                            PDF
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('audio')}
-                                            className="bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white font-bold rounded-lg px-2.5 py-1 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1"
+                                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
                                         >
                                             🎙️ Voice Over
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('images')}
-                                            className="bg-amber-550 hover:bg-amber-600 text-gray-900 dark:text-white font-bold rounded-lg px-2.5 py-1 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1"
+                                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
                                         >
                                             🎨 Generate Images
                                         </button>
@@ -682,7 +718,7 @@ export default function StoryToScript() {
                                                 </p>
                                             )}
 
-                                            <div className="space-y-3 pl-4 border-l border-red-500/20">
+                                            <div className="space-y-3 pl-3 border-l-2 border-red-500/30">
                                                 {scene.dialogues && scene.dialogues.map((dlg, dIdx) => (
                                                     <div key={dIdx} className="space-y-0.5">
                                                         <div className="flex items-center gap-1.5">
@@ -691,7 +727,7 @@ export default function StoryToScript() {
                                                                 <span className="text-[9px] text-gray-500 dark:text-gray-400 italic">({dlg.action.toLowerCase()})</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-gray-700 dark:text-gray-400 font-serif">"{dlg.line}"</p>
+                                                        <p className="text-xs text-gray-700 dark:text-gray-300 font-serif">"{dlg.line}"</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -705,7 +741,7 @@ export default function StoryToScript() {
                                             type="button"
                                             onClick={() => handleGenerateScript(null, true)}
                                             disabled={loading}
-                                            className="bg-yellow-600 hover:bg-yellow-700 text-gray-900 dark:text-white font-bold uppercase px-6 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow"
+                                            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold uppercase px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow"
                                         >
                                             <MdAutorenew className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Continue Next Scene Generation
                                         </button>
@@ -714,53 +750,81 @@ export default function StoryToScript() {
                             </div>
                         )}
                     </div>
-
-                    <div className="space-y-4">
-                        <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4">
-                            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Saved Dialogue Scripts</h3>
-                            
-                            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-                                {savedItems.length === 0 ? (
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 py-4 text-center">No screenplays compiled yet.</p>
-                                ) : (
-                                    savedItems.filter(i => i.type === 'script').map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => loadItemDetails(item.uuid)}
-                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-2.5 ${
-                                                selectedItem && selectedItem.uuid === item.uuid
-                                                    ? 'bg-red-500/5 border-red-500/30'
-                                                    : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-[#1b1b22]'
-                                            }`}
-                                        >
-                                            <div className="mt-0.5 flex-shrink-0">
-                                                <MdDescription className="text-amber-400 w-4 h-4" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.title}</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => deleteItem(item.uuid, e)}
-                                                className="text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors self-center flex-shrink-0"
-                                            >
-                                                <MdDelete className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                ) : (
+                    /* Library Tab */
+                    <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
+                            <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <MdFolder className="text-red-500 w-4 h-4" /> Saved Screenplays
+                            </h3>
+                            <span className="text-[10px] bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded-full">
+                                {savedDialogueScripts.length} Saved
+                            </span>
                         </div>
-                    </div>
-                </div>
 
+                        {savedDialogueScripts.length === 0 ? (
+                            <div className="text-center py-12">
+                                <MdFolder className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                                <p className="text-xs text-gray-500 dark:text-gray-400">No screenplays compiled yet.</p>
+                                <button
+                                    onClick={() => setActiveTab('compiler')}
+                                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase"
+                                >
+                                    Compile New Screenplay
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {savedDialogueScripts.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => loadItemDetails(item.uuid)}
+                                        className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between group ${
+                                            selectedItem && selectedItem.uuid === item.uuid
+                                                ? 'bg-red-500/5 border-red-500/30 ring-1 ring-red-500/20'
+                                                : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-200 dark:border-white/5 hover:border-red-500/30'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2 py-0.5 rounded-full">
+                                                    Screenplay
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => deleteItem(item.uuid, e)}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                    title="Delete Screenplay"
+                                                >
+                                                    <MdDelete className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-500 transition-colors">
+                                                {item.title}
+                                            </h4>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-white/5 flex items-center justify-between">
+                                            <span className="text-[10px] text-gray-400">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                                                Open Screenplay →
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {loading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
                         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Synthesizing content..."}</p>
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Processing..."}</p>
                     </div>
                 </div>
             )}

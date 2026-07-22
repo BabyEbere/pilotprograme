@@ -10,7 +10,9 @@ import {
     MdInfoOutline, 
     MdChevronLeft, 
     MdChevronRight, 
-    MdAutoAwesome
+    MdAutoAwesome,
+    MdFolder,
+    MdCreate
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
@@ -21,6 +23,9 @@ export default function BlogToScript() {
     const [loadingText, setLoadingText] = useState('');
     const [savedItems, setSavedItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
+
+    // Active Section Tab: 'converter' or 'library'
+    const [activeTab, setActiveTab] = useState('converter');
 
     // Tutorial Carousel
     const [showDemo, setShowDemo] = useState(true);
@@ -124,6 +129,7 @@ export default function BlogToScript() {
                     uuid: item.uuid,
                     script: contentJson
                 });
+                setActiveTab('converter');
             }
         } catch (err) {
             alert('Failed to load detail');
@@ -249,16 +255,17 @@ export default function BlogToScript() {
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-6 mb-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
                     <div>
-                        <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
                             <MdLink className="text-red-500 w-6 h-6" /> Blog to Script
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Convert any blog post or article webpage into a video presentation script.</p>
                         {!loadingPlan && (
-                            <span className="text-[10px] bg-red-500/10 text-red-650 dark:text-red-400 border border-red-500/15 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider mt-1.5 inline-block">
+                            <span className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/15 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider mt-1.5 inline-block">
                                 Usage: {usedBlogToScript} / {maxBlogToScript} conversions
                             </span>
                         )}
@@ -266,26 +273,53 @@ export default function BlogToScript() {
                     
                     <button
                         onClick={() => setShowDemo(!showDemo)}
-                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-gray-200/50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
+                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
                     >
                         <MdInfoOutline className="text-red-400 w-4 h-4" /> {showDemo ? "Hide Guide" : "View Guide"}
                     </button>
                 </div>
 
+                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
+                <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
+                    <button
+                        onClick={() => setActiveTab('converter')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'converter'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdCreate className="w-4 h-4" />
+                        <span>Article Converter</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'library'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        <MdFolder className="w-4 h-4" />
+                        <span>Saved Scripts ({savedItems.length})</span>
+                    </button>
+                </div>
+
                 {showDemo && (
-                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-5 mb-6 relative overflow-hidden transition-all duration-300">
+                    <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden transition-all duration-300">
                         <div className="max-w-2xl">
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="bg-red-500 text-gray-900 dark:text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
-                                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
+                                <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-500 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
                             <div className="flex items-center gap-2">
-                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={prevDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronLeft className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                                 <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold">{demoSlide + 1} / {demoSlides.length}</span>
-                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-gray-200/50 dark:bg-white/10 rounded-full">
+                                <button onClick={nextDemoSlide} className="p-1 bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-white/10 rounded-full">
                                     <MdChevronRight className="w-4 h-4 text-gray-700 dark:text-white" />
                                 </button>
                             </div>
@@ -293,18 +327,16 @@ export default function BlogToScript() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-3 space-y-6">
+                {/* Tab Content */}
+                {activeTab === 'converter' ? (
+                    <div className="space-y-6">
                         {(!loadingPlan && (maxBlogToScript === 0 || usedBlogToScript >= maxBlogToScript)) ? (
-                            <div className="min-h-[380px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-250 dark:border-white/10 relative overflow-hidden">
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] bg-red-600/5 rounded-full blur-[70px] pointer-events-none"></div>
-                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 z-10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
+                            <div className="min-h-[350px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden shadow-sm">
+                                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/5">
+                                    <MdLink className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xs font-black uppercase tracking-wider mb-2 text-gray-900 dark:text-white z-10">Blog to Script Locked</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6 z-10">
+                                <h3 className="text-sm font-black uppercase tracking-wider mb-2 text-gray-900 dark:text-white">Blog to Script Locked</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6">
                                     {maxBlogToScript === 0
                                         ? `Your current plan (${subscription?.plan_name || 'Free'}) does not support Blog to Script conversion.`
                                         : `You have reached your limit of ${maxBlogToScript} Blog to Script conversions on your current plan.`}
@@ -312,42 +344,42 @@ export default function BlogToScript() {
                                 </p>
                                 <button
                                     onClick={() => router.push('/dashboard/plans')}
-                                    className="bg-red-650 hover:bg-red-750 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md z-10"
+                                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md"
                                 >
                                     Upgrade Plan
                                 </button>
                             </div>
                         ) : (
                             <form onSubmit={handleBlogToScript} className="space-y-6">
-                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
-                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Blog Webpage to Presentation Script</h3>
+                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+                                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">
+                                        Blog Webpage to Presentation Script
+                                    </h3>
                                     
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Webpage URL</label>
-                                        <div className="flex gap-2">
-                                            <div className="bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 flex items-center gap-2 w-full">
-                                                <MdLink className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                                                <input
-                                                    type="url"
-                                                    required
-                                                    placeholder="https://example.com/blog-post-article"
-                                                    value={blogUrl}
-                                                    onChange={(e) => setBlogUrl(e.target.value)}
-                                                    className="bg-transparent border-none text-xs w-full focus:outline-none text-gray-700 dark:text-white"
-                                                />
-                                            </div>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Webpage URL</label>
+                                        <div className="bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 flex items-center gap-2 w-full">
+                                            <MdLink className="text-gray-400 flex-shrink-0 w-4 h-4" />
+                                            <input
+                                                type="url"
+                                                required
+                                                placeholder="https://example.com/blog-post-article"
+                                                value={blogUrl}
+                                                onChange={(e) => setBlogUrl(e.target.value)}
+                                                className="bg-transparent border-none text-xs w-full focus:outline-none text-gray-700 dark:text-white"
+                                            />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Target Duration</label>
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Target Duration</label>
                                             <select
                                                 value={blogDuration}
                                                 onChange={(e) => setBlogDuration(Number(e.target.value))}
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                             >
-                                                <option value={1}>1 Minute (TikTok/Short)</option>
+                                                <option value={1}>1 Minute (Shorts / TikTok)</option>
                                                 <option value={3}>3 Minutes (Medium video)</option>
                                                 <option value={5}>5 Minutes (Full presentation)</option>
                                                 <option value={10}>10 Minutes (Deep dive)</option>
@@ -355,11 +387,11 @@ export default function BlogToScript() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Video Style / Format</label>
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Video Style / Format</label>
                                             <select
                                                 value={videoStyle}
                                                 onChange={(e) => setVideoStyle(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                             >
                                                 <option value="faceless">Faceless YouTube / Presenter Monologue</option>
                                                 <option value="narrator">Storytelling / Character Dialogues</option>
@@ -367,11 +399,11 @@ export default function BlogToScript() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Visual Scene Style</label>
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Visual Scene Style</label>
                                             <select
                                                 value={visualStyle}
                                                 onChange={(e) => setVisualStyle(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                             >
                                                 <option value="content_based">Content-Based Slides & Title Graphics</option>
                                                 <option value="character_based">Character-Based Cinematic Photos</option>
@@ -383,7 +415,7 @@ export default function BlogToScript() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-red-605 hover:bg-red-750 text-gray-900 dark:text-white font-bold uppercase py-3 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase py-3.5 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
                                 >
                                     <MdAutoAwesome className="w-4 h-4" /> Synthesize Article into Script
                                 </button>
@@ -391,45 +423,45 @@ export default function BlogToScript() {
                         )}
 
                         {blogResult && (
-                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                            <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
                                     <div>
-                                        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/10 px-2 py-0.5 rounded-full">Blog converted presentation script</span>
+                                        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/10 px-2.5 py-0.5 rounded-full">Blog converted script</span>
                                         <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{blogResult.script?.title || 'Synthesized Presentation'}</h3>
                                     </div>
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(blogResult.uuid, 'txt')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             TXT
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(blogResult.uuid, 'docx')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
                                             DOCX
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => triggerDownload(blogResult.uuid, 'pdf')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-200/50 dark:bg-white/10 text-gray-700 dark:text-white"
+                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
-                                            PDF (Watermarked)
+                                            PDF
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('audio')}
-                                            className="bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white font-bold rounded-lg px-2.5 py-1 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1"
+                                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
                                         >
                                             🎙️ Voice Over
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('images')}
-                                            className="bg-amber-550 hover:bg-amber-600 text-gray-900 dark:text-white font-bold rounded-lg px-2.5 py-1 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1"
+                                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
                                         >
                                             🎨 Generate Images
                                         </button>
@@ -443,9 +475,9 @@ export default function BlogToScript() {
                                             {scene.visual_description && (
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 italic">Visual: {scene.visual_description}</p>
                                             )}
-                                            <div className="pl-4 border-l-2 border-cyan-500 space-y-1">
+                                            <div className="pl-3 border-l-2 border-cyan-500 space-y-1">
                                                 {scene.dialogues && scene.dialogues.map((dlg, dIdx) => (
-                                                    <p key={dIdx} className="text-xs text-gray-700 dark:text-gray-400 font-serif leading-relaxed">
+                                                    <p key={dIdx} className="text-xs text-gray-700 dark:text-gray-300 font-serif leading-relaxed">
                                                         <strong>{dlg.speaker}:</strong> "{dlg.line}"
                                                     </p>
                                                 ))}
@@ -456,50 +488,78 @@ export default function BlogToScript() {
                             </div>
                         )}
                     </div>
-
-                    <div className="space-y-4">
-                        <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4">
-                            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Saved Blog Scripts</h3>
-                            
-                            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-                                {savedItems.length === 0 ? (
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 py-4 text-center">No presentation scripts created yet.</p>
-                                ) : (
-                                    savedItems.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => loadItemDetails(item.uuid)}
-                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-2.5 ${
-                                                selectedItem && selectedItem.uuid === item.uuid
-                                                    ? 'bg-red-500/5 border-red-500/30'
-                                                    : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-[#1b1b22]'
-                                            }`}
-                                        >
-                                            <div className="mt-0.5 flex-shrink-0">
-                                                <MdLink className="text-cyan-400 w-4 h-4" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.title}</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => deleteItem(item.uuid, e)}
-                                                className="text-gray-600 dark:text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors self-center flex-shrink-0"
-                                            >
-                                                <MdDelete className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                ) : (
+                    /* Library Tab */
+                    <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
+                            <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <MdFolder className="text-red-500 w-4 h-4" /> Saved Blog Scripts
+                            </h3>
+                            <span className="text-[10px] bg-red-500/10 text-red-500 font-bold px-2 py-0.5 rounded-full">
+                                {savedItems.length} Saved
+                            </span>
                         </div>
-                    </div>
-                </div>
 
+                        {savedItems.length === 0 ? (
+                            <div className="text-center py-12">
+                                <MdFolder className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                                <p className="text-xs text-gray-500 dark:text-gray-400">No blog presentation scripts created yet.</p>
+                                <button
+                                    onClick={() => setActiveTab('converter')}
+                                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase"
+                                >
+                                    Convert New Article
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {savedItems.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => loadItemDetails(item.uuid)}
+                                        className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between group ${
+                                            selectedItem && selectedItem.uuid === item.uuid
+                                                ? 'bg-red-500/5 border-red-500/30 ring-1 ring-red-500/20'
+                                                : 'bg-gray-50 dark:bg-[#17171d]/60 border-gray-200 dark:border-white/5 hover:border-red-500/30'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[9px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/10 px-2 py-0.5 rounded-full">
+                                                    Blog Script
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => deleteItem(item.uuid, e)}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                    title="Delete Script"
+                                                >
+                                                    <MdDelete className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-500 transition-colors">
+                                                {item.title}
+                                            </h4>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-white/5 flex items-center justify-between">
+                                            <span className="text-[10px] text-gray-400">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                                                Open Script →
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {loading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
                         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
                         <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Synthesizing content..."}</p>
