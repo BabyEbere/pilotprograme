@@ -12,7 +12,8 @@ import {
     MdAdd,
     MdFolder,
     MdCreate,
-    MdDownload
+    MdDownload,
+    MdBook
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 

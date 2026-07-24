@@ -18,11 +18,16 @@ export default function CreatorOverview() {
     // States
     const [dailyIdeas, setDailyIdeas] = useState([]);
     const [ideasLoading, setIdeasLoading] = useState(false);
+    const [ideasRefreshing, setIdeasRefreshing] = useState(false);
     const [competitorFeed, setCompetitorFeed] = useState(null);
     const [feedLoading, setFeedLoading] = useState(false);
     const [feedTab, setFeedTab] = useState('trending'); // trending | new | down
     const [savedIdeas, setSavedIdeas] = useState({});
     const [toastMsg, setToastMsg] = useState('');
+
+    // Trending keywords state
+    const [trendingKeywords, setTrendingKeywords] = useState([]);
+    const [keywordsLoading, setKeywordsLoading] = useState(false);
 
     // Suggested Competitors state
     const [suggestedCompetitors, setSuggestedCompetitors] = useState([]);
@@ -93,6 +98,22 @@ export default function CreatorOverview() {
             }
         } catch (e) {
             console.error("Failed to load suggested competitors", e);
+        }
+    };
+
+    const fetchTrendingKeywords = async () => {
+        if (!user?.id) return;
+        setKeywordsLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/youtube-analyzer/trending-keywords/${user.id}`);
+            const json = await res.json();
+            if (json.success) {
+                setTrendingKeywords(json.keywords || []);
+            }
+        } catch (e) {
+            console.error('Failed to load trending keywords', e);
+        } finally {
+            setKeywordsLoading(false);
         }
     };
 
@@ -170,11 +191,30 @@ export default function CreatorOverview() {
         }
     };
 
+    const handleRefreshIdeas = async () => {
+        if (!user?.id || ideasRefreshing) return;
+        setIdeasRefreshing(true);
+        try {
+            const res = await fetch(`${API_URL}/youtube-analyzer/daily-ideas/${user.id}?force=true`);
+            const json = await res.json();
+            if (json.success) {
+                setDailyIdeas(json.ideas || []);
+                setToastMsg('Fresh ideas generated!');
+                setTimeout(() => setToastMsg(''), 3000);
+            }
+        } catch (e) {
+            console.error('Failed to refresh ideas', e);
+        } finally {
+            setIdeasRefreshing(false);
+        }
+    };
+
     useEffect(() => {
         fetchDashboardSummary();
         fetchDailyIdeas();
         fetchCompetitorFeed();
         fetchSuggestedCompetitors();
+        fetchTrendingKeywords();
     }, []);
 
     if (loading) {
@@ -448,34 +488,77 @@ export default function CreatorOverview() {
                             </h3>
                             <p className="text-[10px] text-gray-400">Search volume trends in your niche</p>
                         </div>
+                        {keywordsLoading && (
+                            <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                        )}
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Trending Volume</p>
-                                <p className="text-base font-black text-white mt-0.5">111K Searches <span className="text-emerald-400 font-bold text-xs">+689%</span></p>
+                    <div className="space-y-3">
+                        {keywordsLoading ? (
+                            <div className="space-y-2">
+                                {[1,2,3].map(i => (
+                                    <div key={i} className="h-8 bg-white/5 rounded-xl animate-pulse" />
+                                ))}
                             </div>
-                            <span className="text-xs font-black text-red-500 bg-red-500/10 px-2.5 py-1 rounded-xl">7.5K VPH</span>
-                        </div>
-
-                        {/* Smooth SVG chart trend graph */}
-                        <div className="h-16 w-full relative">
-                            <svg className="w-full h-full text-blue-500/20 fill-current" viewBox="0 0 100 30" preserveAspectRatio="none">
-                                <path d="M0 25 C10 24, 15 10, 25 15 C35 20, 40 5, 50 15 C60 25, 70 8, 80 12 C90 16, 95 2, 100 8 L100 30 L0 30 Z" className="opacity-30 fill-blue-500" />
-                                <path d="M0 25 C10 24, 15 10, 25 15 C35 20, 40 5, 50 15 C60 25, 70 8, 80 12 C90 16, 95 2, 100 8" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
-                            </svg>
-                        </div>
+                        ) : trendingKeywords.length > 0 ? (
+                            trendingKeywords.slice(0, 5).map((kw, idx) => (
+                                <div key={idx} className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-gray-200 capitalize truncate max-w-[60%]">{kw.keyword}</span>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            <span className="text-[9px] font-black text-gray-400">{kw.estimated_volume}</span>
+                                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                kw.trend === 'up' ? 'bg-emerald-500/15 text-emerald-400' :
+                                                kw.trend === 'down' ? 'bg-red-500/15 text-red-400' :
+                                                'bg-gray-500/15 text-gray-400'
+                                            }`}>
+                                                {kw.trend === 'up' ? '+hot' : kw.trend === 'down' ? '-low' : '~stable'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-700 ${
+                                                kw.heat > 65 ? 'bg-gradient-to-r from-red-500 to-orange-400' :
+                                                kw.heat > 38 ? 'bg-gradient-to-r from-blue-500 to-blue-400' :
+                                                'bg-white/20'
+                                            }`}
+                                            style={{ width: `${kw.heat}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-4">
+                                <p className="text-[10px] text-gray-500 italic">Analyzing your niche keywords...</p>
+                                <button
+                                    onClick={fetchTrendingKeywords}
+                                    className="mt-2 text-[9px] font-bold text-blue-400 underline uppercase tracking-wider cursor-pointer"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Daily Ideas section */}
             <div className="space-y-4">
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-yellow-500" />
-                    Daily Content Suggestions
-                </h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-yellow-500" />
+                        Daily Content Suggestions
+                    </h3>
+                    <button
+                        onClick={handleRefreshIdeas}
+                        disabled={ideasRefreshing || ideasLoading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                    >
+                        <RefreshCw className={`w-3 h-3 ${ideasRefreshing ? 'animate-spin' : ''}`} />
+                        {ideasRefreshing ? 'Generating...' : 'Refresh Ideas'}
+                    </button>
+                </div>
 
                 {ideasLoading ? (
                     <div className="bg-white/5 border border-white/5 rounded-3xl p-12 text-center text-xs text-gray-400">

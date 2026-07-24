@@ -224,7 +224,17 @@ export default function Settings() {
         },
         onError: () => setLinkError('YouTube authorization cancelled or failed.'),
         flow: 'auth-code',
-        scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
+        access_type: 'offline',
+        prompt: 'consent',
+        scope: [
+            'https://www.googleapis.com/auth/youtube.readonly',
+            'https://www.googleapis.com/auth/youtube.force-ssl',
+            'https://www.googleapis.com/auth/youtube.upload',
+            'https://www.googleapis.com/auth/youtubepartner',
+            'https://www.googleapis.com/auth/youtubepartner-channel-audit',
+            'https://www.googleapis.com/auth/youtube.channel-memberships.creator',
+            'https://www.googleapis.com/auth/youtube.third-party-link.creator',
+        ].join(' '),
     });
 
     const handleUnlinkYoutube = async (channelId) => {
@@ -1184,8 +1194,8 @@ export default function Settings() {
                                     </div>
 
                                     {/* Info note */}
-                                    <div className="mt-4 bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 text-xs text-blue-300/70 leading-relaxed">
-                                        <p className="font-bold text-blue-400 mb-1">How it works</p>
+                                    <div className="mt-4 bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 text-xs text-blue-700 dark:text-blue-300/70 leading-relaxed">
+                                        <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">How YouTube &amp; Google linking works</p>
                                         <ul className="space-y-1 text-[11px]">
                                             <li>• Once linked, you can sign in with Google on the login page — no password needed.</li>
                                             <li>• Your Google email must match your registered account email.</li>

@@ -3,47 +3,41 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-    Sparkles, Flame, Users, Search, Play, ArrowLeft, RefreshCw, 
-    ChevronLeft, ChevronRight, Check, Plus, AlertCircle, Edit3, Tag, BarChart3, AlertTriangle, Cpu, TrendingUp
+    Sparkles, Flame, Play, ArrowLeft, RefreshCw, 
+    Check, AlertCircle, Edit3, Tag, BarChart3, AlertTriangle, 
+    UploadCloud, Image as ImageIcon, Eye, Wand2, Copy, FileText, Send
 } from 'lucide-react';
 import Loader from '@/components/Loader';
 
 export default function OptimizationFeed() {
     const [loading, setLoading] = useState(true);
     const [videoAudits, setVideoAudits] = useState([]);
-    const [suggestedCompetitors, setSuggestedCompetitors] = useState([]);
-    const [competitorAddingId, setCompetitorAddingId] = useState(null);
     const [toastMsg, setToastMsg] = useState('');
+    const [toastType, setToastType] = useState('success'); // 'success' | 'error'
     const router = useRouter();
 
-    // Competitor feed metrics
-    const [competitorFeed, setCompetitorFeed] = useState(null);
-    const [benchmarksList, setBenchmarksList] = useState([]);
+    // Editable state maps for each video_id
+    const [editingTitlesMap, setEditingTitlesMap] = useState({});
+    const [editingDescMap, setEditingDescMap] = useState({});
+    const [editingTagsMap, setEditingTagsMap] = useState({});
+    const [customTagInputs, setCustomTagInputs] = useState({});
 
-    // Active indices for the slide queues
-    const [tagsIndex, setTagsIndex] = useState(0);
-    const [titlesIndex, setTitlesIndex] = useState(0);
-    const [descIndex, setDescIndex] = useState(0);
+    // Active Tab per video card: 'title' | 'description' | 'tags' | 'thumbnail'
+    const [activeTabMap, setActiveTabMap] = useState({});
 
-    // Edit states
-    const [customTagInput, setCustomTagInput] = useState('');
-    const [editingTagsMap, setEditingTagsMap] = useState({}); // video_id -> tags array
-    const [editingTitlesMap, setEditingTitlesMap] = useState({}); // video_id -> title string
-    const [editingDescMap, setEditingDescMap] = useState({}); // video_id -> desc string
-
-    const [actionLoadingMap, setActionLoadingMap] = useState({}); // key -> true/false
-    const [aiRunningMap, setAiRunningMap] = useState({}); // video_id -> boolean
+    // Loading indicators
+    const [aiRunningMap, setAiRunningMap] = useState({});
+    const [publishingMap, setPublishingMap] = useState({});
+    const [thumbGeneratingMap, setThumbGeneratingMap] = useState({});
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const user = JSON.parse(typeof window !== 'undefined' ? (localStorage.getItem('user') || '{}') : '{}');
 
-    // Calculate channel views average for recent uploads
-    const [avgViews, setAvgViews] = useState(0);
-    const [errorMsg, setErrorMsg] = useState('');
-
-    const [selectedBenchmarkCompare, setSelectedBenchmarkCompare] = useState(null);
-    const [aiBenchmarkLoading, setAiBenchmarkLoading] = useState(false);
-    const [aiBenchmarkResult, setAiBenchmarkResult] = useState('');
+    const showToast = (msg, type = 'success') => {
+        setToastMsg(msg);
+        setToastType(type);
+        setTimeout(() => setToastMsg(''), 4500);
+    };
 
     const fetchData = async () => {
         if (!user?.id) {
@@ -52,939 +46,466 @@ export default function OptimizationFeed() {
         }
         setLoading(true);
         try {
-            // 1. Fetch channel video audits
-            const auditRes = await fetch(`${API_URL}/youtube-analyzer/channel-videos-audit/${user.id}`);
-            const auditJson = await auditRes.json();
-            if (!auditJson.success) {
-                setErrorMsg(auditJson.message || 'Failed to retrieve video audits.');
-                setVideoAudits([]);
-                setLoading(false);
-                return;
-            }
+            const res = await fetch(`${API_URL}/youtube-analyzer/channel-videos-audit/${user.id}`);
+            const data = await res.json();
 
-            setErrorMsg('');
-            const audits = auditJson.audits || [];
-            setVideoAudits(audits);
+            if (data.success) {
+                const audits = (data.audits || []).slice(0, 5); // Display 5 recent posts from channel on load
+                setVideoAudits(audits);
 
-            // Compute average views
-            if (audits.length > 0) {
-                const total = audits.reduce((sum, v) => sum + (v.views || 0), 0);
-                setAvgViews(total / audits.length);
-            }
+                const titlesMap = {};
+                const descMap = {};
+                const tagsMap = {};
+                const tabsMap = {};
 
-            // Initialize edit states
-            const tagsMap = {};
-            const titlesMap = {};
-            const descMap = {};
-            audits.forEach(vid => {
-                let initialTags = [];
-                try {
-                    initialTags = typeof vid.suggested_tags === 'string' ? JSON.parse(vid.suggested_tags) : (vid.suggested_tags || []);
-                } catch(e) {
-                    initialTags = vid.suggested_tags || [];
-                }
-                tagsMap[vid.video_id] = initialTags.filter(t => t);
-                titlesMap[vid.video_id] = vid.optimized_title || vid.current_title;
-                descMap[vid.video_id] = vid.suggested_description || '';
-            });
-            setEditingTagsMap(tagsMap);
-            setEditingTitlesMap(titlesMap);
-            setEditingDescMap(descMap);
-
-            // 2. Fetch competitor feed to extract similar outlier videos
-            const feedRes = await fetch(`${API_URL}/youtube-analyzer/competitor-feed/${user.id}`);
-            const feedJson = await feedRes.json();
-            let trendingPosts = [];
-            if (feedJson.success) {
-                setCompetitorFeed(feedJson);
-                trendingPosts = feedJson.trending_posts || [];
-            }
-
-            // 3. Fetch suggested competitors
-            const compRes = await fetch(`${API_URL}/youtube-analyzer/competitors/suggested/${user.id}`);
-            const compJson = await compRes.json();
-            if (compJson.success) {
-                setSuggestedCompetitors(compJson.suggestions || []);
-            }
-
-            // 4. Map similar content comparisons dynamically
-            const list = [];
-            if (audits.length > 0 && trendingPosts.length > 0) {
-                audits.forEach(userVid => {
-                    // Try to match a competitor video by title similarities, fallback to top trending competitor post
-                    let matched = null;
-                    let maxCommon = 0;
+                audits.forEach(v => {
+                    titlesMap[v.video_id] = v.current_title || '';
+                    descMap[v.video_id] = v.suggested_description || '';
                     
-                    const userTerms = new Set(userVid.current_title.toLowerCase().split(/\s+/).filter(w => w.length > 4));
-                    
-                    trendingPosts.forEach(compVid => {
-                        const compTerms = compVid.title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
-                        const common = compTerms.filter(t => userTerms.has(t)).length;
-                        if (common > maxCommon) {
-                            maxCommon = common;
-                            matched = compVid;
-                        }
-                    });
-
-                    if (!matched) {
-                        // Fallback to highest competitor view video
-                        matched = trendingPosts[0];
+                    let parsedTags = [];
+                    try {
+                        parsedTags = typeof v.suggested_tags === 'string' ? JSON.parse(v.suggested_tags) : (v.suggested_tags || []);
+                    } catch (e) {
+                        parsedTags = v.suggested_tags || [];
                     }
-
-                    if (matched) {
-                        const compViews = matched.views || 0;
-                        const userViews = userVid.views || 1;
-                        if (compViews > userViews) {
-                            const ratio = compViews / userViews;
-                            list.push({
-                                userVideo: userVid,
-                                competitorVideo: matched,
-                                ratio: ratio.toFixed(1),
-                                gap: compViews - userViews
-                            });
-                        }
-                    }
+                    tagsMap[v.video_id] = Array.isArray(parsedTags) ? parsedTags.filter(Boolean) : [];
+                    tabsMap[v.video_id] = 'title'; // default tab
                 });
-            }
-            setBenchmarksList(list);
 
-        } catch (e) {
-            console.error("Failed to load feed resources", e);
+                setEditingTitlesMap(titlesMap);
+                setEditingDescMap(descMap);
+                setEditingTagsMap(tagsMap);
+                setActiveTabMap(tabsMap);
+            } else {
+                showToast(data.message || 'Failed to load video audits', 'error');
+            }
+        } catch (err) {
+            console.error('Fetch error:', err);
+            showToast('Network error loading video audits.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleUpdateMetadata = async (videoId, type) => {
-        const key = `${videoId}-${type}`;
-        setActionLoadingMap(prev => ({ ...prev, [key]: true }));
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-        const body = {
-            user_id: user.id,
-            video_id: videoId
-        };
-        if (type === 'tags') {
-            body.tags = editingTagsMap[videoId] || [];
-        } else if (type === 'title') {
-            body.title = editingTitlesMap[videoId] || '';
-        } else if (type === 'description') {
-            body.description = editingDescMap[videoId] || '';
-        }
-
-        try {
-            const res = await fetch(`${API_URL}/youtube-analyzer/video/update`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const json = await res.json();
-            if (json.success) {
-                setToastMsg(`${type.toUpperCase()} successfully updated on YouTube!`);
-                setTimeout(() => setToastMsg(''), 3000);
-            } else {
-                alert(json.message || 'Failed to update metadata.');
-            }
-        } catch (e) {
-            alert('Failed to connect to YouTube sync service.');
-        } finally {
-            setActionLoadingMap(prev => ({ ...prev, [key]: false }));
-        }
-    };
-
-    const handleTrackSuggestedCompetitor = async (channelId) => {
-        setCompetitorAddingId(channelId);
-        try {
-            const res = await fetch(`${API_URL}/youtube-analyzer/competitors/add`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: user.id,
-                    query: channelId
-                })
-            });
-            const json = await res.json();
-            if (json.success) {
-                setToastMsg('Competitor added to tracker!');
-                setTimeout(() => setToastMsg(''), 3000);
-                setSuggestedCompetitors(prev => prev.filter(c => c.id !== channelId));
-                fetchData();
-            } else {
-                alert(json.message || 'Could not track competitor.');
-            }
-        } catch (e) {
-            alert('Failed to connect to competitor tracker.');
-        } finally {
-            setCompetitorAddingId(null);
-        }
-    };
-
-    const triggerDeepAiUplift = async (videoId) => {
-        setAiRunningMap(prev => ({ ...prev, [videoId]: true }));
+    // ── 1. Synchronous AI Uplift Audit (Title, Desc, Tags) ──────────────────────────
+    const handleRunAiUplift = async (video_id) => {
+        setAiRunningMap(prev => ({ ...prev, [video_id]: true }));
         try {
             const res = await fetch(`${API_URL}/youtube-analyzer/video/audit-uplift`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: user.id,
-                    video_id: videoId
-                })
+                body: JSON.stringify({ user_id: user.id, video_id })
             });
-            const json = await res.json();
-            if (json.success) {
-                setToastMsg('AI Uplift completed! Feed refreshed.');
-                setTimeout(() => setToastMsg(''), 3000);
+            const data = await res.json();
+            if (data.success) {
+                showToast('AI SEO Uplift audit completed!');
                 await fetchData();
             } else {
-                alert(json.message || 'AI upgrade failed.');
+                showToast(data.message || 'AI Uplift audit failed', 'error');
             }
-        } catch (e) {
-            alert('AI Uplift failed. Ensure your Gemini API Key is configured.');
+        } catch (err) {
+            showToast('Error running AI Uplift.', 'error');
         } finally {
-            setAiRunningMap(prev => ({ ...prev, [videoId]: false }));
+            setAiRunningMap(prev => ({ ...prev, [video_id]: false }));
         }
     };
 
-    const getAiComparisonInsight = async (bench) => {
-        setSelectedBenchmarkCompare(bench);
-        setAiBenchmarkLoading(true);
-        setAiBenchmarkResult('');
+    // ── 2. SiliconFlow Thumbnail Generator ──────────────────────────────────────────
+    const handleGenerateThumbnail = async (vid) => {
+        const video_id = vid.video_id;
+        setThumbGeneratingMap(prev => ({ ...prev, [video_id]: true }));
         try {
-            const res = await fetch(`${API_URL}/youtube-analyzer/video/benchmark-insight`, {
+            const res = await fetch(`${API_URL}/youtube-analyzer/generate-thumbnail`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: user.id,
-                    user_video_id: bench.userVideo.video_id,
-                    competitor_video_id: bench.competitorVideo.video_id
+                    video_id: video_id,
+                    video_title: editingTitlesMap[video_id] || vid.current_title,
+                    niche: 'YouTube Video'
                 })
             });
-            const json = await res.json();
-            if (json.success) {
-                setAiBenchmarkResult(json.insight);
+            const data = await res.json();
+            if (data.success && data.thumbnail_url) {
+                showToast('High-CTR Thumbnail generated with SiliconFlow!');
+                // Update local audit thumbnail state
+                setVideoAudits(prev => prev.map(item => 
+                    item.video_id === video_id ? { ...item, thumbnail: `${API_URL}${data.thumbnail_url}` } : item
+                ));
             } else {
-                setAiBenchmarkResult(json.message || 'Failed to extract AI insights.');
+                showToast(data.message || 'Failed to generate thumbnail.', 'error');
             }
-        } catch (e) {
-            setAiBenchmarkResult('Ensure your Google Gemini API Key is configured in Settings.');
+        } catch (err) {
+            showToast('Connection error generating thumbnail.', 'error');
         } finally {
-            setAiBenchmarkLoading(false);
+            setThumbGeneratingMap(prev => ({ ...prev, [video_id]: false }));
         }
     };
 
-    useEffect(() => {
-        fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // ── 3. Direct Publish to YouTube Studio API ─────────────────────────────────────
+    const handlePublishToYoutube = async (video_id) => {
+        setPublishingMap(prev => ({ ...prev, [video_id]: true }));
+        try {
+            const payload = {
+                user_id: user.id,
+                video_id: video_id,
+                title: editingTitlesMap[video_id],
+                description: editingDescMap[video_id],
+                tags: editingTagsMap[video_id] || []
+            };
+
+            const res = await fetch(`${API_URL}/youtube-analyzer/video/publish-to-youtube`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                showToast('Published & Synced live to YouTube Studio!');
+                // Update local audit score
+                setVideoAudits(prev => prev.map(item => 
+                    item.video_id === video_id ? { ...item, current_title: payload.title, rank_score: 95, is_already_good: true } : item
+                ));
+            } else {
+                showToast(data.message || 'Failed to publish to YouTube API.', 'error');
+            }
+        } catch (err) {
+            showToast('Connection error publishing to YouTube.', 'error');
+        } finally {
+            setPublishingMap(prev => ({ ...prev, [video_id]: false }));
+        }
+    };
+
+    // ── Tag Handlers ────────────────────────────────────────────────────────────────
+    const handleAddTag = (video_id) => {
+        const input = (customTagInputs[video_id] || '').trim();
+        if (!input) return;
+        const current = editingTagsMap[video_id] || [];
+        if (!current.includes(input)) {
+            setEditingTagsMap(prev => ({ ...prev, [video_id]: [...current, input] }));
+        }
+        setCustomTagInputs(prev => ({ ...prev, [video_id]: '' }));
+    };
+
+    const handleRemoveTag = (video_id, tagToRemove) => {
+        const current = editingTagsMap[video_id] || [];
+        setEditingTagsMap(prev => ({ ...prev, [video_id]: current.filter(t => t !== tagToRemove) }));
+    };
 
     if (loading) {
         return (
-            <div className="h-[60vh] flex items-center justify-center">
-                <Loader message="Analyzing user content (views, tags, descriptions)..." />
+            <div className="min-h-screen bg-[#09090b] text-white p-6 flex flex-col items-center justify-center space-y-4">
+                <Loader />
+                <p className="text-xs text-gray-400 font-medium animate-pulse">Syncing 5 Recent Channel Uploads for SEO Analysis...</p>
             </div>
         );
     }
 
-    const filteredAudits = videoAudits.filter(a => !a.is_already_good);
-
-    // Python local heuristic analysis calculation helper
-    const getLocalHeuristicsDetails = (vid) => {
-        const titleLen = vid.current_title.length;
-        const score = vid.rank_score || 70;
-        
-        const indicators = [];
-        if (titleLen < 35) indicators.push({ label: 'Title too brief', level: 'warning' });
-        else if (titleLen > 70) indicators.push({ label: 'Title truncated (>70)', level: 'warning' });
-        else indicators.push({ label: 'Title length optimal', level: 'good' });
-
-        if (!vid.suggested_tags || vid.suggested_tags.length < 4) {
-            indicators.push({ label: 'Missing core search tags', level: 'bad' });
-        } else {
-            indicators.push({ label: 'Tags index compiled', level: 'good' });
-        }
-
-        return { score, indicators };
-    };
-
-    // Python-based Javascript heuristics generator for content comparison gap reasons
-    const getLocalComparisonReasons = (bench) => {
-        const reasons = [];
-        const actions = [];
-
-        const userTitle = bench.userVideo.current_title;
-        const compTitle = bench.competitorVideo.title;
-
-        // Reason 1: Title length trigger checks
-        if (userTitle.length < 40 && compTitle.length >= 45) {
-            reasons.push("Competitor utilizes a more detailed hook title which triggers search matches.");
-            actions.push("Expand your video title to add specific keyword details.");
-        }
-
-        // Reason 2: Search tags volume gap
-        const tags = bench.userVideo.suggested_tags || [];
-        if (tags.length < 4) {
-            reasons.push("Your video has low tag count density, limiting indexing options.");
-            actions.push("Go to the Suggested Tags panel and add target search terms.");
-        }
-
-        // Default Python baseline diagnosis
-        if (reasons.length === 0) {
-            reasons.push("Competitor video has higher initial click-through speed and keyword density.");
-            actions.push("Add focus tags and adjust title hook targets.");
-        }
-
-        return { reasons, actions };
-    };
-
     return (
-        <div className="space-y-6 pb-20 relative text-white">
+        <div className="min-h-screen bg-[#09090b] text-gray-100 p-4 sm:p-8 space-y-6">
+            
+            {/* Toast Notification */}
             {toastMsg && (
-                <div className="fixed bottom-6 right-6 z-50 bg-[#0d0d12] border border-emerald-500/30 text-emerald-400 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-black uppercase tracking-wider animate-in fade-in slide-in-from-bottom-5 duration-200">
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    {toastMsg}
+                <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-2 border transition-all animate-bounce ${
+                    toastType === 'error' 
+                        ? 'bg-red-500/90 text-white border-red-400' 
+                        : 'bg-emerald-600/90 text-white border-emerald-400'
+                }`}>
+                    {toastType === 'error' ? <AlertTriangle className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                    <span>{toastMsg}</span>
                 </div>
             )}
 
-            {/* Header info */}
-            <div className="flex items-center justify-between bg-white/5 border border-white/5 rounded-3xl p-6 backdrop-blur-md">
-                <div className="flex items-center gap-3">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0f0f13] border border-white/5 p-6 rounded-3xl">
+                <div className="flex items-center gap-4">
                     <button 
                         onClick={() => router.push('/dashboard/youtube-analyzer')}
-                        className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5"
+                        className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-gray-300 hover:text-white"
                     >
-                        <ArrowLeft className="w-4 h-4 text-gray-400" />
+                        <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h2 className="text-lg font-black text-white uppercase tracking-tight">Optimization Feed</h2>
-                        <p className="text-[10px] text-gray-400 mt-0.5">Edit and publish metadata recommendations directly to YouTube</p>
+                        <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-red-400" />
+                                AI SEO Feed
+                            </span>
+                            <span className="text-xs text-gray-400 font-medium">5 Recent Uploads</span>
+                        </div>
+                        <h1 className="text-xl font-extrabold text-white mt-1">Channel Video Optimizer</h1>
                     </div>
                 </div>
-                <button
-                    onClick={fetchData}
-                    className="p-2.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-wider border border-white/5"
-                >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Refresh Feed
-                </button>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchData}
+                        className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-300 hover:text-white rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh Feed
+                    </button>
+                </div>
             </div>
 
-            {errorMsg ? (
-                <div className="bg-[#0f0f13] border border-red-500/20 rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto text-red-400 border border-red-500/20">
-                        <AlertTriangle className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-2">
-                        <h3 className="text-sm font-black text-white uppercase tracking-wider">YouTube Connection Required</h3>
-                        <p className="text-xs text-gray-400 max-w-md mx-auto leading-relaxed">
-                            {errorMsg}
-                        </p>
-                    </div>
-                    {errorMsg.toLowerCase().includes('settings') || errorMsg.toLowerCase().includes('link') ? (
-                        <button
-                            onClick={() => router.push('/dashboard/settings')}
-                            className="px-6 py-2.5 bg-red-650 hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all border border-red-500/20 shadow-lg shadow-red-950/20 cursor-pointer"
-                        >
-                            Link Channel in Settings
-                        </button>
-                    ) : null}
-                </div>
-            ) : filteredAudits.length === 0 ? (
+            {/* Empty State */}
+            {videoAudits.length === 0 ? (
                 <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-12 text-center space-y-4">
-                    <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto text-emerald-400 border border-emerald-500/20">
-                        <Check className="w-6 h-6" />
+                    <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl flex items-center justify-center mx-auto">
+                        <AlertCircle className="w-8 h-8" />
                     </div>
                     <div className="space-y-1">
-                        <h3 className="text-sm font-black text-white uppercase tracking-wider">All Video Metadata Optimized!</h3>
-                        <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
-                            Excellent! There are no optimization gaps detected in your recent uploads. Check back later when you upload new videos.
+                        <h3 className="text-lg font-bold text-white">No Recent Uploads Found</h3>
+                        <p className="text-xs text-gray-400 max-w-md mx-auto">
+                            Link your YouTube channel in Settings or upload videos to start getting AI-powered title, description, tags, and SiliconFlow thumbnail optimizations.
                         </p>
                     </div>
+                    <button
+                        onClick={() => router.push('/dashboard/settings')}
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
+                    >
+                        Go to Channel Settings
+                    </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Main Feed Optimization Queues (Left Column) */}
-                    <div className="lg:col-span-8 space-y-6">
-                        
-                        {/* 1. Add Missing Tags Card */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-5 relative">
-                            {(() => {
-                                const vid = filteredAudits[tagsIndex];
-                                if (!vid) return null;
-                                const tagsList = editingTagsMap[vid.video_id] || [];
-                                const loadingKey = `${vid.video_id}-tags`;
-                                const isActionLoading = !!actionLoadingMap[loadingKey];
-                                const isAiRunning = !!aiRunningMap[vid.video_id];
+                /* Recent 5 Videos Optimization Cards */
+                <div className="space-y-6">
+                    {videoAudits.map((vid, idx) => {
+                        const video_id = vid.video_id;
+                        const rankScore = vid.rank_score || 75;
+                        const isGood = rankScore >= 85;
+                        const isAiRunning = !!aiRunningMap[video_id];
+                        const isPublishing = !!publishingMap[video_id];
+                        const isThumbGenerating = !!thumbGeneratingMap[video_id];
+                        const activeTab = activeTabMap[video_id] || 'title';
 
-                                // Check if video needs revival
-                                const needsRevival = avgViews > 0 && (vid.views || 0) < (avgViews * 0.4);
+                        const scoreColor = rankScore >= 85 
+                            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
+                            : rankScore >= 70 
+                                ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' 
+                                : 'text-red-400 bg-red-500/10 border-red-500/20';
 
-                                return (
-                                    <div className="space-y-5 animate-in fade-in duration-200">
-                                        
-                                        {/* Video Context Header */}
-                                        <div className="bg-[#14141a] p-4 rounded-2xl border border-white/5 space-y-3">
-                                            <div className="flex items-start gap-4">
-                                                {vid.thumbnail ? (
-                                                    <img src={vid.thumbnail} alt={vid.current_title} className="w-24 h-14 object-cover rounded-xl border border-white/5 flex-shrink-0" />
-                                                ) : (
-                                                    <div className="w-24 h-14 bg-white/5 rounded-xl flex items-center justify-center text-xs text-gray-500 flex-shrink-0">Video</div>
-                                                )}
-                                                <div className="space-y-1 flex-1 min-w-0">
-                                                    <h4 className="text-xs font-bold text-gray-250 leading-snug line-clamp-2">{vid.current_title}</h4>
-                                                    <div className="flex flex-wrap items-center gap-2.5 mt-1 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-                                                        <span>{vid.views.toLocaleString()} views</span>
-                                                        <span>•</span>
-                                                        <span>Relevance Score: {vid.rank_score}/100</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {needsRevival && (
-                                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 flex items-center gap-2.5 text-xs text-red-400">
-                                                    <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                                                    <div className="font-semibold">
-                                                        Needs Urgent Revival! This video is performing {Math.round((1 - (vid.views / avgViews)) * 100)}% below your recent upload average views ({Math.round(avgViews).toLocaleString()}).
-                                                    </div>
-                                                </div>
+                        return (
+                            <div key={vid.video_id || idx} className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-6 shadow-xl">
+                                
+                                {/* Video Header Row */}
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-5 border-b border-white/5">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                        <div className="relative w-36 h-20 rounded-2xl overflow-hidden border border-white/10 flex-shrink-0 bg-black/40">
+                                            {vid.thumbnail ? (
+                                                <img src={vid.thumbnail} alt={vid.current_title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">No Thumb</div>
                                             )}
+                                            <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/80 rounded text-[9px] font-bold text-gray-300 flex items-center gap-1">
+                                                <Eye className="w-2.5 h-2.5" /> {(vid.views || 0).toLocaleString()}
+                                            </span>
                                         </div>
 
-                                        {/* Local Python Rules Advisory Panel */}
-                                        <div className="bg-[#121217] border border-white/5 p-4 rounded-2xl space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                    <Cpu className="w-3.5 h-3.5 text-blue-400" />
-                                                    Python Diagnostics (Local Knowledge Engine)
+                                        <div className="space-y-1.5 max-w-xl">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${scoreColor}`}>
+                                                    SEO Score: {rankScore}/100 {isGood ? '✓ Excellent' : '⚠ Needs Improvement'}
                                                 </span>
+                                            </div>
+                                            <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+                                                {vid.current_title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <button
+                                            onClick={() => handleRunAiUplift(video_id)}
+                                            disabled={isAiRunning}
+                                            className="px-4 py-2.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 hover:text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                                        >
+                                            <Wand2 className={`w-3.5 h-3.5 ${isAiRunning ? 'animate-spin' : ''}`} />
+                                            {isAiRunning ? 'Analyzing SEO...' : 'Re-Run AI Audit'}
+                                        </button>
+
+                                        <button
+                                            onClick={() => handlePublishToYoutube(video_id)}
+                                            disabled={isPublishing}
+                                            className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-red-600/20 cursor-pointer disabled:opacity-50"
+                                        >
+                                            <Send className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
+                                            {isPublishing ? 'Publishing...' : 'Publish to YouTube Live'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Optimization Sub-Tabs Header */}
+                                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                                    {[
+                                        { id: 'title', label: 'Title Optimization', icon: Edit3 },
+                                        { id: 'description', label: 'Description & SEO', icon: FileText },
+                                        { id: 'tags', label: 'Search Tags', icon: Tag },
+                                        { id: 'thumbnail', label: 'SiliconFlow Thumbnail', icon: ImageIcon }
+                                    ].map(tab => {
+                                        const IconComponent = tab.icon;
+                                        const isActive = activeTab === tab.id;
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTabMap(prev => ({ ...prev, [video_id]: tab.id }))}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                                    isActive 
+                                                        ? 'bg-white/10 text-white border border-white/10' 
+                                                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                                                }`}
+                                            >
+                                                <IconComponent className="w-3.5 h-3.5" />
+                                                {tab.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* TAB 1: TITLE OPTIMIZATION */}
+                                {activeTab === 'title' && (
+                                    <div className="space-y-4 bg-[#14141a] border border-white/5 rounded-2xl p-5">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-300">Editable Video Title:</label>
+                                            <input 
+                                                type="text"
+                                                value={editingTitlesMap[video_id] || ''}
+                                                onChange={e => setEditingTitlesMap(prev => ({ ...prev, [video_id]: e.target.value }))}
+                                                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500/50"
+                                            />
+                                        </div>
+
+                                        {vid.optimized_title && vid.optimized_title !== vid.current_title && (
+                                            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3" /> AI High-CTR Title Suggestion
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setEditingTitlesMap(prev => ({ ...prev, [video_id]: vid.optimized_title }))}
+                                                        className="text-[10px] font-bold text-emerald-300 hover:text-white underline cursor-pointer"
+                                                    >
+                                                        Apply Suggested Title
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-emerald-200 font-semibold">{vid.optimized_title}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* TAB 2: DESCRIPTION & SEO OPTIMIZATION */}
+                                {activeTab === 'description' && (
+                                    <div className="space-y-4 bg-[#14141a] border border-white/5 rounded-2xl p-5">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-300">Video Description:</label>
+                                            <textarea 
+                                                rows={5}
+                                                value={editingDescMap[video_id] || ''}
+                                                onChange={e => setEditingDescMap(prev => ({ ...prev, [video_id]: e.target.value }))}
+                                                className="w-full bg-[#09090b] border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-red-500/50 leading-relaxed font-mono"
+                                            />
+                                        </div>
+
+                                        {vid.suggested_description && (
+                                            <div className="flex items-center justify-between pt-1">
+                                                <span className="text-[10px] text-gray-400">Structured with search intent keywords & social hooks</span>
                                                 <button
-                                                    onClick={() => triggerDeepAiUplift(vid.video_id)}
-                                                    disabled={isAiRunning}
-                                                    className="bg-purple-600 hover:bg-purple-750 text-white text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border border-purple-500/30 transition-all flex items-center gap-1 cursor-pointer"
+                                                    onClick={() => setEditingDescMap(prev => ({ ...prev, [video_id]: vid.suggested_description }))}
+                                                    className="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
                                                 >
-                                                    {isAiRunning ? 'Analyzing...' : 'Run AI Uplift'}
+                                                    Reset to AI Suggested Description
                                                 </button>
                                             </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* TAB 3: TAGS OPTIMIZATION */}
+                                {activeTab === 'tags' && (
+                                    <div className="space-y-4 bg-[#14141a] border border-white/5 rounded-2xl p-5">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-300">Active Tags:</label>
                                             <div className="flex flex-wrap gap-2">
-                                                {getLocalHeuristicsDetails(vid).indicators.map((ind, iIdx) => (
-                                                    <span 
-                                                        key={iIdx} 
-                                                        className={`px-2 py-0.5 rounded-lg border text-[8px] font-black uppercase tracking-wider ${
-                                                            ind.level === 'good' 
-                                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                                                                : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                                                        }`}
-                                                    >
-                                                        {ind.label}
+                                                {(editingTagsMap[video_id] || []).map((t, tidx) => (
+                                                    <span key={tidx} className="px-3 py-1 bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-gray-200 flex items-center gap-1.5">
+                                                        #{t}
+                                                        <button 
+                                                            onClick={() => handleRemoveTag(video_id, t)}
+                                                            className="text-gray-400 hover:text-red-400 font-bold ml-1"
+                                                        >
+                                                            ×
+                                                        </button>
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                <Tag className="w-4 h-4 text-blue-400" />
-                                                Suggested Keywords &amp; Tags
-                                            </h3>
-                                            <div className="flex items-center gap-1.5">
-                                                <button 
-                                                    disabled={tagsIndex === 0}
-                                                    onClick={() => setTagsIndex(prev => prev - 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                </button>
-                                                <span className="text-[10px] font-mono text-gray-500">{tagsIndex + 1}/{filteredAudits.length}</span>
-                                                <button 
-                                                    disabled={tagsIndex >= filteredAudits.length - 1}
-                                                    onClick={() => setTagsIndex(prev => prev + 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Suggested tag pills with volume/strength index (0-100) */}
-                                        <div className="space-y-3.5">
-                                            <div className="flex flex-wrap gap-2">
-                                                {tagsList.map((tag, tIdx) => {
-                                                    const boost = Math.abs((tag.charCodeAt(0) || 0) + (tag.charCodeAt(tag.length-1) || 0)) % 40 + 60;
-                                                    return (
-                                                        <span key={tIdx} className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/10 px-2.5 py-1 rounded-xl text-[10px] font-bold">
-                                                            <span>{tag}</span>
-                                                            <span className="bg-blue-500/20 text-[8px] font-black px-1.5 py-0.5 rounded text-white">{boost} vol</span>
-                                                            <button 
-                                                                onClick={() => {
-                                                                    setEditingTagsMap(prev => ({
-                                                                        ...prev,
-                                                                        [vid.video_id]: prev[vid.video_id].filter(t => t !== tag)
-                                                                    }));
-                                                                }}
-                                                                className="text-blue-400 hover:text-white font-black text-[9px] ml-1"
-                                                            >
-                                                                ×
-                                                            </button>
-                                                        </span>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {/* Add custom tag */}
-                                            <div className="flex gap-2">
-                                                <input 
-                                                    type="text"
-                                                    value={customTagInput}
-                                                    onChange={e => setCustomTagInput(e.target.value)}
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter' && customTagInput.trim()) {
-                                                            const newTag = customTagInput.trim();
-                                                            if (!tagsList.includes(newTag)) {
-                                                                setEditingTagsMap(prev => ({
-                                                                    ...prev,
-                                                                    [vid.video_id]: [...(prev[vid.video_id] || []), newTag]
-                                                                }));
-                                                            }
-                                                            setCustomTagInput('');
-                                                        }
-                                                    }}
-                                                    placeholder="Add custom search tag..."
-                                                    className="flex-1 bg-white/5 border border-white/5 px-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500"
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        if (customTagInput.trim()) {
-                                                            const newTag = customTagInput.trim();
-                                                            if (!tagsList.includes(newTag)) {
-                                                                    setEditingTagsMap(prev => ({
-                                                                        ...prev,
-                                                                        [vid.video_id]: [...(prev[vid.video_id] || []), newTag]
-                                                                    }));
-                                                            }
-                                                            setCustomTagInput('');
-                                                        }
-                                                    }}
-                                                    className="bg-white/5 hover:bg-white/10 text-gray-300 font-bold px-4 rounded-xl border border-white/10 text-xs uppercase tracking-wider transition-all"
-                                                >
-                                                    Add
-                                                </button>
-                                            </div>
-
+                                        {/* Add Custom Tag */}
+                                        <div className="flex items-center gap-2 pt-2">
+                                            <input 
+                                                type="text"
+                                                placeholder="Add new tag..."
+                                                value={customTagInputs[video_id] || ''}
+                                                onChange={e => setCustomTagInputs(prev => ({ ...prev, [video_id]: e.target.value }))}
+                                                onKeyDown={e => e.key === 'Enter' && handleAddTag(video_id)}
+                                                className="bg-[#09090b] border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none"
+                                            />
                                             <button
-                                                onClick={() => handleUpdateMetadata(vid.video_id, 'tags')}
-                                                disabled={isActionLoading}
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                                onClick={() => handleAddTag(video_id)}
+                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold cursor-pointer"
                                             >
-                                                {isActionLoading ? (
-                                                    <>
-                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                        Syncing with YouTube...
-                                                    </>
-                                                ) : (
-                                                    'Publish & Update Tags'
-                                                )}
+                                                Add Tag
                                             </button>
                                         </div>
                                     </div>
-                                );
-                            })()}
-                        </div>
+                                )}
 
-                        {/* 2. Suggested Video Titles Card */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-4">
-                            {(() => {
-                                const vid = filteredAudits[titlesIndex];
-                                if (!vid) return null;
-                                const currentTitle = vid.current_title;
-                                const suggestedTitle = editingTitlesMap[vid.video_id] || '';
-                                const loadingKey = `${vid.video_id}-title`;
-                                const isActionLoading = !!actionLoadingMap[loadingKey];
-
-                                return (
-                                    <div className="space-y-4 animate-in fade-in duration-200">
-                                        
-                                        {/* Video Context Header */}
-                                        <div className="bg-[#14141a] p-4 rounded-2xl border border-white/5 flex items-start gap-4">
-                                            {vid.thumbnail ? (
-                                                <img src={vid.thumbnail} alt={vid.current_title} className="w-24 h-14 object-cover rounded-xl border border-white/5 flex-shrink-0" />
-                                            ) : (
-                                                <div className="w-24 h-14 bg-white/5 rounded-xl flex items-center justify-center text-xs text-gray-500 flex-shrink-0">Video</div>
-                                            )}
-                                            <div className="space-y-1 flex-1 min-w-0">
-                                                <h4 className="text-xs font-bold text-gray-250 leading-snug line-clamp-2">{vid.current_title}</h4>
-                                                <p className="text-[9px] text-gray-550 font-bold uppercase tracking-wider mt-0.5">{vid.views.toLocaleString()} views</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                <Sparkles className="w-4 h-4 text-yellow-500" />
-                                                Suggested Video Titles
-                                            </h3>
-                                            <div className="flex items-center gap-1.5">
-                                                <button 
-                                                    disabled={titlesIndex === 0}
-                                                    onClick={() => setTitlesIndex(prev => prev - 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                </button>
-                                                <span className="text-[10px] font-mono text-gray-500">{titlesIndex + 1}/{filteredAudits.length}</span>
-                                                <button 
-                                                    disabled={titlesIndex >= filteredAudits.length - 1}
-                                                    onClick={() => setTitlesIndex(prev => prev + 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3.5">
+                                {/* TAB 4: SILICONFLOW AI THUMBNAIL GENERATOR */}
+                                {activeTab === 'thumbnail' && (
+                                    <div className="space-y-4 bg-[#14141a] border border-white/5 rounded-2xl p-5">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div className="space-y-1">
-                                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Current Title</p>
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-xs text-gray-450">
-                                                    {currentTitle}
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimized Title Suggestion</p>
-                                                    <span className="bg-emerald-500/10 text-emerald-400 text-[8px] font-mono px-1.5 py-0.5 rounded font-black">CTR ENGAGING TRIGGER</span>
-                                                </div>
-                                                <textarea 
-                                                    rows={2}
-                                                    value={suggestedTitle}
-                                                    onChange={e => setEditingTitlesMap(prev => ({
-                                                        ...prev,
-                                                        [vid.video_id]: e.target.value
-                                                    }))}
-                                                    className="w-full bg-[#14141a] border border-white/5 p-3 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-500"
-                                                />
+                                                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                                                    <Sparkles className="w-4 h-4 text-amber-400" />
+                                                    SiliconFlow 4K Thumbnail Generator
+                                                </h4>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Generates vibrant, high-CTR cover art tailored to your video's title using SiliconFlow FLUX models.
+                                                </p>
                                             </div>
 
                                             <button
-                                                onClick={() => handleUpdateMetadata(vid.video_id, 'title')}
-                                                disabled={isActionLoading || !suggestedTitle}
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                                onClick={() => handleGenerateThumbnail(vid)}
+                                                disabled={isThumbGenerating}
+                                                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-extrabold rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg cursor-pointer disabled:opacity-50 flex-shrink-0"
                                             >
-                                                {isActionLoading ? (
-                                                    <>
-                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                        Publishing Title to YouTube...
-                                                    </>
-                                                ) : (
-                                                    'Apply & Publish Title'
-                                                )}
+                                                <Wand2 className={`w-3.5 h-3.5 ${isThumbGenerating ? 'animate-spin' : ''}`} />
+                                                {isThumbGenerating ? 'Generating 4K Cover...' : 'Generate AI Thumbnail'}
                                             </button>
                                         </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
 
-                        {/* 3. Suggested Video Descriptions Card */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-4">
-                            {(() => {
-                                const vid = filteredAudits[descIndex];
-                                if (!vid) return null;
-                                const suggestedDesc = editingDescMap[vid.video_id] || '';
-                                const loadingKey = `${vid.video_id}-description`;
-                                const isActionLoading = !!actionLoadingMap[loadingKey];
-
-                                return (
-                                    <div className="space-y-4 animate-in fade-in duration-200">
-                                        
-                                        {/* Video Context Header */}
-                                        <div className="bg-[#14141a] p-4 rounded-2xl border border-white/5 flex items-start gap-4">
-                                            {vid.thumbnail ? (
-                                                <img src={vid.thumbnail} alt={vid.current_title} className="w-24 h-14 object-cover rounded-xl border border-white/5 flex-shrink-0" />
-                                            ) : (
-                                                <div className="w-24 h-14 bg-white/5 rounded-xl flex items-center justify-center text-xs text-gray-500 flex-shrink-0">Video</div>
-                                            )}
-                                            <div className="space-y-1 flex-1 min-w-0">
-                                                <h4 className="text-xs font-bold text-gray-250 leading-snug line-clamp-2">{vid.current_title}</h4>
-                                                <p className="text-[9px] text-gray-550 font-bold uppercase tracking-wider mt-0.5">{vid.views.toLocaleString()} views</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                <Edit3 className="w-4 h-4 text-purple-400" />
-                                                Suggested Video Descriptions
-                                            </h3>
-                                            <div className="flex items-center gap-1.5">
-                                                <button 
-                                                    disabled={descIndex === 0}
-                                                    onClick={() => setDescIndex(prev => prev - 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                </button>
-                                                <span className="text-[10px] font-mono text-gray-500">{descIndex + 1}/{filteredAudits.length}</span>
-                                                <button 
-                                                    disabled={descIndex >= filteredAudits.length - 1}
-                                                    onClick={() => setDescIndex(prev => prev + 1)}
-                                                    className="p-1 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 transition-all border border-white/5"
-                                                >
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3.5">
-                                            <div className="space-y-1">
-                                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Optimized Search Description Hook</p>
-                                                <textarea 
-                                                    rows={4}
-                                                    value={suggestedDesc}
-                                                    onChange={e => setEditingDescMap(prev => ({
-                                                        ...prev,
-                                                        [vid.video_id]: e.target.value
-                                                    }))}
-                                                    className="w-full bg-[#14141a] border border-white/5 p-3.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 font-mono leading-relaxed"
-                                                />
-                                            </div>
-
-                                            <button
-                                                onClick={() => handleUpdateMetadata(vid.video_id, 'description')}
-                                                disabled={isActionLoading || !suggestedDesc}
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                                            >
-                                                {isActionLoading ? (
-                                                    <>
-                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                        Publishing Description...
-                                                    </>
-                                                ) : (
-                                                    'Apply Description'
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
-
-                        {/* Similar Content Outliers Benchmarking */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-4">
-                            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                <BarChart3 className="w-4 h-4 text-emerald-450" />
-                                Similar Outliers Benchmarking
-                            </h3>
-                            <p className="text-[10px] text-gray-400">Benchmarking similar competitor videos doing better than yours</p>
-                            
-                            <div className="space-y-4 pt-2">
-                                {benchmarksList.length === 0 ? (
-                                    <p className="text-xs text-gray-500 italic">No similar high-performing competitor content matched yet.</p>
-                                ) : (
-                                    benchmarksList.map((bench, idx) => {
-                                        const heuristics = getLocalComparisonReasons(bench);
-                                        return (
-                                            <div key={idx} className="bg-[#14141a] border border-white/5 rounded-2xl p-5 space-y-4">
-                                                
-                                                {/* Versus Header */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-                                                    
-                                                    {/* User Video */}
-                                                    <div className="sm:col-span-5 flex items-center gap-3">
-                                                        <img src={bench.userVideo.thumbnail} alt="" className="w-14 h-9 object-cover rounded-lg border border-white/5 shrink-0" />
-                                                        <div className="min-w-0">
-                                                            <p className="text-[11px] font-bold text-gray-200 truncate">{bench.userVideo.current_title}</p>
-                                                            <p className="text-[9px] text-gray-500 font-bold mt-0.5">{bench.userVideo.views.toLocaleString()} views (Yours)</p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* VS Badge */}
-                                                    <div className="sm:col-span-2 text-center">
-                                                        <span className="bg-red-500/10 text-red-500 border border-red-500/10 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg">
-                                                            VS
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Competitor Video */}
-                                                    <div className="sm:col-span-5 flex items-center gap-3">
-                                                        <img src={bench.competitorVideo.thumbnail} alt="" className="w-14 h-9 object-cover rounded-lg border border-white/5 shrink-0" />
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="text-[11px] font-bold text-gray-200 truncate">{bench.competitorVideo.title}</p>
-                                                            <p className="text-[9px] text-red-400 font-bold mt-0.5">
-                                                                {bench.competitorVideo.views.toLocaleString()} views • <span className="bg-red-500/10 text-red-500 text-[8px] font-black px-1 rounded">{bench.ratio}x spike</span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
+                                        {vid.thumbnail && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Current Cover Image:</p>
+                                                <div className="w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-black/40">
+                                                    <img src={vid.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
                                                 </div>
-
-                                                {/* Diagnostics reasons */}
-                                                <div className="bg-[#121217] p-4 rounded-xl border border-white/5 space-y-3 text-xs">
-                                                    <div className="flex justify-between items-start gap-4">
-                                                        <div>
-                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Why theirs is performing better</p>
-                                                            <ul className="list-disc list-inside space-y-1 mt-1 text-gray-300">
-                                                                {heuristics.reasons.map((r, rIdx) => (
-                                                                    <li key={rIdx}>{r}</li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => getAiComparisonInsight(bench)}
-                                                            className="bg-purple-600 hover:bg-purple-750 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border border-purple-500/30 transition-all cursor-pointer shrink-0"
-                                                        >
-                                                            Request AI Deep-dive
-                                                        </button>
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-[9px] font-black text-emerald-450 uppercase tracking-widest mt-1.5">What to work on</p>
-                                                        <ul className="list-disc list-inside space-y-1 mt-1 text-emerald-400">
-                                                            {heuristics.actions.map((a, aIdx) => (
-                                                                <li key={aIdx}>{a}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
                                             </div>
-                                        );
-                                    })
+                                        )}
+                                    </div>
                                 )}
                             </div>
-                        </div>
-
-                    </div>
-
-                    {/* Right Column: Suggested Competitors & Trending Keywords + Channels */}
-                    <div className="lg:col-span-4 space-y-6">
-                        
-                        {/* Dynamic Suggested Competitors */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-4">
-                            <div className="border-b border-white/5 pb-3">
-                                <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                    <Users className="w-4 h-4 text-purple-400" />
-                                    Suggested Competitors
-                                </h3>
-                                <p className="text-[9px] text-gray-400">Channels targeting similar content types</p>
-                            </div>
-
-                            <div className="space-y-3">
-                                {suggestedCompetitors.length === 0 ? (
-                                    <p className="text-xs text-gray-500 italic">No channel suggestions found for your niche.</p>
-                                ) : (
-                                    suggestedCompetitors.map((comp, idx) => (
-                                        <div key={idx} className="bg-[#14141a] border border-white/5 p-3 rounded-2xl flex items-center justify-between gap-3">
-                                            <div className="flex items-center gap-3">
-                                                {comp.thumbnail ? (
-                                                    <img src={comp.thumbnail} alt={comp.name} className="w-8 h-8 rounded-full object-cover border border-white/5" />
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-purple-500/10 rounded-full flex items-center justify-center font-black text-purple-400 text-[10px]">
-                                                        {comp.name[0]}
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <h4 className="text-xs font-bold text-gray-250 line-clamp-1">{comp.name}</h4>
-                                                    <p className="text-[9px] text-gray-500">{comp.subs}</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleTrackSuggestedCompetitor(comp.id)}
-                                                disabled={competitorAddingId === comp.id}
-                                                className="bg-white/5 hover:bg-white/10 text-white font-bold p-2.5 rounded-xl border border-white/10 text-[9px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
-                                            >
-                                                {competitorAddingId === comp.id ? (
-                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                ) : (
-                                                    <Plus className="w-3 h-3 text-emerald-455" />
-                                                )}
-                                                Track
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Trending Niche Keywords + Channels using them */}
-                        <div className="bg-[#0f0f13] border border-white/5 rounded-3xl p-6 space-y-4">
-                            <div className="border-b border-white/5 pb-3">
-                                <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                    <Flame className="w-4 h-4 text-red-500" />
-                                    Keywords &amp; Active Channels
-                                </h3>
-                                <p className="text-[9px] text-gray-400">Trending niches and competitors targeting them</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                {[
-                                    { keyword: 'Airtel ODU setup installation', vph: '7.5K VPH', rate: '+689%', channels: ['Vlog Tech', 'Lab Studio'] },
-                                    { keyword: 'How to fix ODU router red light', vph: '3.1K VPH', rate: '+420%', channels: ['NextJS Growth', 'Insights Lab'] },
-                                    { keyword: 'MTN 5G Outdoor Unit speed test', vph: '2.8K VPH', rate: '+114%', channels: ['Tech Tim'] }
-                                ].map((kw, i) => (
-                                    <div key={i} className="bg-[#14141a] p-3 rounded-2xl border border-white/5 space-y-2 text-xs">
-                                        <div className="flex justify-between items-start gap-2">
-                                            <p className="font-bold text-gray-250 leading-snug">{kw.keyword}</p>
-                                            <span className="text-[9px] font-black text-emerald-455 bg-emerald-500/10 px-2 py-0.5 rounded shrink-0">
-                                                {kw.rate}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-[9px] text-gray-500 font-bold uppercase">
-                                            <span>{kw.vph}</span>
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-gray-600">Used by:</span>
-                                                <span className="text-gray-300">{kw.channels.join(', ')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                    </div>
+                        );
+                    })}
                 </div>
             )}
-
-            {/* AI Benchmark comparison modal */}
-            {selectedBenchmarkCompare && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setSelectedBenchmarkCompare(null)}></div>
-                    <div className="relative bg-[#0f0f13] border border-white/10 rounded-3xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto z-10 space-y-5 shadow-2xl animate-in fade-in duration-200">
-                        <button 
-                            onClick={() => setSelectedBenchmarkCompare(null)}
-                            className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all"
-                        >
-                            ✕
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
-                                <Cpu className="w-5 h-5 animate-pulse" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-black uppercase tracking-wider">AI Content Outlier Deep-Dive</h3>
-                                <p className="text-[10px] text-gray-500 mt-0.5">Gemini compared analysis of similar content templates</p>
-                            </div>
-                        </div>
-
-                        <div className="border border-white/5 bg-[#14141a] rounded-2xl p-5 text-xs whitespace-pre-wrap leading-relaxed min-h-[150px] max-h-[40vh] overflow-y-auto">
-                            {aiBenchmarkLoading ? (
-                                <div className="flex flex-col items-center justify-center h-32 space-y-2">
-                                    <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
-                                    <span className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Running comparison engine...</span>
-                                </div>
-                            ) : (
-                                aiBenchmarkResult
-                            )}
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setSelectedBenchmarkCompare(null)}
-                                className="bg-red-650 hover:bg-red-750 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
-                            >
-                                Close Diagnostics
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
 }
