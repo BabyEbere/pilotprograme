@@ -633,9 +633,8 @@ const AdminSettings = () => {
                                         <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 flex gap-3 text-xs text-blue-200/60 leading-relaxed font-bold italic">
                                             <MdInfo className="text-blue-400 w-5 h-5 flex-shrink-0 mt-0.5" />
                                             <div>
-                                                <span className="text-blue-300 not-italic">Image Generation Limits:</span>{' '}
-                                                SiliconFlow and Ideogram usage are tracked per-user based on their subscription plan.
-                                                Configure limits under <span className="text-blue-300">Pricing &amp; Limits Control</span>.
+                                                <span className="text-blue-300 not-italic">Gemini 3.1 Flash Lite Image Integration:</span>{' '}
+                                                Gemini image generation defaults to <span className="text-blue-300">gemini-3.1-flash-lite-image</span> (1K, Sub-2s latency, SynthID watermarked) using individual users' Gemini API keys configured in their settings.
                                             </div>
                                         </div>
                                     </Section>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { MdAdd, MdDelete, MdVisibility, MdPlaylistAdd, MdAudiotrack } from 'react-icons/md';
+import { MdAdd, MdDelete, MdVisibility, MdPlaylistAdd, MdAudiotrack, MdSmartButton, MdTimer } from 'react-icons/md';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -409,187 +409,114 @@ export default function Scripts() {
             <div className="flex-1 overflow-y-auto">
 
                 {/* Header */}
-
                 <div className="bg-gray-50 dark:bg-[#111111] border-b border-gray-200 dark:border-white/10">
-
                     <div className="px-4 sm:px-6 py-4">
-
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
                             <div>
-
-                                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">My Scripts</h1>
-
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Generate and manage your video scripts</p>
-
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                        <MdSmartButton className="w-3 h-3" /> AI Automation & Faceless Content
+                                    </span>
+                                    <h1 className="text-xl font-bold uppercase tracking-tight text-gray-900 dark:text-white">AI Script Studio</h1>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Create viral faceless video scripts, YouTube automation content, and marketing narratives.
+                                </p>
                             </div>
 
                             <button
-
                                 onClick={openGenerateModal}
-
-                                className="bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 justify-center"
-
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 justify-center shadow-lg shadow-red-900/20"
                             >
-
                                 <MdAdd className="w-4 h-4" />
-
-                                Generate Script
-
+                                Generate Faceless Script
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
 
 
 
                 {/* Scripts Grid */}
-
-                <div className="p-4 sm:p-6">
-
+                <div className="p-4 sm:p-6 lg:p-8">
                     {loading ? (
-
-                        <div className="text-center py-12">
-
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading scripts...</p>
-
+                        <div className="text-center py-16">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 font-semibold uppercase tracking-wider">Loading script pipeline...</p>
                         </div>
-
                     ) : scripts.length === 0 ? (
-
-                        <div className="text-center py-12">
-
-                            <p className="text-gray-500 dark:text-gray-400">No scripts yet. Generate your first script!</p>
-
+                        <div className="text-center py-16 bg-gray-50 dark:bg-[#111116] border border-gray-200 dark:border-white/10 rounded-2xl p-8">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">No video scripts found. Generate your first faceless AI video script!</p>
                         </div>
-
                     ) : (
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {scripts.map((script) => (
-
                                 <div
-
                                     key={script.id}
-
-                                    className="bg-gray-50 dark:bg-[#111111] rounded-lg border border-gray-200 dark:border-white/10 hover:shadow-md transition-shadow p-4"
-
+                                    className="bg-gray-50 dark:bg-[#111116] rounded-2xl border border-gray-200 dark:border-white/10 hover:border-red-500/30 transition-all p-5 flex flex-col justify-between shadow-sm hover:shadow-md group"
                                 >
-
-                                    <div className="flex items-start justify-between mb-3">
-
-                                        <div className="flex-1">
-
-                                            <h3 className="font-semibold text-gray-900 dark:text-white text-base mb-1">{script.title}</h3>
-
-                                            <div className="flex items-center gap-2 flex-wrap">
-
-                                                <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-
-                                                    {script.niche_name}
-
-                                                </span>
-
-                                                <span className="px-2 py-1 bg-gray-200 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded text-xs font-medium">
-
-                                                    {script.duration} min
-
-                                                </span>
-
-                                                <span className={`px-2 py-1 rounded text-xs font-medium ${script.status === 'completed' ? 'bg-green-100 text-green-700' :
-
-                                                    script.status === 'generating' ? 'bg-yellow-100 text-yellow-700' :
-
-                                                        'bg-red-100 text-red-700'
-
-                                                    }`}>
-
-                                                    {script.status}
-
-                                                </span>
-
-                                                {script.visual_bible && (
-
-                                                    <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-[10px] font-bold uppercase tracking-tighter border border-blue-500/20">
-
-                                                        Visual Bible
-
-                                                    </span>
-
-                                                )}
-
-                                            </div>
-
+                                    <div>
+                                        <div className="flex items-start justify-between gap-2 mb-3">
+                                            <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight group-hover:text-red-500 transition-colors line-clamp-1">
+                                                {script.title}
+                                            </h3>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                                                script.status === 'completed'
+                                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                                    : script.status === 'generating'
+                                                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                            }`}>
+                                                {script.status}
+                                            </span>
                                         </div>
 
+                                        <div className="flex items-center gap-2 flex-wrap mb-3">
+                                            {script.niche_name && (
+                                                <span className="px-2.5 py-0.5 bg-gray-200 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold uppercase tracking-wider border border-gray-300 dark:border-white/5">
+                                                    {script.niche_name}
+                                                </span>
+                                            )}
+                                            <span className="px-2.5 py-0.5 bg-gray-200 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold flex items-center gap-1">
+                                                <MdTimer className="w-3 h-3 text-gray-400" /> {script.duration} min
+                                            </span>
+                                        </div>
+
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed">
+                                            {script.description}
+                                        </p>
                                     </div>
 
+                                    <div>
+                                        <div className="text-[10px] text-gray-400 dark:text-gray-500 mb-3 font-mono">
+                                            Created {new Date(script.created_at).toLocaleDateString()}
+                                        </div>
 
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    const identifier = script.uuid || script.id;
+                                                    if (identifier) router.push(`/dashboard/scripts/${identifier}`);
+                                                }}
+                                                disabled={script.status !== 'completed'}
+                                                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <MdVisibility className="w-4 h-4" /> View & Edit
+                                            </button>
 
-                                    <p className="text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{script.description}</p>
-
-
-
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-
-                                        Created {new Date(script.created_at).toLocaleDateString()}
-
+                                            <button
+                                                onClick={() => handleDelete(script.id)}
+                                                className="px-3 py-2 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl text-xs font-bold transition-all"
+                                                title="Delete Script"
+                                            >
+                                                <MdDelete className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
-
-
-
-                                    <div className="flex gap-2">
-
-                                        <button
-
-                                            onClick={() => {
-
-                                                const identifier = script.uuid || script.id;
-
-                                                if (identifier) router.push(`/dashboard/scripts/${identifier}`);
-
-                                            }}
-
-                                            disabled={script.status !== 'completed'}
-
-                                            className="flex-1 px-3 py-1.5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-white dark:bg-[#0a0a0a] hover:text-gray-900 dark:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-
-                                        >
-
-                                            <MdVisibility className="w-4 h-4" />
-
-                                            View
-
-                                        </button>
-
-                                        <button
-
-                                            onClick={() => handleDelete(script.id)}
-
-                                            className="px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg text-sm hover:bg-red-500/10 transition-colors"
-
-                                        >
-
-                                            <MdDelete className="w-4 h-4" />
-
-                                        </button>
-
-                                    </div>
-
                                 </div>
-
                             ))}
-
                         </div>
-
                     )}
-
                 </div>
 
             </div>

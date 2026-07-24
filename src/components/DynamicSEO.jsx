@@ -126,13 +126,38 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
         };
 
         const addJSONLDSchema = (seoData, schemaType, customSchemaData, faqData) => {
-            // Remove existing JSON-LD schema if any
+            // Remove existing JSON-LD schema scripts
             const existingSchema = document.getElementById('json-ld-schema');
-            if (existingSchema) {
-                existingSchema.remove();
-            }
+            if (existingSchema) existingSchema.remove();
+            const existingBreadcrumbs = document.getElementById('json-ld-breadcrumbs');
+            if (existingBreadcrumbs) existingBreadcrumbs.remove();
+            const existingFAQ = document.getElementById('json-ld-faq');
+            if (existingFAQ) existingFAQ.remove();
+
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://s1.pilotprograme.com';
             
-            // Build schema object
+            // 1. Breadcrumbs Schema (consists of home, register, login, about, features, pricing, documentation)
+            const breadcrumbSchema = {
+                '@context': 'https://schema.org',
+                '@type': 'BreadcrumbList',
+                'itemListElement': [
+                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${origin}/` },
+                    { '@type': 'ListItem', 'position': 2, 'name': 'Features', 'item': `${origin}/features` },
+                    { '@type': 'ListItem', 'position': 3, 'name': 'Pricing', 'item': `${origin}/pricing` },
+                    { '@type': 'ListItem', 'position': 4, 'name': 'About', 'item': `${origin}/about` },
+                    { '@type': 'ListItem', 'position': 5, 'name': 'Documentation', 'item': `${origin}/tutorial` },
+                    { '@type': 'ListItem', 'position': 6, 'name': 'Login', 'item': `${origin}/login` },
+                    { '@type': 'ListItem', 'position': 7, 'name': 'Register', 'item': `${origin}/register` }
+                ]
+            };
+
+            const breadcrumbScript = document.createElement('script');
+            breadcrumbScript.id = 'json-ld-breadcrumbs';
+            breadcrumbScript.type = 'application/ld+json';
+            breadcrumbScript.text = JSON.stringify(breadcrumbSchema);
+            document.head.appendChild(breadcrumbScript);
+
+            // 2. Primary Page Schema (WebSite, Organization, Article, Product, Dataset)
             let schema = {};
             
             if (schemaType === 'WebSite') {
@@ -144,7 +169,7 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
                     'description': seoData.description || fallbackDescription || '',
                     'potentialAction': {
                         '@type': 'SearchAction',
-                        'target': `${window.location.origin}/?search={search_term_string}`,
+                        'target': `${origin}/?search={search_term_string}`,
                         'query-input': 'required name=search_term_string'
                     }
                 };
@@ -154,7 +179,7 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
                     '@type': 'Organization',
                     'name': seoData.title || fallbackTitle || 'Pilot Programme',
                     'url': seoData.og_url || window.location.href,
-                    'logo': 'https://pilotprograme.com/pilotprograme-logo.jpg',
+                    'logo': `${origin}/pilotprograme-logo.jpg`,
                     'description': seoData.description || fallbackDescription || '',
                     'sameAs': [
                         'https://twitter.com/pilotprograme',
@@ -178,7 +203,7 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
                         'name': 'Pilot Programme',
                         'logo': {
                             '@type': 'ImageObject',
-                            'url': 'https://pilotprograme.com/pilotprograme-logo.jpg'
+                            'url': `${origin}/pilotprograme-logo.jpg`
                         }
                     }
                 };
@@ -186,26 +211,68 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
                 schema = {
                     '@context': 'https://schema.org',
                     '@type': 'Product',
-                    'name': seoData.title || fallbackTitle,
-                    'description': seoData.description || fallbackDescription,
-                    'url': seoData.og_url || window.location.href,
-                    'offers': customSchemaData.offers || []
+                    'name': seoData.title || fallbackTitle || 'Pilot Programme — Faceless YouTube Automation Suite',
+                    'image': `${origin}/pilotprograme-logo.jpg`,
+                    'description': seoData.description || fallbackDescription || 'AI Faceless YouTube automation platform with script generation, voiceovers, scene images, and channel analytics.',
+                    'brand': {
+                        '@type': 'Brand',
+                        'name': 'Pilot Programme'
+                    },
+                    'offers': {
+                        '@type': 'AggregateOffer',
+                        'priceCurrency': 'NGN',
+                        'lowPrice': '0',
+                        'highPrice': '9000',
+                        'offerCount': '4',
+                        'offers': [
+                            {
+                                '@type': 'Offer',
+                                'name': 'Free Plan',
+                                'price': '0',
+                                'priceCurrency': 'NGN',
+                                'availability': 'https://schema.org/InStock',
+                                'url': `${origin}/pricing`
+                            },
+                            {
+                                '@type': 'Offer',
+                                'name': 'Starter Plan',
+                                'price': '2500',
+                                'priceCurrency': 'NGN',
+                                'availability': 'https://schema.org/InStock',
+                                'url': `${origin}/pricing`
+                            },
+                            {
+                                '@type': 'Offer',
+                                'name': 'Pookie Plan',
+                                'price': '5000',
+                                'priceCurrency': 'NGN',
+                                'availability': 'https://schema.org/InStock',
+                                'url': `${origin}/pricing`
+                            },
+                            {
+                                '@type': 'Offer',
+                                'name': 'Creator Plan',
+                                'price': '9000',
+                                'priceCurrency': 'NGN',
+                                'availability': 'https://schema.org/InStock',
+                                'url': `${origin}/pricing`
+                            }
+                        ]
+                    }
                 };
-            }
-            
-            // Add FAQPage schema if FAQ data is provided
-            if (faqData && faqData.length > 0) {
+            } else if (schemaType === 'Dataset') {
                 schema = {
                     '@context': 'https://schema.org',
-                    '@type': 'FAQPage',
-                    'mainEntity': faqData.map(faq => ({
-                        '@type': 'Question',
-                        'name': faq.q || faq.question,
-                        'acceptedAnswer': {
-                            '@type': 'Answer',
-                            'text': faq.a || faq.answer
-                        }
-                    }))
+                    '@type': 'Dataset',
+                    'name': seoData.title || fallbackTitle || 'Pilot Programme Faceless YouTube Automation & AI Prompt Dataset',
+                    'description': seoData.description || fallbackDescription || 'Comprehensive dataset of AI video scripts, niche automation frameworks, voice synthesis presets, and YouTube metadata analytics.',
+                    'url': `${origin}/blog`,
+                    'keywords': ['AI video scripts', 'YouTube automation dataset', 'faceless YouTube channels', 'AI voiceover presets'],
+                    'creator': {
+                        '@type': 'Organization',
+                        'name': 'Pilot Programme'
+                    },
+                    'license': 'https://creativecommons.org/licenses/by/4.0/'
                 };
             }
             
@@ -214,12 +281,51 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
                 schema = { ...schema, ...customSchemaData };
             }
             
-            // Add JSON-LD script to head
+            // Add Primary JSON-LD script to head
             const script = document.createElement('script');
             script.id = 'json-ld-schema';
             script.type = 'application/ld+json';
             script.text = JSON.stringify(schema);
             document.head.appendChild(script);
+
+            // 3. Add FAQPage schema if FAQ data is provided or page contains FAQs
+            const activeFaqs = faqData && faqData.length > 0 ? faqData : [
+                {
+                    q: 'How does faceless YouTube automation work?',
+                    a: 'Faceless YouTube automation uses AI to write video scripts, generate realistic voiceover narration, and render scene images without requiring a camera or video editor.'
+                },
+                {
+                    q: 'Can I generate scene prompts and visual bibles with Gemini AI?',
+                    a: 'Yes! Pilot Programme uses Google Gemini AI to analyze script scenes, extract visual prompts, and maintain character face and environment consistency across scenes.'
+                },
+                {
+                    q: 'What subscription plans are available for Pilot Programme?',
+                    a: 'We offer Free, Starter (₦2,500/mo), Pookie (₦5,000/mo), and Creator (₦9,000/mo) plans with instant Paystack activation and flexible credit quotas.'
+                },
+                {
+                    q: 'Are the AI voiceovers and generated scripts monetizable on YouTube?',
+                    a: 'Yes! All scripts, voiceovers, and scene images generated on Pilot Programme comply with YouTube monetization guidelines.'
+                }
+            ];
+
+            const faqSchema = {
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                'mainEntity': activeFaqs.map(faq => ({
+                    '@type': 'Question',
+                    'name': faq.q || faq.question,
+                    'acceptedAnswer': {
+                        '@type': 'Answer',
+                        'text': faq.a || faq.answer
+                    }
+                }))
+            };
+
+            const faqScript = document.createElement('script');
+            faqScript.id = 'json-ld-faq';
+            faqScript.type = 'application/ld+json';
+            faqScript.text = JSON.stringify(faqSchema);
+            document.head.appendChild(faqScript);
         };
 
         const applyFallbackSEO = () => {

@@ -457,10 +457,17 @@ export default function StoryToScript() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
                     <div>
-                        <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                            <MdMovie className="text-red-500 w-6 h-6" /> Story to Script
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Convert your story outline or custom treatments into dialogue-driven screenplays.</p>
+                        <div className="flex items-center gap-2">
+                            <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                <MdMovie className="w-3 h-3 text-yellow-500" /> Movie Screenplays & Dialogues
+                            </span>
+                            <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                                <MdMovie className="text-red-500 w-6 h-6" /> Story to Script
+                            </h1>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                            Convert long-form story outlines or custom treatments into formal movie screenplays with character dialogues and speaker cues.
+                        </p>
                     </div>
                     
                     <button

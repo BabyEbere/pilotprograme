@@ -99,7 +99,7 @@ export default function BlogPage() {
                 fallbackTitle="Blog — Pilot Programme | Faceless YouTube Automation Tips & Guides"
                 fallbackDescription="Read the latest tips, guides, and insights on faceless YouTube automation, AI content creation, and growing your channel from the Pilot Programme blog."
                 fallbackKeywords="Pilot Programme blog, faceless YouTube tips, AI content creation guides, YouTube automation blog, faceless YouTube strategy"
-                schemaType="Article"
+                schemaType="Dataset"
             />
             <Navbar />
             <Breadcrumbs />

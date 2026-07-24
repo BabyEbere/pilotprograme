@@ -11,7 +11,8 @@ import {
     MdPlayArrow, MdArrowForward, MdCheck, MdClose,
     MdDescription, MdRecordVoiceOver, MdImage,
     MdAutoAwesome, MdBolt, MdTrendingUp,
-    MdLock, MdCreditCard, MdRocketLaunch, MdStar, MdDiamond
+    MdLock, MdCreditCard, MdRocketLaunch, MdStar, MdDiamond,
+    MdExpandMore, MdGroup, MdShare, MdHelpOutline
 } from 'react-icons/md';
 
 // ── Animated counter ──────────────────────────────────────────────────────────
@@ -148,8 +149,8 @@ function PlanCard({ plan }) {
             {plan.badge && (
                 <div className="absolute top-3.5 right-3.5 z-10">
                     <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full tracking-wide ${plan.highlight
-                            ? 'bg-red-600 text-gray-900 dark:text-white'
-                            : 'bg-gray-200/50 dark:bg-white/10 dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/15'
+                        ? 'bg-red-600 text-gray-900 dark:text-white'
+                        : 'bg-gray-200/50 dark:bg-white/10 dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/15'
                         }`}>
                         {plan.badge}
                     </span>
@@ -250,10 +251,10 @@ function PlanCard({ plan }) {
                 <div className="mt-6">
                     <Link href='/register'
                         className={`block w-full py-2.5 rounded-xl text-sm font-semibold text-center transition-all ${plan.highlight
-                                ? 'bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white shadow-lg shadow-red-900/40'
-                                : plan.name === 'Free'
-                                    ? 'bg-gray-100 dark:bg-white/8 hover:bg-gray-200 dark:hover:bg-gray-300/50 dark:bg-white/15 text-gray-800 dark:text-gray-300'
-                                    : 'bg-gray-100 dark:bg-white/8 hover:bg-gray-200 dark:hover:bg-gray-300/50 dark:bg-white/15 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-white/10'
+                            ? 'bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white shadow-lg shadow-red-900/40'
+                            : plan.name === 'Free'
+                                ? 'bg-gray-100 dark:bg-white/8 hover:bg-gray-200 dark:hover:bg-gray-300/50 dark:bg-white/15 text-gray-800 dark:text-gray-300'
+                                : 'bg-gray-100 dark:bg-white/8 hover:bg-gray-200 dark:hover:bg-gray-300/50 dark:bg-white/15 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-white/10'
                             }`}
                     >
                         {plan.cta}
@@ -323,6 +324,130 @@ function buildFeatures(dbPlan) {
     return features;
 }
 
+// ── FAQ section ───────────────────────────────────────────────────────────────
+// Real long-tail questions people search before signing up for a tool like this.
+// FAQPage schema should be added in DynamicSEO/head for this section to earn
+// "People Also Ask" placement — plain accordion markup alone won't do that.
+const FAQ_ITEMS = [
+    {
+        q: 'Is Pilot Programme really free to start?',
+        a: 'Yes. The Free plan gives you 2 script generations and 2 audio renders a month with Edge TTS narration, no card required. You can upgrade any time your niche channel starts scaling.',
+    },
+    {
+        q: 'Do I need any editing or camera skills to use this?',
+        a: 'No. Pilot Programme is built specifically for faceless channels — you pick a niche and topic, Gemini writes the scene-by-scene script, you generate narration and matching images, then assemble the download in your video editor and publish.',
+    },
+    {
+        q: 'How does billing work — do you charge in Naira or Dollars?',
+        a: 'Checkout runs through Paystack in NGN. Pricing is shown in Naira across every plan, so there\'s no card-conversion guesswork or USD billing surprises for Nigerian and African creators.',
+    },
+    {
+        q: 'What TTS voices are available, and are any of them free?',
+        a: 'Edge TTS is free on every plan, including Free. Paid plans unlock premium SiliconFlow voices — CosyVoice2 for emotion-aware narration, Fish Speech 1.5 for natural multilingual delivery, and IndexTTS-2 for high-fidelity output.',
+    },
+    {
+        q: 'Can I turn an existing blog post or article into a video script?',
+        a: 'Yes — the Blog to Script tool ingests any article URL, crawls the text, and converts it into either a presenter-monologue script or a storytelling treatment, available from the Starter plan up.',
+    },
+    {
+        q: 'Does Pilot Programme work for any YouTube niche?',
+        a: 'Niche management is built into every plan, and the AI Content Generator surfaces trending topic ideas per niche — so whether you\'re running a folklore channel, a crime-drama channel, or a news-recap channel, the workflow is the same.',
+    },
+];
+
+function FaqItem({ item, isOpen, onToggle }) {
+    return (
+        <div className="border-b border-gray-200 dark:border-white/10">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+            >
+                <span className="text-sm md:text-base font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                    {item.q}
+                </span>
+                <MdExpandMore
+                    className={`w-5 h-5 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-red-500' : ''}`}
+                />
+            </button>
+            <div
+                className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 pb-5' : 'grid-rows-[0fr] opacity-0'}`}
+                style={{ display: 'grid' }}
+            >
+                <div className="overflow-hidden">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed pr-8">
+                        {item.a}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FaqSection() {
+    const [openIndex, setOpenIndex] = useState(0);
+
+    return (
+        <section className="py-16 md:py-20 bg-white dark:bg-[#0a0a0a] border-b border-gray-100 dark:border-white/5">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center gap-2 bg-red-600/10 dark:bg-red-600/20 text-red-600 dark:text-red-400 px-4 py-1.5 rounded-full text-xs font-semibold mb-4">
+                        <MdHelpOutline className="w-4 h-4" />
+                        Frequently Asked Questions
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+                        Everything you're wondering before you start
+                    </h2>
+                </div>
+
+                <div>
+                    {FAQ_ITEMS.map((item, i) => (
+                        <FaqItem
+                            key={i}
+                            item={item}
+                            isOpen={openIndex === i}
+                            onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
+                        />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ── Affiliate teaser ─────────────────────────────────────────────────────────
+function AffiliateTeaser() {
+    return (
+        <section className="py-16 bg-gray-50 dark:bg-[#0d0d0d] border-y border-gray-200 dark:border-white/8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                <div className="bg-white dark:bg-[#111116] border border-gray-200 dark:border-white/10 rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                    <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                        <MdShare className="w-7 h-7 text-red-500" />
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-red-500 uppercase tracking-widest mb-2">
+                            <MdGroup className="w-3.5 h-3.5" />
+                            Affiliate Program
+                        </div>
+                        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1.5">
+                            Know creators who'd use this? Earn recurring commission.
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Get your referral link, track signups in real time, and get paid every time someone you refer subscribes — no cap on payouts.
+                        </p>
+                    </div>
+                    <Link
+                        href="/affiliate"
+                        className="flex-shrink-0 inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-red-600/15 hover:scale-105"
+                    >
+                        Become an Affiliate
+                        <MdArrowForward className="w-4 h-4" />
+                    </Link>
+                </div>
+            </div>
+        </section>
+    );
+}
+
 export default function HomeClient(props) {
     const [activeVoice, setActiveVoice] = useState(0);
     const voices = ['Edge TTS (Free)', 'CosyVoice2', 'Fish Speech 1.5', 'IndexTTS-2'];
@@ -345,8 +470,8 @@ export default function HomeClient(props) {
     }, []);
 
     const displayPlans = PLANS.map((basePlan, index) => {
-        const dbMatch = dbPlans.find(dbP => dbP.name.toLowerCase() === basePlan.name.toLowerCase() || 
-            (basePlan.name === 'Pro' && dbP.name.toLowerCase() === 'creator')) || 
+        const dbMatch = dbPlans.find(dbP => dbP.name.toLowerCase() === basePlan.name.toLowerCase() ||
+            (basePlan.name === 'Pro' && dbP.name.toLowerCase() === 'creator')) ||
             (index < dbPlans.length ? dbPlans[index] : null);
 
         if (dbMatch) {
@@ -444,8 +569,8 @@ export default function HomeClient(props) {
                 </section>
 
                 <section className="py-16 bg-gray-50 dark:bg-[#0d0d0d] border-y border-gray-200 dark:border-white/8 transition-colors overflow-hidden relative">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-                        <div className="text-center mb-12">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-12">
+                        <div className="text-center">
                             <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mb-3">Pilot Programme is Powered By</p>
                             <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-3 leading-tight">
                                 Three industry leaders.{' '}
@@ -454,13 +579,97 @@ export default function HomeClient(props) {
                                 </span>
                             </h2>
                             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-                                Our partnerships with Google, Gemini AI, and PookieTech form the technological backbone of everything we build.
+                                Our integration with Google Cloud, Gemini AI, and PookieTech forms the technological backbone of our automated creation engine.
                             </p>
+                        </div>
+
+                        {/* POWERED BY CARDS: GOOGLE, GEMINI, POOKIETECH */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                            {/* Google Card */}
+                            <div className="bg-white dark:bg-[#111116] border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-blue-500/40 transition-all duration-300 shadow-sm hover:shadow-xl group flex flex-col justify-between">
+                                <div className="space-y-4">
+                                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center p-2.5 group-hover:scale-105 transition-transform">
+                                        <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-500 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                                            Infrastructure & Cloud
+                                        </span>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-2 group-hover:text-blue-500 transition-colors">
+                                            Google Cloud
+                                        </h3>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5 leading-relaxed">
+                                            High-performance cloud infrastructure providing sub-second low-latency processing, high-availability data storage, and global API reliability.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-blue-500">
+                                    <span>Powered by Google</span>
+                                    <span>⚡ 99.9% Uptime</span>
+                                </div>
+                            </div>
+
+                            {/* Gemini AI Card */}
+                            <div className="bg-white dark:bg-[#111116] border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 shadow-sm hover:shadow-xl group flex flex-col justify-between">
+                                <div className="space-y-4">
+                                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform overflow-hidden">
+                                        <img src="/gemini-logo.png" alt="Google Gemini AI Logo" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-500 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                                            Generative Intelligence
+                                        </span>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-2 group-hover:text-purple-500 transition-colors">
+                                            Google Gemini AI
+                                        </h3>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5 leading-relaxed">
+                                            Multimodal artificial intelligence powering deep script synthesis, visual scene prompt extraction, and structured storytelling logic.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-purple-500 dark:text-purple-400">
+                                    <span>Gemini 2.5 Flash Engine</span>
+                                    <span>✨ Multimodal AI</span>
+                                </div>
+                            </div>
+
+                            {/* PookieTech Card */}
+                            <div className="bg-white dark:bg-[#111116] border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-red-500/40 transition-all duration-300 shadow-sm hover:shadow-xl group flex flex-col justify-between">
+                                <div className="space-y-4">
+                                    <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform overflow-hidden">
+                                        <img src="/pookietech.png" alt="PookieTech Systems Logo" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-500 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">
+                                            Proprietary Automation
+                                        </span>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-2 group-hover:text-red-500 transition-colors">
+                                            PookieTech Systems
+                                        </h3>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5 leading-relaxed">
+                                            Proprietary faceless video pipelines, audio synthesis orchestrators, YouTube competitor analysis, and automated channel growth tools.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-red-500">
+                                    <span>PookieTech Core</span>
+                                    <span>🚀 Automation Suite</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <BlogSection limit={3} />
+
+                <FaqSection />
+
+                <AffiliateTeaser />
             </div>
             <Footer />
         </>
