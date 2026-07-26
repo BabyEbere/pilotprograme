@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
     Youtube, Star, Trash2, ArrowLeft, RefreshCw, Sparkles, BookOpen, AlertCircle, ChevronRight, ChevronDown, Flame
 } from 'lucide-react';
 import Loader from '@/components/Loader';
 
-export default function BookmarkedIdeas() {
+function BookmarkedIdeasContent() {
     const [loading, setLoading] = useState(true);
     const [favorites, setFavorites] = useState([]);
     const [expandedIdea, setExpandedIdea] = useState(null);
@@ -268,5 +268,13 @@ export default function BookmarkedIdeas() {
 
             {actionLoading && <Loader message="Updating bookmarks..." fullScreen={true} />}
         </div>
+    );
+}
+
+export default function BookmarkedIdeas() {
+    return (
+        <Suspense fallback={<div className="p-6 text-xs font-bold text-white">Loading Bookmarks...</div>}>
+            <BookmarkedIdeasContent />
+        </Suspense>
     );
 }

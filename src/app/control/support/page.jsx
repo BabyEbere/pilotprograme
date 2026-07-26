@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import {
     MdConfirmationNumber, MdChatBubble, MdRefresh,
     MdWarning, MdArrowBack, MdEdit, MdSave,
@@ -47,7 +47,7 @@ function timeStr(d) {
     return new Date(d).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export default function AdminSupport() {
+function AdminSupportContent() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [tickets, setTickets] = useState([]);
     const [stats, setStats] = useState({});
@@ -447,5 +447,13 @@ export default function AdminSupport() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AdminSupport() {
+    return (
+        <Suspense fallback={<div className="p-6 text-xs font-bold text-gray-500">Loading Support...</div>}>
+            <AdminSupportContent />
+        </Suspense>
     );
 }
