@@ -198,3 +198,43 @@ input:-webkit-autofill:active {
   margin: 2rem 0;
 }
 
+/* ── ULTRA-COOL NEON GRADIENT ACCENT SCROLLBAR ── */
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ef4444 0%, #a855f7 50%, #dc2626 100%);
+  border-radius: 9999px;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 18px rgba(168, 85, 247, 0.4);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff2a2a 0%, #c084fc 50%, #ff2a2a 100%);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.9), 0 0 25px rgba(192, 132, 252, 0.7);
+}
+
+/* Firefox custom scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ef4444 transparent;
+}
+
+.dark * {
+  scrollbar-color: #a855f7 transparent;
+}
+

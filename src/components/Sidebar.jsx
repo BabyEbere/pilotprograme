@@ -28,10 +28,12 @@ import {
     MdTheaterComedy
 } from 'react-icons/md';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+import { useNavigation } from '@/context/NavigationContext';
+import { Sun, Moon, Loader2 } from 'lucide-react';
 
 export default function Sidebar({ collapsed, setCollapsed }) {
     const pathname = usePathname();
+    const { startNavigation, navigatingPath } = useNavigation();
     const [menuOpen, setMenuOpen] = useState(false);
     const [videoEnabled, setVideoEnabled] = useState(false);
     const [storyLabEnabled, setStoryLabEnabled] = useState(false);
@@ -136,11 +138,16 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                         const Icon = item.icon;
                         const active = isActive(item.path);
                         const locked = isLocked(item.label);
+                        const targetPath = locked ? '/dashboard/plans' : item.path;
+                        const isNavigatingItem = navigatingPath === targetPath;
 
                         return (
                             <Link key={item.path}
-                                href={locked ? '/dashboard/plans' : item.path}
-                                onClick={() => setMenuOpen(false)}
+                                href={targetPath}
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    startNavigation(targetPath, item.label);
+                                }}
                                 className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
                                     } gap-3 rounded-xl transition-all duration-200 ${active
                                         ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
@@ -155,7 +162,10 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                     )}
                                 </div>
                                 {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
-                                {locked && !collapsed && (
+                                {isNavigatingItem && (
+                                    <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                )}
+                                {locked && !collapsed && !isNavigatingItem && (
                                     <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
                                 )}
                             </Link>
@@ -179,10 +189,15 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                 const Icon = item.icon;
                                 const active = isActive(item.path);
                                 const locked = isLocked(item.label);
+                                const targetPath = locked ? '/dashboard/plans' : item.path;
+                                const isNavigatingItem = navigatingPath === targetPath;
                                 return (
                                     <Link key={item.path}
-                                        href={locked ? '/dashboard/plans' : item.path}
-                                        onClick={() => setMenuOpen(false)}
+                                        href={targetPath}
+                                        onClick={() => {
+                                            setMenuOpen(false);
+                                            startNavigation(targetPath, item.label);
+                                        }}
                                         className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
                                             } gap-3 rounded-xl transition-all duration-200 ${active
                                                 ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
@@ -197,7 +212,10 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                             )}
                                         </div>
                                         {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
-                                        {locked && !collapsed && (
+                                        {isNavigatingItem && (
+                                            <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                        )}
+                                        {locked && !collapsed && !isNavigatingItem && (
                                             <MdLock className="w-3.5 h-3.5 text-amber-500 ml-auto flex-shrink-0" />
                                         )}
                                     </Link>
@@ -215,11 +233,15 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                     {bottomItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
+                        const isNavigatingItem = navigatingPath === item.path;
 
                         return (
                             <Link key={item.path}
                                 href={item.path}
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    startNavigation(item.path, item.label);
+                                }}
                                 className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'
                                     } gap-3 rounded-xl transition-all duration-200 ${active
                                         ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
@@ -229,6 +251,9 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
                                 {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
+                                {isNavigatingItem && (
+                                    <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                )}
                             </Link>
                         );
                     })}
@@ -349,7 +374,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                         <div className="grid grid-cols-2 gap-2">
                             {/* Projects */}
                             <Link href="/dashboard/projects"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/projects', 'Projects'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/projects') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdVideoLibrary className="w-5 h-5 flex-shrink-0" />
@@ -358,7 +383,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* Images */}
                             <Link href="/dashboard/images"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/images', 'Images'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/images') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdImage className="w-5 h-5 flex-shrink-0" />
@@ -367,7 +392,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* Subscriptions */}
                             <Link href="/dashboard/plans"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/plans', 'Subscriptions'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/plans') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdTrendingUp className="w-5 h-5 flex-shrink-0" />
@@ -376,7 +401,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* YouTube Analyzer */}
                             <Link href={isLocked('YT Analyzer') ? '/dashboard/plans' : '/dashboard/youtube-analyzer'}
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation(isLocked('YT Analyzer') ? '/dashboard/plans' : '/dashboard/youtube-analyzer', 'YT Analyzer'); }}
                                 className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/youtube-analyzer') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('YT Analyzer') ? 'opacity-65' : ''}`}
                             >
                                 <div className="flex items-center gap-3">
@@ -388,7 +413,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* Affiliates */}
                             <Link href="/dashboard/affiliates"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/affiliates', 'Affiliates'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/affiliates') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdPeople className="w-5 h-5 flex-shrink-0" />
@@ -398,7 +423,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             {/* Videos (Conditional) */}
                             {videoEnabled && (
                                 <Link href="/dashboard/videos"
-                                    onClick={() => setMenuOpen(false)}
+                                    onClick={() => { setMenuOpen(false); startNavigation('/dashboard/videos', 'Videos'); }}
                                     className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/videos') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                                 >
                                     <MdMovie className="w-5 h-5 flex-shrink-0" />
@@ -410,7 +435,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                             {storyLabEnabled && (
                                 <>
                                     <Link href={isLocked('Story Writer') ? '/dashboard/plans' : '/dashboard/story-writer'}
-                                        onClick={() => setMenuOpen(false)}
+                                        onClick={() => { setMenuOpen(false); startNavigation(isLocked('Story Writer') ? '/dashboard/plans' : '/dashboard/story-writer', 'Story Outline Writer'); }}
                                         className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-writer') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Story Writer') ? 'opacity-65' : ''}`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -420,7 +445,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                         {isLocked('Story Writer') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                                     </Link>
                                     <Link href={isLocked('Story to Script') ? '/dashboard/plans' : '/dashboard/story-to-script'}
-                                        onClick={() => setMenuOpen(false)}
+                                        onClick={() => { setMenuOpen(false); startNavigation(isLocked('Story to Script') ? '/dashboard/plans' : '/dashboard/story-to-script', 'Story to Screenplay'); }}
                                         className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/story-to-script') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Story to Script') ? 'opacity-65' : ''}`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -430,7 +455,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                                         {isLocked('Story to Script') && <MdLock className="w-4 h-4 text-amber-500 flex-shrink-0" />}
                                     </Link>
                                     <Link href={isLocked('Blog to Script') ? '/dashboard/plans' : '/dashboard/blog-to-script'}
-                                        onClick={() => setMenuOpen(false)}
+                                        onClick={() => { setMenuOpen(false); startNavigation(isLocked('Blog to Script') ? '/dashboard/plans' : '/dashboard/blog-to-script', 'Blog to Script'); }}
                                         className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/blog-to-script') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'} ${isLocked('Blog to Script') ? 'opacity-65' : ''}`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -444,7 +469,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* Tutorials */}
                             <Link href="/dashboard/tutorial"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/tutorial', 'Tutorials'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/tutorial') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdOndemandVideo className="w-5 h-5 flex-shrink-0" />
@@ -453,7 +478,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
                             {/* Support */}
                             <Link href="/dashboard/support"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => { setMenuOpen(false); startNavigation('/dashboard/support', 'Support'); }}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive('/dashboard/support') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#181818] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222]'}`}
                             >
                                 <MdHelp className="w-5 h-5 flex-shrink-0" />

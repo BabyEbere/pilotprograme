@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
     MdMovie, 
     MdDelete, 
@@ -13,11 +14,16 @@ import {
     MdFolder,
     MdCreate,
     MdDownload,
-    MdBook
+    MdBook,
+    MdLocationOn,
+    MdLanguage,
+    MdPeople,
+    MdHomeWork
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
 export default function StoryWriter() {
+    const router = useRouter();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState('');
@@ -32,16 +38,16 @@ export default function StoryWriter() {
     const [demoSlide, setDemoSlide] = useState(0);
     const demoSlides = [
         {
-            title: "⚡ Step 1: Auto-Brainstorm Cast & Concept",
-            desc: "Select your genre & style, type a 1-sentence basic idea, and click 'Auto-Brainstorm Concept & Cast'. The AI will map out character cards and motives!"
+            title: "⚡ Step 1: Fill Story Questionnaire & Niche",
+            desc: "Specify location, environment, dialect, demographics, and parent context to shape the story world."
         },
         {
-            title: "✍️ Step 2: Custom Character Management",
-            desc: "Review character cards. You can edit names, change flaws/motivations, add new actors, or remove supporting cast dynamically."
+            title: "✍️ Step 2: Auto-Brainstorm Cast & Concept",
+            desc: "Click 'Auto-Brainstorm Concept & Cast'. The AI maps out character cards, flaws, motivations, and plot outline!"
         },
         {
-            title: "📖 Step 3: Progressive Chapter Extension",
-            desc: "Generate Chapter 1. Then, use the progressive builder input at the bottom to tell the AI what should happen next. Build your story chapter by chapter!"
+            title: "📖 Step 3: Progressive Story Chapters & Script Conversion",
+            desc: "Generate Chapter 1 treatment prose. Extend story chapters, then click 'Convert to Script Screenplay'!"
         }
     ];
 
@@ -55,6 +61,14 @@ export default function StoryWriter() {
     const [description, setDescription] = useState('');
     const [characters, setCharacters] = useState([]);
 
+    // Questionnaire Parameters for Story Creation
+    const [location, setLocation] = useState('');
+    const [environment, setEnvironment] = useState('');
+    const [language, setLanguage] = useState('English');
+    const [nameType, setNameType] = useState('Mixed');
+    const [teensOption, setTeensOption] = useState('General / All Ages');
+    const [parentsOption, setParentsOption] = useState('Standard Family Context');
+
     // Advanced Production
     const [duration, setDuration] = useState(20);
     const [isSeasonal, setIsSeasonal] = useState(false);
@@ -67,8 +81,8 @@ export default function StoryWriter() {
     const [activeChapters, setActiveChapters] = useState([]);
     const [nextInstructions, setNextInstructions] = useState('');
 
-    const [nichesList, setNichesList] = useState(['Drama', 'Action', 'Thriller', 'Comedy', 'Romance', 'Mystery']);
-    const [stylesList, setStylesList] = useState(['Nollywood / African Drama', 'Hollywood Cinematic', 'Telenovela Drama', 'Short Film / TikTok Style', 'Documentary style']);
+    const [nichesList, setNichesList] = useState(['Drama', 'Action', 'Thriller', 'Comedy', 'Romance', 'Mystery', 'Sci-Fi', 'Horror', 'Documentary']);
+    const [stylesList, setStylesList] = useState(['Nollywood / African Drama', 'Hollywood Cinematic', 'Telenovela Drama', 'Short Film / TikTok Style', 'Documentary style', 'African Epic / Cultural Myth']);
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -167,7 +181,6 @@ export default function StoryWriter() {
                 } else {
                     setActiveChapters([{ chapter_number: 1, title: 'Chapter 1', content: item.content }]);
                 }
-                // Switch to generator view to show the loaded story
                 setActiveTab('generator');
             }
         } catch (err) {
@@ -178,19 +191,20 @@ export default function StoryWriter() {
     };
 
     const handleAutoBrainstorm = async () => {
-        if (!description.trim()) {
-            alert('Please type a basic plot concept or seed idea in the text area first!');
-            return;
-        }
-
         setLoading(true);
-        setLoadingText('AI is brainstorming characters, roles, and themes...');
+        setLoadingText('AI is brainstorming concept, plot outline, and character cast...');
 
         const payload = {
             user_id: userId,
             seed_idea: description,
             niche: niche === 'custom' ? customNiche : niche,
             style: style === 'custom' ? customStyle : style,
+            location: location,
+            environment: environment,
+            language: language,
+            name_type: nameType,
+            teens_option: teensOption,
+            parents_option: parentsOption,
             duration: duration,
             is_seasonal: isSeasonal,
             api_key: ''
@@ -204,10 +218,10 @@ export default function StoryWriter() {
             });
             const data = await res.json();
             if (data.success) {
-                setTheme(data.theme);
-                setDescription(data.plot_summary);
-                setCharacters(data.characters || []);
-                alert('Brainstorm complete! Review and adjust the generated cast list and theme below.');
+                if (data.theme) setTheme(data.theme);
+                if (data.plot_summary) setDescription(data.plot_summary);
+                if (data.characters && data.characters.length > 0) setCharacters(data.characters);
+                alert('✨ Brainstorm complete! Review and adjust the generated cast list and plot summary below.');
             } else {
                 alert(data.message || 'Brainstorming failed.');
             }
@@ -237,8 +251,13 @@ export default function StoryWriter() {
 
     const handleGenerateStory = async (e) => {
         e.preventDefault();
+        if (!description.trim()) {
+            alert('Please fill out the story concept or click Auto-Brainstorm first!');
+            return;
+        }
+
         setLoading(true);
-        setLoadingText('Creating initial Story Treatment outline (Chapter 1)...');
+        setLoadingText('Creating Story Treatment outline & Chapter 1...');
         resetStoryContext();
 
         const payload = {
@@ -362,14 +381,14 @@ export default function StoryWriter() {
                     <div>
                         <div className="flex items-center gap-2">
                             <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                                <MdBook className="w-3 h-3" /> Book & Story Treatments
+                                <MdBook className="w-3 h-3" /> Movie Story & Treatment Generator
                             </span>
                             <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
                                 <MdMovie className="text-red-500 w-6 h-6" /> Story Writer
                             </h1>
                         </div>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                            Build long-form story treatments, brainstorm character cast cards, and write progressive story chapters.
+                            Build long-form movie story treatments, answer questionnaire prompts, and brainstorm dynamic character cast cards.
                         </p>
                     </div>
                     
@@ -381,7 +400,7 @@ export default function StoryWriter() {
                     </button>
                 </div>
 
-                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
+                {/* Section Tabs Switcher */}
                 <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
                     <button
                         onClick={() => setActiveTab('generator')}
@@ -433,9 +452,12 @@ export default function StoryWriter() {
                 {activeTab === 'generator' ? (
                     <div className="space-y-6">
                         <form onSubmit={handleGenerateStory} className="space-y-6">
-                            {/* Outline & Concept Details */}
+                            
+                            {/* STORY QUESTIONNAIRE & CONCEPT CREATION */}
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
-                                <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">Outline & Concept Details</h3>
+                                <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2 flex items-center gap-2">
+                                    <MdAutoAwesome className="text-red-500" /> Story Questionnaire & Production Concept
+                                </h3>
                                 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
@@ -462,7 +484,7 @@ export default function StoryWriter() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Writing Style</label>
+                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Writing Style & Regional Tone</label>
                                         <select
                                             value={style}
                                             onChange={(e) => setStyle(e.target.value)}
@@ -485,24 +507,126 @@ export default function StoryWriter() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
-                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Core Story Concept / Seed Idea</label>
-                                        <button
-                                            type="button"
-                                            onClick={handleAutoBrainstorm}
-                                            className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow"
-                                        >
-                                            ⚡ Auto-Brainstorm Concept & Cast
-                                        </button>
+                                {/* QUESTIONNAIRE INPUTS GRID */}
+                                <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-4 bg-gray-50/50 dark:bg-[#15151b] p-4 rounded-xl">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        
+                                        {/* Location */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                <MdLocationOn className="text-red-500" /> Location
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                                placeholder="e.g. Lagos, London, High School Campus"
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            />
+                                        </div>
+
+                                        {/* Environment */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                <MdHomeWork className="text-red-500" /> Environment / Setting
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={environment}
+                                                onChange={(e) => setEnvironment(e.target.value)}
+                                                placeholder="e.g. Wealthy Estate, Boarding School, Slum"
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            />
+                                        </div>
+
+                                        {/* Language */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                <MdLanguage className="text-red-500" /> Language / Dialect
+                                            </label>
+                                            <select
+                                                value={language}
+                                                onChange={(e) => setLanguage(e.target.value)}
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="English">English</option>
+                                                <option value="Pidgin English">Pidgin English</option>
+                                                <option value="Bilingual (English + Pidgin)">Bilingual (English + Pidgin)</option>
+                                                <option value="Yoruba Accent">Yoruba Accent</option>
+                                                <option value="Hausa Accent">Hausa Accent</option>
+                                                <option value="Igbo Accent">Igbo Accent</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Name Type */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Character Name Types</label>
+                                            <select
+                                                value={nameType}
+                                                onChange={(e) => setNameType(e.target.value)}
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="Mixed">Mixed (English + Ethnic)</option>
+                                                <option value="English">English Names</option>
+                                                <option value="Yoruba">Yoruba Names</option>
+                                                <option value="Hausa">Hausa Names</option>
+                                                <option value="Igbo">Igbo Names</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Just Teens */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                <MdPeople className="text-red-500" /> Target Demographics
+                                            </label>
+                                            <select
+                                                value={teensOption}
+                                                onChange={(e) => setTeensOption(e.target.value)}
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="General / All Ages">General / All Ages</option>
+                                                <option value="Just Teens - Both Genders">Just Teens (Boys & Girls)</option>
+                                                <option value="Just Teens - Only Boys">Just Teens (Only Boys)</option>
+                                                <option value="Just Teens - Only Girls">Just Teens (Only Girls)</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Parents Context */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Parents / Family Context</label>
+                                            <select
+                                                value={parentsOption}
+                                                onChange={(e) => setParentsOption(e.target.value)}
+                                                className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                            >
+                                                <option value="Standard Family Context">Standard Family Context</option>
+                                                <option value="Strict Parents">Strict Parents</option>
+                                                <option value="Single Mother">Single Mother</option>
+                                                <option value="Absent Parents">Absent Parents</option>
+                                                <option value="Independent / No Parent Involvement">Independent / No Parent Involvement</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <textarea
-                                        placeholder="Write a brief summary of what the story is about, or seed ideas..."
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows="4"
-                                        className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                    />
+
+                                    <div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Core Story Concept / Premise</label>
+                                            <button
+                                                type="button"
+                                                onClick={handleAutoBrainstorm}
+                                                className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow flex items-center gap-1"
+                                            >
+                                                ⚡ Auto-Brainstorm Concept & Cast
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            placeholder="Write a brief summary of what the story is about, or click Auto-Brainstorm above to generate..."
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            rows="4"
+                                            className="w-full bg-white dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -563,7 +687,7 @@ export default function StoryWriter() {
                                 </div>
                             </div>
 
-                            {/* Cast Cards */}
+                            {/* Cast Cards Sheet */}
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Cast Card Sheet</h3>
@@ -663,6 +787,13 @@ export default function StoryWriter() {
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <button
                                             type="button"
+                                            onClick={() => router.push('/dashboard/story-to-script')}
+                                            className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
+                                        >
+                                            🎬 Convert to Script Screenplay →
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={() => triggerDownload(activeStoryUuid, 'txt')}
                                             className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
                                         >
@@ -757,33 +888,29 @@ export default function StoryWriter() {
                                     >
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full uppercase">
                                                     {item.niche || 'Story'}
                                                 </span>
                                                 <button
-                                                    type="button"
                                                     onClick={(e) => deleteItem(item.uuid, e)}
-                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                                    title="Delete Story"
+                                                    className="text-gray-400 hover:text-red-500 p-1 transition-colors"
+                                                    title="Delete"
                                                 >
                                                     <MdDelete className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-500 transition-colors">
+
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-red-500 transition-colors">
                                                 {item.title}
                                             </h4>
-                                            <p className="text-[10px] text-gray-400">
-                                                Style: {item.style || 'Standard'}
+                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                                {item.style}
                                             </p>
                                         </div>
 
-                                        <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-white/5 flex items-center justify-between">
-                                            <span className="text-[10px] text-gray-400">
-                                                {new Date(item.created_at).toLocaleDateString()}
-                                            </span>
-                                            <span className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                                                Open Story →
-                                            </span>
+                                        <div className="mt-3 pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[10px] text-gray-400">
+                                            <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                                            <span className="font-bold text-red-500 group-hover:translate-x-1 transition-transform">Open →</span>
                                         </div>
                                     </div>
                                 ))}
@@ -791,16 +918,8 @@ export default function StoryWriter() {
                         )}
                     </div>
                 )}
-            </div>
 
-            {loading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
-                        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Processing..."}</p>
-                    </div>
-                </div>
-            )}
+            </div>
         </div>
     );
 }

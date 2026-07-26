@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { 
     MdMovie, 
     MdDescription,
-    MdFileUpload,
     MdDelete, 
     MdAutorenew, 
     MdInfoOutline, 
@@ -14,7 +13,9 @@ import {
     MdChevronRight, 
     MdAutoAwesome,
     MdFolder,
-    MdCreate
+    MdCreate,
+    MdBook,
+    MdVisibility
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
@@ -26,7 +27,7 @@ export default function StoryToScript() {
     const [savedItems, setSavedItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
 
-    // Active Section Tab: 'compiler' or 'library'
+    // Active Section Tab: 'compiler', 'viewer', or 'library'
     const [activeTab, setActiveTab] = useState('compiler');
 
     // Tutorial Carousel
@@ -34,21 +35,20 @@ export default function StoryToScript() {
     const [demoSlide, setDemoSlide] = useState(0);
     const demoSlides = [
         {
-            title: "⚡ Step 1: Select Story Source",
-            desc: "Select a story you saved from the Story Writer, or upload/paste custom treatments."
+            title: "⚡ Step 1: Select Story Outline from Library",
+            desc: "Choose a saved story generated from your Story Writer. The Niche, Writing Style, and plot outline are auto-imported!"
         },
         {
-            title: "✍️ Step 2: Auto-Generate Voiceover Dialogue Guidelines",
-            desc: "Generate custom dialogue guidelines. This prompts the AI to keep language dialects and speaker tone consistent."
+            title: "✍️ Step 2: Dialogue Guidelines & Tone",
+            desc: "Review or edit custom dialogue guidelines to ensure character dialects and speech tone match your vision."
         },
         {
-            title: "📖 Step 3: Sequential Scene Dialects compilation",
-            desc: "Start screenplay script compilation. The AI will output scene-by-scene script files sequentially."
+            title: "📖 Step 3: View & Export Formal Screenplay",
+            desc: "Click 'Convert Treatment to Script'. The AI opens the dedicated Screenplay Viewer with extended scenes!"
         }
     ];
 
-    // Tab 2: Story to Script State
-    const [inputSource, setInputSource] = useState('paste');
+    // Screenplay Compiler State
     const [selectedSavedStoryId, setSelectedSavedStoryId] = useState('');
     const [pastedStoryText, setPastedStoryText] = useState('');
     const [scriptTitle, setScriptTitle] = useState('My Screenplay');
@@ -56,9 +56,8 @@ export default function StoryToScript() {
     const [customScriptInstructions, setCustomScriptInstructions] = useState('');
     const [scriptResult, setScriptResult] = useState(null);
     const [scriptHasMore, setScriptHasMore] = useState(false);
-    const fileInputRef = useRef(null);
 
-    // Dynamic List of Characters for script configuration
+    // Dynamic Metadata Auto-Imported from Saved Story
     const [characters, setCharacters] = useState([]);
     const [niche, setNiche] = useState('Drama');
     const [style, setStyle] = useState('Nollywood / African Drama');
@@ -120,6 +119,7 @@ export default function StoryToScript() {
                 if (activeScriptUuid === uuid) {
                     setScriptResult(null);
                     setActiveScriptUuid('');
+                    setActiveTab('compiler');
                 }
             }
         } catch (err) {
@@ -150,7 +150,8 @@ export default function StoryToScript() {
                 } else {
                     setScriptHasMore(false);
                 }
-                setActiveTab('compiler');
+                // Switch to dedicated Screenplay Viewer tab!
+                setActiveTab('viewer');
             }
         } catch (err) {
             alert('Failed to load screenplay detail');
@@ -159,52 +160,46 @@ export default function StoryToScript() {
         }
     };
 
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        setLoading(true);
-        setLoadingText('Parsing document text...');
-        try {
-            const res = await fetch(`${API_URL}/admin/story/extract-text`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-                setPastedStoryText(data.text);
-                setInputSource('paste');
-                alert(`Text extracted successfully from: ${data.filename}`);
-            } else {
-                alert(data.message || 'Text extraction failed.');
-            }
-        } catch (err) {
-            alert('Network error parsing document');
-        } finally {
-            setLoading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
-    };
-
+    // Auto-import Niche, Writing Style, Title, Outline, Cast, and Dialogue Guidelines from selected saved story!
     const handleSourceStorySelect = async (storyId) => {
         setSelectedSavedStoryId(storyId);
         if (!storyId) return;
         const matched = savedItems.find(item => item.id.toString() === storyId);
         if (matched) {
+            if (matched.niche) setNiche(matched.niche);
+            if (matched.style) setStyle(matched.style);
+
+            if (matched.title) {
+                setScriptTitle(matched.title.replace(/^Story:\s*/i, ''));
+            }
+
             setLoading(true);
-            setLoadingText('Ingesting story metadata...');
+            setLoadingText('Auto-importing story niche, writing style, & outline...');
             try {
                 const res = await fetch(`${API_URL}/admin/story/${matched.uuid}`);
                 const data = await res.json();
                 if (data.success && data.item) {
-                    const content = data.item.content;
+                    const item = data.item;
+                    if (item.niche) setNiche(item.niche);
+                    if (item.style) setStyle(item.style);
+
+                    const content = item.content;
                     let parsed = content;
                     if (typeof content === 'string') {
                         try { parsed = JSON.parse(content); } catch {}
                     }
+                    
+                    let treatmentProse = '';
+                    if (parsed && parsed.chapters) {
+                        treatmentProse = parsed.chapters.map(c => c.content).join("\n\n");
+                    } else if (typeof content === 'string') {
+                        treatmentProse = content;
+                    }
+
+                    if (treatmentProse) {
+                        setPastedStoryText(treatmentProse);
+                    }
+
                     if (parsed.metadata) {
                         const meta = parsed.metadata;
                         if (meta.niche) setNiche(meta.niche);
@@ -215,6 +210,11 @@ export default function StoryToScript() {
                         if (meta.has_narrator !== undefined) setHasNarrator(meta.has_narrator);
                         if (meta.characters) setCharacters(meta.characters);
                     }
+
+                    // Auto-generate dialogue guidelines for this saved story
+                    if (treatmentProse || item.blueprint) {
+                        await handleGenerateDialogueGuidelinesFromText(treatmentProse || item.blueprint);
+                    }
                 }
             } catch (err) {
                 console.error("Error loading selected story metadata:", err);
@@ -224,109 +224,66 @@ export default function StoryToScript() {
         }
     };
 
-    const handleGenerateDialogueGuidelines = async () => {
-        let treatmentText = pastedStoryText;
-
-        if (inputSource === 'saved_story') {
-            if (!selectedSavedStoryId) {
-                alert('Please select a saved outline first.');
-                return;
-            }
-            const matched = savedItems.find(item => item.id.toString() === selectedSavedStoryId);
-            if (matched) {
-                setLoading(true);
-                setLoadingText('Loading saved story treatment...');
-                try {
-                    const detailRes = await fetch(`${API_URL}/admin/story/${matched.uuid}`);
-                    const detailData = await detailRes.json();
-                    if (detailData.success) {
-                        const content = detailData.item.content;
-                        if (typeof content === 'object') {
-                            treatmentText = content.chapters ? content.chapters.map(c => c.content).join("\n\n") : JSON.stringify(content);
-                        } else {
-                            treatmentText = content;
-                        }
-                    }
-                } catch {
-                    alert('Error loading saved story treatment.');
-                    setLoading(false);
-                    return;
-                } finally {
-                    setLoading(false);
-                }
-            }
-        }
-
-        if (!treatmentText.trim()) {
-            alert('Source story treatment or pasted document is empty. Please enter/upload/select a story first!');
-            return;
-        }
-
-        setLoading(true);
-        setLoadingText('AI is analyzing the story plot to suggest dialogue guidelines...');
-
-        const payload = {
-            user_id: userId,
-            story_text: treatmentText,
-            api_key: ''
-        };
-
+    // Helper to generate dialogue guidelines from text
+    const handleGenerateDialogueGuidelinesFromText = async (storyText) => {
+        if (!storyText.trim()) return;
         try {
             const res = await fetch(`${API_URL}/admin/story/analyze-dialogue-guidelines`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    user_id: userId,
+                    story_text: storyText,
+                    api_key: ''
+                })
             });
             const data = await res.json();
-            if (data.success) {
+            if (data.success && data.guidelines) {
                 setCustomScriptInstructions(data.guidelines);
-                alert('Dialogue guidelines generated! You can still edit them in the text box.');
-            } else {
-                alert(data.message || 'Analysis failed.');
             }
         } catch (err) {
-            alert('Server error generating dialogue guidelines');
-        } finally {
-            setLoading(false);
+            console.error("Error auto-analyzing dialogue guidelines:", err);
         }
     };
 
     const handleGenerateScript = async (e, shouldContinue = false) => {
         if (e) e.preventDefault();
-        setLoading(true);
-        setLoadingText(shouldContinue ? 'Generating next segment of movie script...' : 'Initializing movie script compiler (Scene 1)...');
         
-        let treatmentText = pastedStoryText;
-        let storyUuidParam = undefined;
+        if (!selectedSavedStoryId && !activeScriptUuid) {
+            alert('Please select a saved story outline from the dropdown to generate its screenplay script!');
+            return;
+        }
 
-        if (inputSource === 'saved_story') {
+        let storyUuidParam = undefined;
+        let treatmentText = pastedStoryText;
+
+        if (selectedSavedStoryId) {
             const matched = savedItems.find(item => item.id.toString() === selectedSavedStoryId);
             if (matched) {
                 storyUuidParam = matched.uuid;
-                try {
-                    const detailRes = await fetch(`${API_URL}/admin/story/${matched.uuid}`);
-                    const detailData = await detailRes.json();
-                    if (detailData.success) {
-                        const content = detailData.item.content;
-                        if (typeof content === 'object') {
-                            treatmentText = content.chapters ? content.chapters.map(c => c.content).join("\n\n") : JSON.stringify(content);
-                        } else {
-                            treatmentText = content;
+                if (!treatmentText.trim()) {
+                    try {
+                        const detailRes = await fetch(`${API_URL}/admin/story/${matched.uuid}`);
+                        const detailData = await detailRes.json();
+                        if (detailData.success) {
+                            const content = detailData.item.content;
+                            if (typeof content === 'object') {
+                                treatmentText = content.chapters ? content.chapters.map(c => c.content).join("\n\n") : JSON.stringify(content);
+                            } else {
+                                treatmentText = content;
+                            }
                         }
+                    } catch {
+                        alert('Error loading target saved story outline');
+                        setLoading(false);
+                        return;
                     }
-                } catch {
-                    alert('Error loading target saved story outline');
-                    setLoading(false);
-                    return;
                 }
             }
         }
 
-        if (!shouldContinue && !treatmentText.trim()) {
-            alert('Please provide a story outline/treatment first.');
-            setLoading(false);
-            return;
-        }
+        setLoading(true);
+        setLoadingText(shouldContinue ? 'Generating next extended scenes of movie script...' : 'Compiling high-retention movie script (Scene 1)...');
 
         const payload = {
             user_id: userId,
@@ -357,6 +314,8 @@ export default function StoryToScript() {
                 setActiveScriptUuid(data.uuid);
                 setScriptHasMore(data.has_more);
                 fetchSavedItems();
+                // Automatically switch to dedicated Screenplay Viewer tab!
+                setActiveTab('viewer');
             } else {
                 alert(data.message || 'Script generation failed.');
             }
@@ -447,6 +406,7 @@ export default function StoryToScript() {
     const usedStoryToScript = parseInt(subscription?.used_story_to_script || 0);
 
     const savedDialogueScripts = savedItems.filter(i => i.type === 'script');
+    const availableStories = savedItems.filter(i => i.type === 'story');
 
     return (
         <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
@@ -466,7 +426,7 @@ export default function StoryToScript() {
                             </h1>
                         </div>
                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                            Convert long-form story outlines or custom treatments into formal movie screenplays with character dialogues and speaker cues.
+                            Select a story outline from your Story Writer library to compile it into a formal movie screenplay with actor dialogues.
                         </p>
                     </div>
                     
@@ -478,8 +438,8 @@ export default function StoryToScript() {
                     </button>
                 </div>
 
-                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
-                <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
+                {/* Section Tabs Switcher: 3 Distinct Tabs! */}
+                <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3 flex-wrap">
                     <button
                         onClick={() => setActiveTab('compiler')}
                         className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
@@ -489,7 +449,27 @@ export default function StoryToScript() {
                         }`}
                     >
                         <MdCreate className="w-4 h-4" />
-                        <span>Script Compiler</span>
+                        <span>1. Script Compiler</span>
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            if (!scriptResult) {
+                                alert('No active screenplay loaded yet. Select a story and click Convert Treatment to Script first!');
+                                return;
+                            }
+                            setActiveTab('viewer');
+                        }}
+                        className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            activeTab === 'viewer'
+                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                                : scriptResult 
+                                    ? 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                                    : 'bg-gray-100/50 dark:bg-white/5 opacity-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                        <MdVisibility className="w-4 h-4 text-yellow-500" />
+                        <span>2. View Screenplay {scriptResult ? `(${scriptTitle})` : ''}</span>
                     </button>
 
                     <button
@@ -501,7 +481,7 @@ export default function StoryToScript() {
                         }`}
                     >
                         <MdFolder className="w-4 h-4" />
-                        <span>Saved Screenplays ({savedDialogueScripts.length})</span>
+                        <span>3. Saved Screenplays ({savedDialogueScripts.length})</span>
                     </button>
                 </div>
 
@@ -526,8 +506,8 @@ export default function StoryToScript() {
                     </div>
                 )}
 
-                {/* Tab Content */}
-                {activeTab === 'compiler' ? (
+                {/* TAB 1: SCRIPT COMPILER FORM ONLY */}
+                {activeTab === 'compiler' && (
                     <div className="space-y-6">
                         {(!loadingPlan && (maxStoryToScript === 0 || usedStoryToScript >= maxStoryToScript)) ? (
                             <div className="min-h-[350px] flex flex-col items-center justify-center p-6 text-center bg-white dark:bg-[#111111] rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden shadow-sm">
@@ -550,124 +530,129 @@ export default function StoryToScript() {
                             </div>
                         ) : (
                             <form onSubmit={(e) => handleGenerateScript(e, false)} className="space-y-6">
+                                
+                                {/* SELECT SAVED STORY OUTLINE */}
                                 <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
-                                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">
-                                        Convert Outline to Script Dialogue
-                                    </h3>
-                                    
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Script Title</label>
-                                        <input
-                                            type="text"
-                                            value={scriptTitle}
-                                            onChange={(e) => setScriptTitle(e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        />
+                                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-2">
+                                        <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                            <MdBook className="text-red-500" /> Select Target Story Outline
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push('/dashboard/story-writer')}
+                                            className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg font-bold uppercase hover:bg-red-500/20 transition-all"
+                                        >
+                                            + Create Story in Story Writer
+                                        </button>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Source Treatment Outline</label>
-                                        <div className="flex flex-col sm:flex-row gap-3 mb-3">
-                                            <label className="flex items-center gap-2 cursor-pointer text-xs">
-                                                <input
-                                                    type="radio"
-                                                    name="inputSource"
-                                                    value="paste"
-                                                    checked={inputSource === 'paste'}
-                                                    onChange={(e) => setInputSource(e.target.value)}
-                                                    className="text-red-500 focus:ring-red-500"
-                                                />
-                                                Paste / Upload Document
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer text-xs">
-                                                <input
-                                                    type="radio"
-                                                    name="inputSource"
-                                                    value="saved_story"
-                                                    checked={inputSource === 'saved_story'}
-                                                    onChange={(e) => setInputSource(e.target.value)}
-                                                    className="text-red-500 focus:ring-red-500"
-                                                />
-                                                Select Saved Story Outlines
-                                            </label>
-                                        </div>
-
-                                        {inputSource === 'paste' ? (
-                                            <div className="space-y-3">
-                                                <textarea
-                                                    placeholder="Paste story treatment chapters here, or upload a docx/pdf..."
-                                                    value={pastedStoryText}
-                                                    onChange={(e) => setPastedStoryText(e.target.value)}
-                                                    rows="5"
-                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                                />
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="file"
-                                                        accept=".docx,.pdf,.txt"
-                                                        ref={fileInputRef}
-                                                        onChange={handleFileUpload}
-                                                        className="hidden"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        className="bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all text-gray-700 dark:text-white"
-                                                    >
-                                                        <MdFileUpload className="w-4 h-4 text-red-500" /> Ingest Treatment PDF / DOCX
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <select
-                                                value={selectedSavedStoryId}
-                                                onChange={(e) => handleSourceStorySelect(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                            >
-                                                <option value="">-- Choose saved story outline --</option>
-                                                {savedItems.filter(i => i.type === 'story').map(item => (
-                                                    <option key={item.id} value={item.id}>{item.title} ({item.niche})</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
-                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Dialogue Guidelines (Tones, Dialects)</label>
+                                    {availableStories.length === 0 ? (
+                                        <div className="p-4 bg-gray-50 dark:bg-[#16161c] border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-center">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">No story outlines found in your library.</p>
                                             <button
                                                 type="button"
-                                                onClick={handleGenerateDialogueGuidelines}
-                                                className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow"
+                                                onClick={() => router.push('/dashboard/story-writer')}
+                                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-1.5 rounded-xl uppercase shadow"
                                             >
-                                                ⚡ Auto-Generate Dialogue Guidelines
+                                                Go to Story Writer to Create Story →
                                             </button>
                                         </div>
-                                        <textarea
-                                            placeholder="Specify guidelines for characters (e.g. 'Amara speaks with sharp British accent...')"
-                                            value={customScriptInstructions}
-                                            onChange={(e) => setCustomScriptInstructions(e.target.value)}
-                                            rows="3"
-                                            className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
-                                        />
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">
+                                                    Choose Generated Story to Script:
+                                                </label>
+                                                <select
+                                                    value={selectedSavedStoryId}
+                                                    onChange={(e) => handleSourceStorySelect(e.target.value)}
+                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3.5 py-3 text-xs text-gray-700 dark:text-white focus:outline-none font-bold"
+                                                >
+                                                    <option value="">-- Choose saved story outline from Story Writer --</option>
+                                                    {availableStories.map(item => (
+                                                        <option key={item.id} value={item.id}>{item.title} ({item.niche || 'Story'})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {selectedSavedStoryId && (
+                                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs space-y-1">
+                                                    <div className="font-bold text-white text-xs">✓ Target Story Ingested:</div>
+                                                    <div>Genre/Niche: <strong className="text-white">{niche}</strong> | Writing Style: <strong className="text-white">{style}</strong></div>
+                                                    {characters.length > 0 && (
+                                                        <div>Cast Cards: <strong className="text-white">{characters.length} characters imported</strong> ({characters.map(c => c.name).filter(Boolean).join(', ')})</div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Screenplay Script Title</label>
+                                                <input
+                                                    type="text"
+                                                    value={scriptTitle}
+                                                    onChange={(e) => setScriptTitle(e.target.value)}
+                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* DIALOGUE GUIDELINES */}
+                                <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-gray-100 dark:border-white/5 pb-2">
+                                        <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                                            Dialogue Guidelines & Speaker Cues
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleGenerateDialogueGuidelinesFromText(pastedStoryText)}
+                                            disabled={!selectedSavedStoryId}
+                                            className="self-start sm:self-auto text-[10px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all shadow disabled:opacity-50"
+                                        >
+                                            ⚡ Refresh Dialogue Guidelines
+                                        </button>
                                     </div>
+                                    <textarea
+                                        placeholder="Guidelines for character speech (e.g. 'Everyday conversational language, natural vocabulary, sharp comedic delivery...')"
+                                        value={customScriptInstructions}
+                                        onChange={(e) => setCustomScriptInstructions(e.target.value)}
+                                        rows="3"
+                                        className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-700 dark:text-white focus:outline-none"
+                                    />
                                 </div>
 
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || !selectedSavedStoryId}
                                     className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase py-3.5 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
                                 >
                                     <MdAutoAwesome className="w-4 h-4" /> Convert Treatment to Script
                                 </button>
                             </form>
                         )}
+                    </div>
+                )}
 
-                        {scriptResult && (
+                {/* TAB 2: DEDICATED SCREENPLAY VIEWER & READER */}
+                {activeTab === 'viewer' && (
+                    <div>
+                        {!scriptResult ? (
+                            <div className="text-center py-12 bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6">
+                                <MdVisibility className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-xs text-gray-500 dark:text-gray-400">No active screenplay loaded yet.</p>
+                                <button
+                                    onClick={() => setActiveTab('compiler')}
+                                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase"
+                                >
+                                    Go to Script Compiler
+                                </button>
+                            </div>
+                        ) : (
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
                                     <div>
-                                        <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2.5 py-0.5 rounded-full">Dialogue script</span>
+                                        <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2.5 py-0.5 rounded-full">Screenplay Reader</span>
                                         <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{scriptTitle}</h3>
                                         {scriptResult.total_duration && (
                                             <p className="text-[10px] text-gray-500 dark:text-gray-400">Duration: {Math.round(scriptResult.total_duration)}s</p>
@@ -712,29 +697,29 @@ export default function StoryToScript() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar border border-gray-100 dark:border-white/5 rounded-xl p-4 bg-gray-50 dark:bg-black/25">
+                                <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar border border-gray-100 dark:border-white/5 rounded-xl p-4 sm:p-6 bg-gray-50 dark:bg-black/30">
                                     {scriptResult.scenes && scriptResult.scenes.map((scene, index) => (
                                         <div key={index} className="space-y-3 pb-6 border-b border-gray-200 dark:border-white/5 last:border-none last:pb-0">
-                                            <div className="text-xs font-bold text-gray-800 dark:text-gray-300 font-mono tracking-wide uppercase">
+                                            <div className="text-xs font-bold text-gray-800 dark:text-gray-300 font-mono tracking-wide uppercase bg-gray-200/50 dark:bg-white/5 px-3 py-1.5 rounded-lg inline-block">
                                                 Scene {scene.scene_number || (index + 1)}: {scene.scene_title || scene.type || 'SCENE'}
                                             </div>
                                             
                                             {scene.visual_description && (
-                                                <p className="text-xs italic text-gray-500 dark:text-gray-400 leading-relaxed font-sans">
+                                                <p className="text-xs italic text-gray-500 dark:text-gray-400 leading-relaxed font-sans bg-amber-500/5 p-2.5 rounded-lg border-l-2 border-amber-500/40">
                                                     Action: {scene.visual_description}
                                                 </p>
                                             )}
 
-                                            <div className="space-y-3 pl-3 border-l-2 border-red-500/30">
+                                            <div className="space-y-3 pl-3 sm:pl-4 border-l-2 border-red-500/30">
                                                 {scene.dialogues && scene.dialogues.map((dlg, dIdx) => (
                                                     <div key={dIdx} className="space-y-0.5">
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">{dlg.speaker}</span>
+                                                            <span className="text-[11px] font-black text-red-500 uppercase tracking-wider">{dlg.speaker}</span>
                                                             {dlg.action && (
                                                                 <span className="text-[9px] text-gray-500 dark:text-gray-400 italic">({dlg.action.toLowerCase()})</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-gray-700 dark:text-gray-300 font-serif">"{dlg.line}"</p>
+                                                        <p className="text-xs text-gray-700 dark:text-gray-300 font-serif leading-relaxed">"{dlg.line}"</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -757,8 +742,10 @@ export default function StoryToScript() {
                             </div>
                         )}
                     </div>
-                ) : (
-                    /* Library Tab */
+                )}
+
+                {/* TAB 3: SAVED SCREENPLAYS LIBRARY */}
+                {activeTab === 'library' && (
                     <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm">
                         <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
                             <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -794,30 +781,29 @@ export default function StoryToScript() {
                                     >
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-2 py-0.5 rounded-full">
-                                                    Screenplay
+                                                <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full uppercase">
+                                                    {item.niche || 'Screenplay'}
                                                 </span>
                                                 <button
-                                                    type="button"
                                                     onClick={(e) => deleteItem(item.uuid, e)}
-                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                                    title="Delete Screenplay"
+                                                    className="text-gray-400 hover:text-red-500 p-1 transition-colors"
+                                                    title="Delete"
                                                 >
                                                     <MdDelete className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-500 transition-colors">
+
+                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-red-500 transition-colors">
                                                 {item.title}
                                             </h4>
+                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                                {item.style}
+                                            </p>
                                         </div>
 
-                                        <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-white/5 flex items-center justify-between">
-                                            <span className="text-[10px] text-gray-400">
-                                                {new Date(item.created_at).toLocaleDateString()}
-                                            </span>
-                                            <span className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                                                Open Screenplay →
-                                            </span>
+                                        <div className="mt-3 pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[10px] text-gray-400">
+                                            <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                                            <span className="font-bold text-red-500 group-hover:translate-x-1 transition-transform">Read Screenplay →</span>
                                         </div>
                                     </div>
                                 ))}
@@ -825,16 +811,8 @@ export default function StoryToScript() {
                         )}
                     </div>
                 )}
-            </div>
 
-            {loading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#111115] border border-gray-200 dark:border-white/10 rounded-2xl p-6 text-center max-w-xs w-full shadow-2xl space-y-4">
-                        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-300">{loadingText || "Processing..."}</p>
-                    </div>
-                </div>
-            )}
+            </div>
         </div>
     );
 }

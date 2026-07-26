@@ -33,8 +33,12 @@ import {
     MdOndemandVideo,
 } from 'react-icons/md';
 
+import { useNavigation } from '@/context/NavigationContext';
+import { Loader2 } from 'lucide-react';
+
 export default function AdminSidebar({ collapsed, setCollapsed }) {
     const pathname = usePathname();
+    const { startNavigation, navigatingPath } = useNavigation();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [contentDropdownOpen, setContentDropdownOpen] = useState(false);
     const [openTickets, setOpenTickets] = useState(0);
@@ -152,13 +156,17 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
+                        const isNavigatingItem = navigatingPath === item.path;
                         return (
                             <Link key={item.path}
                                 href={item.path}
-                                onClick={() => setMobileOpen(false)}
+                                onClick={() => {
+                                    setMobileOpen(false);
+                                    startNavigation(item.path, item.label);
+                                }}
                                 className={`relative flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
-                                    ? 'bg-red-500/10 text-red-650 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
-                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
@@ -166,14 +174,17 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                                 {!collapsed && (
                                     <span className="text-xs font-semibold uppercase tracking-wider flex-1">{item.label}</span>
                                 )}
+                                {isNavigatingItem && (
+                                    <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                )}
                                 {/* Badge */}
-                                {item.badge && (
+                                {item.badge && !isNavigatingItem && (
                                     collapsed ? (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-550 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                                             {item.badge > 9 ? '9+' : item.badge}
                                         </span>
                                     ) : (
-                                        <span className="ml-auto text-[10px] font-bold bg-red-550 text-white px-1.5 py-0.5 rounded-full">
+                                        <span className="ml-auto text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full">
                                             {item.badge > 99 ? '99+' : item.badge}
                                         </span>
                                     )
@@ -184,50 +195,64 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
 
                     {/* Blog Section */}
                     {!collapsed && (
-                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-450 dark:text-gray-600 uppercase tracking-widest">
+                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">
                             Blog Content
                         </div>
                     )}
                     {blogItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
+                        const isNavigatingItem = navigatingPath === item.path;
                         return (
                             <Link key={item.path}
                                 href={item.path}
-                                onClick={() => setMobileOpen(false)}
+                                onClick={() => {
+                                    setMobileOpen(false);
+                                    startNavigation(item.path, item.label);
+                                }}
                                 className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
-                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
-                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
                                 {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
+                                {isNavigatingItem && (
+                                    <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                )}
                             </Link>
                         );
                     })}
 
                     {/* Intelligence Section */}
                     {!collapsed && (
-                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-450 dark:text-gray-600 uppercase tracking-widest">
+                        <div className="px-4 pt-4 pb-1.5 mt-2 text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">
                             Intelligence
                         </div>
                     )}
                     {researchItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
+                        const isNavigatingItem = navigatingPath === item.path;
                         return (
                             <Link key={item.path}
                                 href={item.path}
-                                onClick={() => setMobileOpen(false)}
+                                onClick={() => {
+                                    setMobileOpen(false);
+                                    startNavigation(item.path, item.label);
+                                }}
                                 className={`flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'justify-start px-3.5 py-2.5'} gap-3 rounded-xl transition-all duration-200 ${active
-                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
-                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold border-l-2 border-red-500 rounded-l-none pl-3 shadow-[inset_1.5px_0_0_rgba(239,68,68,0.1)]'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                                 title={collapsed ? item.label : ''}
                             >
                                 <Icon className="w-4 h-4 flex-shrink-0" />
                                 {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider">{item.label}</span>}
+                                {isNavigatingItem && (
+                                    <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                )}
                             </Link>
                         );
                     })}
@@ -238,8 +263,8 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                             <button
                                 onClick={() => setContentDropdownOpen(!contentDropdownOpen)}
                                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 ${isContentActive
-                                    ? 'bg-red-500/10 text-red-655 dark:text-red-400 font-bold'
-                                    : 'text-gray-550 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -256,17 +281,24 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                                     {contentItems.map((item) => {
                                         const Icon = item.icon;
                                         const active = isActive(item.path);
+                                        const isNavigatingItem = navigatingPath === item.path;
                                         return (
                                             <Link key={item.path}
                                                 href={item.path}
-                                                onClick={() => setMobileOpen(false)}
+                                                onClick={() => {
+                                                    setMobileOpen(false);
+                                                    startNavigation(item.path, item.label);
+                                                }}
                                                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs ${active
                                                     ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold'
                                                     : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/60 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
                                                     }`}
                                             >
                                                 <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                                                <span className="font-medium">{item.label}</span>
+                                                <span className="flex-1">{item.label}</span>
+                                                {isNavigatingItem && (
+                                                    <Loader2 className="w-3 h-3 text-red-500 animate-spin ml-auto flex-shrink-0" />
+                                                )}
                                             </Link>
                                         );
                                     })}

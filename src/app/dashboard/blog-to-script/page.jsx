@@ -12,7 +12,8 @@ import {
     MdChevronRight, 
     MdAutoAwesome,
     MdFolder,
-    MdCreate
+    MdCreate,
+    MdAccessTime
 } from 'react-icons/md';
 import Sidebar from '@/components/Sidebar';
 
@@ -33,15 +34,15 @@ export default function BlogToScript() {
     const demoSlides = [
         {
             title: "⚡ Step 1: Provide Blog Link",
-            desc: "Enter any standard article or blog URL webpage."
+            desc: "Paste any published blog post or article webpage URL."
         },
         {
-            title: "⏱️ Step 2: Target Video duration",
-            desc: "Select your target video runtime length (e.g. 1 minute for Shorts, 5 minutes for deep dive)."
+            title: "⏱️ Step 2: Target Video Duration",
+            desc: "Select your desired video runtime (1m Shorts up to 10m deep dive). The AI will calculate scene depth and word count automatically."
         },
         {
-            title: "📖 Step 3: Crawl & Compile Script",
-            desc: "Synthesize content. The AI extracts text, structures slides, and generates speech dialogues."
+            title: "📖 Step 3: Crawl & Synthesize Script",
+            desc: "Extract text, structure scenes, draft spoken narration, and generate visual cues ready for voiceovers and image creation."
         }
     ];
 
@@ -53,7 +54,7 @@ export default function BlogToScript() {
     const [blogResult, setBlogResult] = useState(null);
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
     const userId = user.id || 1;
 
     const [subscription, setSubscription] = useState(null);
@@ -141,7 +142,7 @@ export default function BlogToScript() {
     const handleBlogToScript = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setLoadingText('Crawling URL & Synthesizing script presentation...');
+        setLoadingText(`Crawling webpage & synthesizing ${blogDuration}-minute full script...`);
         setBlogResult(null);
 
         const payload = {
@@ -248,24 +249,25 @@ export default function BlogToScript() {
     const prevDemoSlide = () => {
         setDemoSlide((prev) => (prev - 1 + demoSlides.length) % demoSlides.length);
     };
+    
     const maxBlogToScript = parseInt(subscription?.max_blog_to_script || 0);
     const usedBlogToScript = parseInt(subscription?.used_blog_to_script || 0);
 
     return (
-        <div className="flex h-screen bg-gray-55 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
             <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
                 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/5 pb-5 mb-6">
                     <div>
-                        <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                            <MdLink className="text-red-500 w-6 h-6" /> Blog to Script
+                        <h1 className="text-lg sm:text-2xl font-bold uppercase tracking-tight flex items-center gap-2">
+                            <MdLink className="text-red-500 w-6 h-6 sm:w-7 sm:h-7" /> Blog to Script
                         </h1>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Convert any blog post or article webpage into a video presentation script.</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5">Turn any blog post or webpage URL into a comprehensive YouTube video script.</p>
                         {!loadingPlan && (
-                            <span className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/15 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider mt-1.5 inline-block">
+                            <span className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/15 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider mt-2 inline-block">
                                 Usage: {usedBlogToScript} / {maxBlogToScript} conversions
                             </span>
                         )}
@@ -273,13 +275,13 @@ export default function BlogToScript() {
                     
                     <button
                         onClick={() => setShowDemo(!showDemo)}
-                        className="self-start md:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
+                        className="self-start sm:self-auto bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all text-gray-700 dark:text-white"
                     >
                         <MdInfoOutline className="text-red-400 w-4 h-4" /> {showDemo ? "Hide Guide" : "View Guide"}
                     </button>
                 </div>
 
-                {/* Section Tabs Switcher (Mobile Friendly & Modern) */}
+                {/* Section Tabs Switcher */}
                 <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-3">
                     <button
                         onClick={() => setActiveTab('converter')}
@@ -310,7 +312,7 @@ export default function BlogToScript() {
                     <div className="bg-gradient-to-r from-red-50 to-purple-50 dark:from-red-950/20 dark:to-purple-950/10 border border-red-200 dark:border-red-500/25 rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden transition-all duration-300">
                         <div className="max-w-2xl">
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide Mode</span>
+                                <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Guide</span>
                                 <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{demoSlides[demoSlide].title}</h4>
                             </div>
                             <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{demoSlides[demoSlide].desc}</p>
@@ -353,7 +355,7 @@ export default function BlogToScript() {
                             <form onSubmit={handleBlogToScript} className="space-y-6">
                                 <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                     <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2">
-                                        Blog Webpage to Presentation Script
+                                        Blog Webpage Configuration
                                     </h3>
                                     
                                     <div>
@@ -373,16 +375,18 @@ export default function BlogToScript() {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Target Duration</label>
+                                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 flex items-center gap-1">
+                                                <MdAccessTime className="w-3.5 h-3.5 text-red-500" /> Target Duration
+                                            </label>
                                             <select
                                                 value={blogDuration}
                                                 onChange={(e) => setBlogDuration(Number(e.target.value))}
                                                 className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2.5 text-xs text-gray-700 dark:text-white focus:outline-none"
                                             >
-                                                <option value={1}>1 Minute (Shorts / TikTok)</option>
-                                                <option value={3}>3 Minutes (Medium video)</option>
-                                                <option value={5}>5 Minutes (Full presentation)</option>
-                                                <option value={10}>10 Minutes (Deep dive)</option>
+                                                <option value={1}>1 Minute (Shorts / ~5 scenes)</option>
+                                                <option value={3}>3 Minutes (Medium / ~9-12 scenes)</option>
+                                                <option value={5}>5 Minutes (Full Video / ~15-18 scenes)</option>
+                                                <option value={10}>10 Minutes (Deep Dive / ~30 scenes)</option>
                                             </select>
                                         </div>
 
@@ -417,7 +421,7 @@ export default function BlogToScript() {
                                     disabled={loading}
                                     className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase py-3.5 rounded-2xl text-xs tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
                                 >
-                                    <MdAutoAwesome className="w-4 h-4" /> Synthesize Article into Script
+                                    <MdAutoAwesome className="w-4 h-4" /> Synthesize Article into Full Script
                                 </button>
                             </form>
                         )}
@@ -426,60 +430,83 @@ export default function BlogToScript() {
                             <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-white/5 pb-3">
                                     <div>
-                                        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/10 px-2.5 py-0.5 rounded-full">Blog converted script</span>
-                                        <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">{blogResult.script?.title || 'Synthesized Presentation'}</h3>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/10 px-2.5 py-0.5 rounded-full">Blog Converted Script</span>
+                                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                                                {blogResult.script?.scenes?.length || 0} Scenes
+                                            </span>
+                                        </div>
+                                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white mt-1">
+                                            {blogResult.script?.title || 'Synthesized Presentation'}
+                                        </h3>
                                     </div>
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <button
-                                            type="button"
-                                            onClick={() => triggerDownload(blogResult.uuid, 'txt')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
-                                        >
-                                            TXT
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => triggerDownload(blogResult.uuid, 'docx')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
-                                        >
-                                            DOCX
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => triggerDownload(blogResult.uuid, 'pdf')}
-                                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white"
-                                        >
-                                            PDF
-                                        </button>
+
+                                    {/* Action Buttons Toolbar */}
+                                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+                                        <div className="flex items-center gap-1 col-span-2 sm:col-span-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => triggerDownload(blogResult.uuid, 'txt')}
+                                                className="flex-1 sm:flex-none bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white text-center"
+                                            >
+                                                TXT
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => triggerDownload(blogResult.uuid, 'docx')}
+                                                className="flex-1 sm:flex-none bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white text-center"
+                                            >
+                                                DOCX
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => triggerDownload(blogResult.uuid, 'pdf')}
+                                                className="flex-1 sm:flex-none bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white text-center"
+                                            >
+                                                PDF
+                                            </button>
+                                        </div>
+
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('audio')}
-                                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
+                                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl px-3 py-2 text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow"
                                         >
                                             🎙️ Voice Over
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleSyncToDashboard('images')}
-                                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow"
+                                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl px-3 py-2 text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow"
                                         >
-                                            🎨 Generate Images
+                                            🎨 Images
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                                     {blogResult.script?.scenes && blogResult.script.scenes.map((scene, idx) => (
-                                        <div key={idx} className="space-y-2 pb-4 border-b border-gray-100 dark:border-white/5 last:border-none">
-                                            <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase font-mono">Slide / Scene {scene.scene_number}: {scene.scene_title}</h4>
+                                        <div key={idx} className="bg-gray-50 dark:bg-[#16161d] p-4 rounded-xl space-y-2 border border-gray-100 dark:border-white/5">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <h4 className="text-xs font-bold text-red-500 dark:text-red-400 uppercase font-mono">
+                                                    Scene {scene.scene_number || idx + 1}: {scene.scene_title}
+                                                </h4>
+                                            </div>
+
                                             {scene.visual_description && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 italic">Visual: {scene.visual_description}</p>
+                                                <div className="bg-white dark:bg-[#0f0f13] p-2.5 rounded-lg border border-gray-200/60 dark:border-white/5 text-[11px] text-gray-600 dark:text-gray-400 italic">
+                                                    <strong className="not-italic text-gray-800 dark:text-gray-200 font-sans">Visual Cue:</strong> {scene.visual_description}
+                                                </div>
                                             )}
-                                            <div className="pl-3 border-l-2 border-cyan-500 space-y-1">
+
+                                            <div className="pl-3 border-l-2 border-cyan-500 space-y-2 pt-1">
                                                 {scene.dialogues && scene.dialogues.map((dlg, dIdx) => (
-                                                    <p key={dIdx} className="text-xs text-gray-700 dark:text-gray-300 font-serif leading-relaxed">
-                                                        <strong>{dlg.speaker}:</strong> "{dlg.line}"
-                                                    </p>
+                                                    <div key={dIdx} className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-sans">
+                                                        <span className="font-bold text-cyan-600 dark:text-cyan-400 uppercase text-[11px] block sm:inline mr-2">
+                                                            [{dlg.speaker || 'Presenter'}]:
+                                                        </span>
+                                                        <span>"{dlg.line}"</span>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
@@ -512,7 +539,7 @@ export default function BlogToScript() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {savedItems.map((item) => (
                                     <div
                                         key={item.id}

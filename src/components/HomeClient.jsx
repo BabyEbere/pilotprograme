@@ -448,6 +448,43 @@ function AffiliateTeaser() {
     );
 }
 
+// ── Rotating Word Rotator ───────────────────────────────────────────────────
+function RotatingWords() {
+    const words = [
+        "Faceless YouTube Channels",
+        "Viral AI Video Scripts",
+        "Blog to Script Videos",
+        "Story to Screenplay Lab",
+        "Realistic Voiceovers & Scenes",
+        "YouTube Competitor Audits"
+    ];
+    const [index, setIndex] = useState(0);
+    const [fade, setFade] = useState(true);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setFade(false);
+            setTimeout(() => {
+                setIndex((prev) => (prev + 1) % words.length);
+                setFade(true);
+            }, 300);
+        }, 2600);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className="inline-block relative min-w-[280px] sm:min-w-[420px] text-left">
+            <span
+                className={`inline-block bg-gradient-to-r from-red-500 via-purple-500 to-red-600 bg-clip-text text-transparent font-black transition-all duration-300 transform ${
+                    fade ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95'
+                }`}
+            >
+                {words[index]}
+            </span>
+        </span>
+    );
+}
+
 export default function HomeClient(props) {
     const [activeVoice, setActiveVoice] = useState(0);
     const voices = ['Edge TTS (Free)', 'CosyVoice2', 'Fish Speech 1.5', 'IndexTTS-2'];
@@ -498,50 +535,70 @@ export default function HomeClient(props) {
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-red-600/5 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
                     </div>
 
-                    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-28 md:py-36 text-center">
-                        <div className="inline-flex items-center gap-2 bg-red-600/10 dark:bg-red-600/20 backdrop-blur-sm border border-red-500/20 dark:border-red-500/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-full text-xs font-semibold mb-8 tracking-wide">
-                            <MdAutoAwesome className="w-4 h-4" />
-                            Powered by Pilot Programme AI Technology
+                    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
+                        <div className="inline-flex items-center gap-2 bg-red-600/10 dark:bg-red-600/20 backdrop-blur-sm border border-red-500/20 dark:border-red-500/30 text-red-600 dark:text-red-400 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-wide">
+                            <MdAutoAwesome className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
+                            <span>Powered by Pilot Programme AI Engine</span>
                         </div>
 
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-5 leading-tight tracking-tight">
-                            Faceless YouTube Automation
-                            <span className="block bg-gradient-to-r from-red-600 via-red-700 to-red-600 bg-clip-text text-transparent">
-                                10x Faster
-                            </span>
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6 leading-tight tracking-tight">
+                            Automate & Scale Your <br className="hidden sm:inline" />
+                            <RotatingWords />
                         </h1>
 
-                        <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-10 max-w-3xl mx-auto font-normal leading-relaxed">
-                            AI-powered scripts, professional narration, and stunning visuals.
-                            <span className="block mt-2 text-gray-500 dark:text-gray-400 dark:text-gray-400">Everything you need to dominate YouTube — no camera, no editing.</span>
+                        <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto font-normal leading-relaxed">
+                            Generate viral scripts with Gemini AI, synthesize human-like voiceovers, ingest any blog URL into video presentations, and audit competitor channel outliers.
+                            <span className="block mt-2.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Complete faceless creator suite — No camera required, no video editing experience, no USD conversion surprises.
+                            </span>
                         </p>
 
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
+                        {/* Feature Badges with Crisp Vector Icons */}
+                        <div className="flex flex-wrap items-center justify-center gap-2 mb-10 max-w-3xl mx-auto">
+                            {[
+                                { label: "Gemini 2.5 Scripting", icon: MdAutoAwesome },
+                                { label: "Edge-TTS & SiliconFlow Voices", icon: MdRecordVoiceOver },
+                                { label: "Web Blog to Script", icon: MdDescription },
+                                { label: "Nollywood & Hollywood Screenplays", icon: MdRocketLaunch },
+                                { label: "YouTube Outlier Audits", icon: MdTrendingUp }
+                            ].map((badge, idx) => {
+                                const Icon = badge.icon;
+                                return (
+                                    <span key={idx} className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-3.5 py-1.5 rounded-full text-gray-700 dark:text-gray-300">
+                                        <Icon className="w-3.5 h-3.5 text-red-500" />
+                                        {badge.label}
+                                    </span>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
                             <Link href="/get-started"
-                                className="group bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white px-8 py-3 rounded-lg text-base font-semibold transition-all shadow-lg shadow-red-600/15 dark:shadow-red-600/50 flex items-center justify-center gap-2 hover:shadow-red-600/30 dark:hover:shadow-red-600/70 hover:scale-105"
+                                className="group bg-gradient-to-r from-red-600 via-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-600/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 <MdPlayArrow className="w-5 h-5 fill-white" />
                                 Start Creating Free
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
                             </Link>
                             <Link href="/pricing"
-                                className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 backdrop-blur-sm text-gray-800 dark:text-white px-8 py-3 rounded-lg text-base font-semibold border border-gray-300/40 dark:border-white/20 transition-all flex items-center justify-center"
+                                className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 backdrop-blur-sm text-gray-800 dark:text-white px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold uppercase tracking-wider border border-gray-300/40 dark:border-white/20 transition-all flex items-center justify-center"
                             >
-                                View Plans
+                                View Pricing Plans
                             </Link>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-1.5">
                                 <MdCheck className="w-3.5 h-3.5 text-green-500" />
                                 <span>Free plan available</span>
                             </div>
                             <div className="flex items-center gap-1.5">
+                                <MdCreditCard className="w-3.5 h-3.5 text-red-500" />
                                 <span>Paystack (NGN) · Fast & Secure</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <MdLock className="w-3.5 h-3.5 text-gray-600 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500" />
-                                <span>Secure · No spam</span>
+                                <MdLock className="w-3.5 h-3.5 text-gray-400" />
+                                <span>Instant Setup · No Spam</span>
                             </div>
                         </div>
                     </div>

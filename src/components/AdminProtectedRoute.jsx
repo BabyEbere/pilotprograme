@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SESSION_TIMEOUT = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
-const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // Check every minute
+const REMEMBER_ME_TIMEOUT = 3 * 24 * 60 * 60 * 1000; // 3 Days (72 Hours) in milliseconds
+const DEFAULT_SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // Check every 60 seconds
 
 export default function AdminProtectedRoute({ children }) {
     const router = useRouter();
@@ -25,6 +26,9 @@ export default function AdminProtectedRoute({ children }) {
         let lastActivity = Date.now();
         let activityCheckInterval;
 
+        const isRemembered = localStorage.getItem('remember_me') === 'true';
+        const sessionTimeout = isRemembered ? REMEMBER_ME_TIMEOUT : DEFAULT_SESSION_TIMEOUT;
+
         const updateActivity = () => {
             lastActivity = Date.now();
             localStorage.setItem('last_activity', lastActivity.toString());
@@ -40,10 +44,11 @@ export default function AdminProtectedRoute({ children }) {
             const storedActivity = parseInt(localStorage.getItem('last_activity') || lastActivity.toString());
             const timeSinceActivity = now - storedActivity;
 
-            if (timeSinceActivity > SESSION_TIMEOUT) {
+            if (timeSinceActivity > sessionTimeout) {
                 localStorage.removeItem('user');
                 localStorage.removeItem('login_time');
                 localStorage.removeItem('last_activity');
+                localStorage.removeItem('remember_me');
                 window.location.href = '/login?timeout=true';
             }
 
@@ -51,10 +56,11 @@ export default function AdminProtectedRoute({ children }) {
                 const loginTimestamp = parseInt(loginTime);
                 const sessionDuration = now - loginTimestamp;
 
-                if (sessionDuration > SESSION_TIMEOUT) {
+                if (sessionDuration > sessionTimeout) {
                     localStorage.removeItem('user');
                     localStorage.removeItem('login_time');
                     localStorage.removeItem('last_activity');
+                    localStorage.removeItem('remember_me');
                     window.location.href = '/login?timeout=true';
                 }
             }

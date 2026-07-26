@@ -133,9 +133,37 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
             if (existingBreadcrumbs) existingBreadcrumbs.remove();
             const existingFAQ = document.getElementById('json-ld-faq');
             if (existingFAQ) existingFAQ.remove();
+            const existingNavSchema = document.getElementById('json-ld-navigation');
+            if (existingNavSchema) existingNavSchema.remove();
 
-            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://s1.pilotprograme.com';
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.pilotprograme.com';
             
+            // 0. SiteNavigationElement Schema (Tells Google Search about all navbar links for Sitelinks indexing)
+            const navigationSchema = {
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                'name': 'Pilot Programme Site Navigation',
+                'itemListElement': [
+                    { '@type': 'SiteNavigationElement', 'position': 1, 'name': 'Home', 'description': 'Main overview', 'url': `${origin}/` },
+                    { '@type': 'SiteNavigationElement', 'position': 2, 'name': 'YouTube Script Engine', 'description': 'Generate faceless scripts with AI Gemini 2.5', 'url': `${origin}/features` },
+                    { '@type': 'SiteNavigationElement', 'position': 3, 'name': 'Blog to Script Converter', 'description': 'Convert webpage URLs to video scripts', 'url': `${origin}/features` },
+                    { '@type': 'SiteNavigationElement', 'position': 4, 'name': 'Story to Screenplay Lab', 'description': 'Film outline & screenplay generator', 'url': `${origin}/features` },
+                    { '@type': 'SiteNavigationElement', 'position': 5, 'name': 'Video Tutorials', 'description': 'Step-by-step video guides', 'url': `${origin}/tutorial` },
+                    { '@type': 'SiteNavigationElement', 'position': 6, 'name': 'Documentation', 'description': 'Platform documentation and guides', 'url': `${origin}/documentation` },
+                    { '@type': 'SiteNavigationElement', 'position': 7, 'name': 'Blog & Strategy Guides', 'description': 'YouTube automation articles', 'url': `${origin}/blog` },
+                    { '@type': 'SiteNavigationElement', 'position': 8, 'name': 'Pricing Plans', 'description': 'Transparent pricing and subscription tiers', 'url': `${origin}/pricing` },
+                    { '@type': 'SiteNavigationElement', 'position': 9, 'name': 'About Us', 'description': 'About Pilot Programme platform', 'url': `${origin}/about` },
+                    { '@type': 'SiteNavigationElement', 'position': 10, 'name': 'Contact Us', 'description': 'Contact Pilot Programme support and inquiries', 'url': `${origin}/contact` },
+                    { '@type': 'SiteNavigationElement', 'position': 11, 'name': 'Affiliate Program', 'description': 'Earn commissions referring creators', 'url': `${origin}/affiliate` }
+                ]
+            };
+
+            const navScript = document.createElement('script');
+            navScript.id = 'json-ld-navigation';
+            navScript.type = 'application/ld+json';
+            navScript.text = JSON.stringify(navigationSchema);
+            document.head.appendChild(navScript);
+
             // 1. Breadcrumbs Schema (consists of home, register, login, about, features, pricing, documentation)
             const breadcrumbSchema = {
                 '@context': 'https://schema.org',

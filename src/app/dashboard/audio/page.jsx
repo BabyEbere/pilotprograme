@@ -189,10 +189,12 @@ function TechyAudioPlayer({ src, title, voice, onPlayChange }) {
             <div className="relative z-10 flex flex-col gap-3">
                 {/* Track Title & Clean Equalizer */}
                 <div className="flex items-center justify-between">
-                    <div className="min-w-0 flex-1 pr-2">
-                        <h4 className="text-xs font-bold text-gray-200 truncate tracking-wide">{title || "Audio Track"}</h4>
+                    <div className="min-w-0 flex-1 pr-2 overflow-hidden">
+                        <h4 className="text-xs font-bold text-gray-200 truncate max-w-[180px] sm:max-w-[260px] tracking-wide" title={title}>
+                            {title || "Audio Track"}
+                        </h4>
                         {voice && (
-                            <p className="text-[10px] font-mono text-gray-400 mt-0.5 uppercase tracking-wider">{voice}</p>
+                            <p className="text-[10px] font-mono text-gray-400 mt-0.5 uppercase tracking-wider truncate max-w-[180px] sm:max-w-[260px]">{voice}</p>
                         )}
                     </div>
 
@@ -1076,9 +1078,11 @@ export default function Audio() {
                                         }`}
                                     >
                                         <div className="flex flex-col gap-4">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 dark:text-white text-xs truncate">{audio.script_title || 'Untitled Script'}</h3>
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div className="min-w-0 flex-1 overflow-hidden pr-2">
+                                                    <h3 className="font-bold text-gray-900 dark:text-white text-xs truncate max-w-[160px] sm:max-w-[240px]" title={audio.script_title || 'Untitled Script'}>
+                                                        {audio.script_title || 'Untitled Script'}
+                                                    </h3>
                                                     <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold mt-1">
                                                         <span className="text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                             {audio.voice_name}

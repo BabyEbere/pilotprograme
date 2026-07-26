@@ -16,10 +16,17 @@ async function getPost(slug) {
         
         if (data.success && data.post) {
             const rawImage = data.post.featured_image || '';
-            // Strip data: URIs — social crawlers need real HTTPS URLs, not base64
-            const cleanImage = rawImage.startsWith('data:')
-                ? ''
-                : rawImage.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com');
+            let cleanImage = rawImage;
+            if (cleanImage.startsWith('data:')) {
+                cleanImage = '';
+            } else if (cleanImage) {
+                if (!cleanImage.startsWith('http://') && !cleanImage.startsWith('https://')) {
+                    const slash = cleanImage.startsWith('/') ? '' : '/';
+                    cleanImage = `https://s1.pilotprograme.com${slash}${cleanImage}`;
+                } else {
+                    cleanImage = cleanImage.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com');
+                }
+            }
             return {
                 ...data.post,
                 featured_image: cleanImage
@@ -42,9 +49,9 @@ export async function generateMetadata({ params }) {
         };
     }
     
-    const ogImage = post.featured_image && !post.featured_image.startsWith('data:')
+    const ogImage = post.featured_image
         ? [{ url: post.featured_image, width: 1200, height: 630, alt: post.title }]
-        : [];
+        : [{ url: 'https://pilotprograme.com/pilotprograme-logo.jpg', width: 1200, height: 630, alt: post.title }];
 
     return {
         title: post.meta_title || `${post.title} — Pilot Programme`,
@@ -59,7 +66,7 @@ export async function generateMetadata({ params }) {
             siteName: 'Pilot Programme',
         },
         twitter: {
-            card: ogImage.length > 0 ? 'summary_large_image' : 'summary',
+            card: 'summary_large_image',
             title: post.meta_title || post.title,
             description: post.meta_description || post.excerpt || '',
             images: ogImage.map(i => i.url),
