@@ -73,6 +73,7 @@ export default function StoryWriter() {
     const [duration, setDuration] = useState(20);
     const [isSeasonal, setIsSeasonal] = useState(false);
     const [hasNarrator, setHasNarrator] = useState(true);
+    const [storyFormat, setStoryFormat] = useState('roleplay'); // 'documentary' | 'roleplay'
 
     // Progressive writing state
     const [activeStoryUuid, setActiveStoryUuid] = useState('');
@@ -269,6 +270,7 @@ export default function StoryWriter() {
             description,
             is_seasonal: isSeasonal,
             has_narrator: hasNarrator,
+            story_format: storyFormat,
             characters: characters,
             api_key: ''
         };
@@ -504,6 +506,56 @@ export default function StoryWriter() {
                                                 className="w-full bg-gray-50 dark:bg-[#1a1a1f] border border-gray-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white focus:outline-none mt-2"
                                             />
                                         )}
+                                    </div>
+                                </div>
+
+                                {/* STORY PRODUCTION FORMAT SELECTOR (DOCUMENTARY VS ROLE PLAY) */}
+                                <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-2">
+                                    <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Production Format / Story Type
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStoryFormat('roleplay')}
+                                            className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                                                storyFormat === 'roleplay'
+                                                    ? 'bg-red-600/10 border-red-500 text-gray-900 dark:text-white ring-1 ring-red-500/50'
+                                                    : 'bg-gray-50 dark:bg-[#1a1a1f] border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                                            }`}
+                                        >
+                                            <span className="text-xl">🎭</span>
+                                            <div>
+                                                <div className="font-bold text-xs flex items-center gap-1.5">
+                                                    <span>Role Play / Screenplay</span>
+                                                    {storyFormat === 'roleplay' && <span className="text-[9px] font-mono text-red-500 font-bold uppercase">✓ Active</span>}
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                    Generates dynamic character actor dialogues, speaker exchanges, roleplay interactions & stage directions.
+                                                </p>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setStoryFormat('documentary')}
+                                            className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                                                storyFormat === 'documentary'
+                                                    ? 'bg-red-600/10 border-red-500 text-gray-900 dark:text-white ring-1 ring-red-500/50'
+                                                    : 'bg-gray-50 dark:bg-[#1a1a1f] border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                                            }`}
+                                        >
+                                            <span className="text-xl">🎙️</span>
+                                            <div>
+                                                <div className="font-bold text-xs flex items-center gap-1.5">
+                                                    <span>Documentary / Narration</span>
+                                                    {storyFormat === 'documentary' && <span className="text-[9px] font-mono text-red-500 font-bold uppercase">✓ Active</span>}
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                    Pure voiceover narration only. No actor dialogues or speaker labels will be generated.
+                                                </p>
+                                            </div>
+                                        </button>
                                     </div>
                                 </div>
 

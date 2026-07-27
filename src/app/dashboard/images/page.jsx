@@ -41,7 +41,48 @@ const ASPECT_RATIOS = [
     { id: '1:2', label: '1:2 Tall Banner', desc: 'Mobile Web Banners', ratioClass: 'w-3.5 h-7' },
     { id: '2:1', label: '2:1 Panoramic', desc: 'Header Banners', ratioClass: 'w-8 h-4' },
     { id: '16:10', label: '16:10 Display', desc: 'Mac & PC Displays', ratioClass: 'w-8 h-5' },
-    { id: '10:16', label: '10:16 Display', desc: 'Vertical Mobile Apps', ratioClass: 'w-5 h-8' },
+];
+
+const ART_STYLES = [
+    {
+        id: 'photorealistic',
+        name: 'Photorealistic Photography',
+        badge: 'Real-world Photos',
+        icon: '📷',
+        desc: 'Ultra-realistic Hasselblad / 35mm commercial camera photography & macro B-roll style.',
+        bullets: [
+            'Ultra-realistic Hasselblad / 35mm commercial camera photography & macro lighting',
+            'Real-world human presenters, skin textures, natural studio lighting & metallic/matte hardware prototypes',
+            'Realistic studio sets, depth of field bokeh, volumetric studio light & professional tech B-roll',
+            'Excludes 3D animation, cartoons, Pixar renders, or drawings'
+        ]
+    },
+    {
+        id: 'pixar_3d',
+        name: '3D Pixar Feature Film Style',
+        badge: '3D Pixar Animation',
+        icon: '✨',
+        desc: 'High-budget 3D animated feature film aesthetic (Disney-Pixar / Dreamworks style).',
+        bullets: [
+            'High-budget 3D animated feature film aesthetic with heroic adult proportions',
+            'Rich subsurface scattering, Octane 4K 3D rendering, and vibrant expressive lighting',
+            'Stylized character faces, fixed hair texture, and epic animated background sets',
+            'Excludes realistic human skin photo textures, over-simplified 2D cartoons, or chibi proportions'
+        ]
+    },
+    {
+        id: 'illustration',
+        name: 'Illustrational Graphic Art',
+        badge: 'Graphic Digital Art',
+        icon: '🎨',
+        desc: 'Premium digital illustration, vector graphic artwork & editorial storybook style.',
+        bullets: [
+            'Premium digital illustration, vector graphic artwork & editorial storybook aesthetic',
+            'Clean graphic linework, rich color palettes, and artistic atmospheric shading',
+            'Expressive visual metaphors, creative poster compositions & custom graphic storytelling',
+            'Excludes realistic photo textures and raw 3D models'
+        ]
+    }
 ];
 
 const MODELS = [
@@ -82,9 +123,10 @@ export default function Images() {
     const [viewMode, setViewMode] = useState('albums');
     const [selectedAlbumId, setSelectedAlbumId] = useState(null);
 
-    // Engine, Model & Aspect Ratio State
+    // Engine, Model, Aspect Ratio & Art Style State
     const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-lite-image');
     const [selectedAspectRatio, setSelectedAspectRatio] = useState('1:1');
+    const [selectedArtStyle, setSelectedArtStyle] = useState('photorealistic'); // photorealistic | pixar_3d | illustration
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -211,6 +253,51 @@ export default function Images() {
         }
     }, [formData.script_id, scripts]);
 
+    useEffect(() => {
+        if (selectedAlbumId && selectedAlbumId !== 'standalone') {
+            const selectedScript = scripts.find(s => String(s.id) === String(selectedAlbumId));
+            if (selectedScript?.visual_bible) {
+                try {
+                    setVisualBible(typeof selectedScript.visual_bible === 'string' ? JSON.parse(selectedScript.visual_bible) : selectedScript.visual_bible);
+                } catch (e) { setVisualBible(null); }
+            } else {
+                setVisualBible(null);
+            }
+        }
+    }, [selectedAlbumId, scripts]);
+
+    const handleBuildBibleForActiveScript = async () => {
+        const targetScriptId = selectedAlbumId || formData.script_id;
+        if (!targetScriptId || targetScriptId === 'standalone') return;
+
+        setIsBuildingBible(true);
+        try {
+            const response = await fetch(`${API_URL}/images/build-bible`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ script_id: targetScriptId, user_id: user.id, image_style: selectedArtStyle })
+            });
+            const data = await response.json();
+            if (data.success && data.bible) {
+                setVisualBible(data.bible);
+                setScripts(prev => prev.map(s => String(s.id) === String(targetScriptId) ? { ...s, visual_bible: data.bible } : s));
+                showToast('Visual Identity & Character Consistency Bible created!', 'success');
+            } else {
+                const message = data.message || '';
+                if (response.status === 429 || message.toLowerCase().includes('quota')) {
+                    showQuotaModal(message || "Quota limit reached. Please update key in Settings.");
+                } else {
+                    showToast('Error creating visual identity: ' + message, 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error building bible:', error);
+            showToast('Failed to build visual identity.', 'error');
+        } finally {
+            setIsBuildingBible(false);
+        }
+    };
+
     const handleBuildBible = async () => {
         if (!formData.script_id) return;
         setIsBuildingBible(true);
@@ -218,7 +305,7 @@ export default function Images() {
             const response = await fetch(`${API_URL}/images/build-bible`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ script_id: formData.script_id, user_id: user.id })
+                body: JSON.stringify({ script_id: formData.script_id, user_id: user.id, image_style: selectedArtStyle })
             });
             const data = await response.json();
             if (data.success) {
@@ -267,7 +354,8 @@ export default function Images() {
                 body: JSON.stringify({
                     script_id: currentScript?.id,
                     user_id: user.id,
-                    scene_number: formData.scene_number
+                    scene_number: formData.scene_number,
+                    image_style: selectedArtStyle
                 })
             });
 
@@ -304,7 +392,8 @@ export default function Images() {
                 body: JSON.stringify({
                     script_id: scriptId,
                     user_id: user.id,
-                    scene_number: sceneNum
+                    scene_number: sceneNum,
+                    image_style: selectedArtStyle
                 })
             });
 
@@ -312,7 +401,7 @@ export default function Images() {
 
             if (data.success && data.prompts) {
                 await fetchPrompts();
-                showToast(`Extracted 4 prompts for Scene ${sceneNum}!`, 'success');
+                showToast(`Extracted ${data.prompts.length} prompts for Scene ${sceneNum}!`, 'success');
             } else {
                 showToast(data.message || 'Error extracting scene prompts', 'error');
             }
@@ -636,6 +725,66 @@ export default function Images() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* 4. ART STYLE & GENERATION METHOD SELECTOR WITH INTERACTIVE BULLET POINTS */}
+                            <div className="pt-3 border-t border-white/10 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <MdAutoAwesome className="text-red-500" /> Select Generation Method & Art Style
+                                    </label>
+                                    <span className="text-[10px] font-mono text-purple-400 uppercase tracking-wider font-bold">
+                                        {ART_STYLES.find(s => s.id === selectedArtStyle)?.badge}
+                                    </span>
+                                </div>
+
+                                {/* Style Selector Buttons */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    {ART_STYLES.map(style => {
+                                        const isSelected = selectedArtStyle === style.id;
+                                        return (
+                                            <button
+                                                key={style.id}
+                                                type="button"
+                                                onClick={() => setSelectedArtStyle(style.id)}
+                                                className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 ${
+                                                    isSelected
+                                                        ? 'bg-purple-600/15 border-purple-500 text-white shadow-lg shadow-purple-900/20 ring-1 ring-purple-500/50'
+                                                        : 'bg-[#111116] border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                                                }`}
+                                            >
+                                                <span className="text-xl leading-none">{style.icon}</span>
+                                                <div>
+                                                    <div className="font-bold text-xs flex items-center gap-1.5">
+                                                        <span>{style.name}</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{style.desc}</p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Interactive Bullet Breakdown Box */}
+                                {(() => {
+                                    const activeStyleObj = ART_STYLES.find(s => s.id === selectedArtStyle) || ART_STYLES[0];
+                                    return (
+                                        <div className="bg-[#111116] border border-white/10 p-3.5 rounded-xl space-y-2 text-xs">
+                                            <div className="flex items-center gap-2 font-bold text-purple-400 text-[11px] uppercase tracking-wider">
+                                                <span>{activeStyleObj.icon}</span>
+                                                <span>Style Rules & Enforced AI Prompts ({activeStyleObj.name})</span>
+                                            </div>
+                                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
+                                                {activeStyleObj.bullets.map((bullet, idx) => (
+                                                    <li key={idx} className="flex items-start gap-1.5 leading-snug">
+                                                        <span className="text-purple-400 font-bold">•</span>
+                                                        <span>{bullet}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -782,6 +931,107 @@ export default function Images() {
                                 </button>
                             </div>
 
+                            {/* ── VISUAL IDENTITY & CHARACTER CONSISTENCY BIBLE PANEL ── */}
+                            {activeAlbum && (
+                                <div className="bg-[#1c1c26] border border-white/10 rounded-2xl p-6 space-y-4 shadow-xl">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                                <MdAutoAwesome className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                                    <span>Visual Identity & Character Consistency Bible</span>
+                                                    {visualBible ? (
+                                                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                                                            ✓ Active & Locked
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20">
+                                                            ⚠️ Not Created Yet
+                                                        </span>
+                                                    )}
+                                                </h3>
+                                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                                    AI character seed & face consistency anchor for {activeAlbum.title}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={handleBuildBibleForActiveScript}
+                                            disabled={isBuildingBible}
+                                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20 disabled:opacity-50"
+                                        >
+                                            {isBuildingBible ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    <span>Analyzing Script & Characters...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <MdAutoAwesome className="w-4 h-4" />
+                                                    <span>{visualBible ? 'Re-build Visual Identity' : '✨ Build Visual Identity Bible'}</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {visualBible ? (
+                                        <div className="space-y-4">
+                                            {/* Character Roster */}
+                                            {visualBible.characters && visualBible.characters.length > 0 && (
+                                                <div>
+                                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
+                                                        Character Roster & Visual Features ({visualBible.characters.length})
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        {visualBible.characters.map((c, idx) => (
+                                                            <div key={idx} className="bg-[#111116] border border-white/5 p-3.5 rounded-xl space-y-1.5 text-xs">
+                                                                <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                                                                    <span className="font-bold text-white text-xs">{c.name}</span>
+                                                                    <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                                                                        {c.gender !== 'N/A' ? c.gender : 'Subject'}
+                                                                    </span>
+                                                                </div>
+                                                                {c.hair !== 'N/A' && <p className="text-[11px] text-gray-300"><strong className="text-gray-400">Hair:</strong> {c.hair}</p>}
+                                                                {c.face !== 'N/A' && <p className="text-[11px] text-gray-300"><strong className="text-gray-400">Face:</strong> {c.face}</p>}
+                                                                {c.default_outfit !== 'N/A' && <p className="text-[11px] text-gray-300"><strong className="text-gray-400">Outfit:</strong> {c.default_outfit}</p>}
+                                                                {c.build !== 'N/A' && <p className="text-[11px] text-gray-300"><strong className="text-gray-400">Build:</strong> {c.build}</p>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Environment Roster */}
+                                            {visualBible.environments && visualBible.environments.length > 0 && (
+                                                <div className="pt-2 border-t border-white/5">
+                                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
+                                                        Environment & Lighting Style ({visualBible.environments.length})
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {visualBible.environments.map((env, idx) => (
+                                                            <div key={idx} className="bg-[#111116] border border-white/5 p-3 rounded-xl space-y-1 text-xs">
+                                                                <span className="font-bold text-white text-xs">{env.name}</span>
+                                                                <p className="text-[11px] text-gray-300 leading-relaxed">{env.description}</p>
+                                                                {env.atmosphere && <p className="text-[10px] text-purple-400 font-mono">Atmosphere: {env.atmosphere}</p>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="bg-[#111116] border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                                            <p className="text-gray-400 leading-relaxed">
+                                                Click "Build Visual Identity Bible" above so the AI extracts character face features, hair texture, clothing, and environment anchors to keep character appearance 100% consistent across all scene images.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {scenesInAlbum.map(sceneNumber => {
                                 const sceneImages = activeAlbumImages.filter(img => img.scene_number === sceneNumber);
                                 const completedSceneImages = sceneImages.filter(img => img.status === 'completed' && img.image_url);
@@ -919,7 +1169,7 @@ export default function Images() {
                                             Ready to Extract Prompts for Scene {nextSceneToExtractNum}?
                                         </h4>
                                         <p className="text-xs text-gray-400 max-w-md mx-auto mt-1 leading-relaxed">
-                                            Extract 4 cinematic visual prompts & camera angles for Scene {nextSceneToExtractNum} from your script narration.
+                                            Extract 3 cinematic visual prompts & camera angles for Scene {nextSceneToExtractNum} from your script narration.
                                         </p>
                                     </div>
                                     <button

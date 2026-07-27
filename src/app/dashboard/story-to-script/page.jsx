@@ -65,6 +65,7 @@ export default function StoryToScript() {
     const [duration, setDuration] = useState(20);
     const [isSeasonal, setIsSeasonal] = useState(false);
     const [hasNarrator, setHasNarrator] = useState(true);
+    const [storyFormat, setStoryFormat] = useState('roleplay'); // 'documentary' | 'roleplay'
 
     const API_URL = (typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000');
     const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
@@ -298,6 +299,7 @@ export default function StoryToScript() {
             duration: duration,
             is_seasonal: isSeasonal,
             has_narrator: hasNarrator,
+            story_format: storyFormat,
             characters: characters,
             api_key: ''
         };
@@ -573,17 +575,68 @@ export default function StoryToScript() {
                                                         <option key={item.id} value={item.id}>{item.title} ({item.niche || 'Story'})</option>
                                                     ))}
                                                 </select>
-                                            </div>
+                                                {selectedSavedStoryId && (
+                                                    <div className="mt-3">
+                                                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs space-y-1">
+                                                            <div className="font-bold text-white text-xs">✓ Target Story Ingested:</div>
+                                                            <div>Genre/Niche: <strong className="text-white">{niche}</strong> | Writing Style: <strong className="text-white">{style}</strong></div>
+                                                            {characters.length > 0 && (
+                                                                <div>Cast Cards: <strong className="text-white">{characters.length} characters imported</strong> ({characters.map(c => c.name).filter(Boolean).join(', ')})</div>
+                                                            )}
+                                                        </div>
 
-                                            {selectedSavedStoryId && (
-                                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs space-y-1">
-                                                    <div className="font-bold text-white text-xs">✓ Target Story Ingested:</div>
-                                                    <div>Genre/Niche: <strong className="text-white">{niche}</strong> | Writing Style: <strong className="text-white">{style}</strong></div>
-                                                    {characters.length > 0 && (
-                                                        <div>Cast Cards: <strong className="text-white">{characters.length} characters imported</strong> ({characters.map(c => c.name).filter(Boolean).join(', ')})</div>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        {/* STORY PRODUCTION FORMAT SELECTOR (DOCUMENTARY VS ROLE PLAY) */}
+                                                        <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2 mt-4">
+                                                            <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                                Production Format / Screenplay Type
+                                                            </label>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setStoryFormat('roleplay')}
+                                                                    className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                                                                        storyFormat === 'roleplay'
+                                                                            ? 'bg-red-600/10 border-red-500 text-gray-900 dark:text-white ring-1 ring-red-500/50'
+                                                                            : 'bg-gray-50 dark:bg-[#1a1a1f] border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                                                                    }`}
+                                                                >
+                                                                    <span className="text-xl">🎭</span>
+                                                                    <div>
+                                                                        <div className="font-bold text-xs flex items-center gap-1.5">
+                                                                            <span>Role Play / Screenplay</span>
+                                                                            {storyFormat === 'roleplay' && <span className="text-[9px] font-mono text-red-500 font-bold uppercase">✓ Active</span>}
+                                                                        </div>
+                                                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                                            Generates dynamic character actor dialogues, speaker exchanges & roleplay interactions.
+                                                                        </p>
+                                                                    </div>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setStoryFormat('documentary')}
+                                                                    className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                                                                        storyFormat === 'documentary'
+                                                                            ? 'bg-red-600/10 border-red-500 text-gray-900 dark:text-white ring-1 ring-red-500/50'
+                                                                            : 'bg-gray-50 dark:bg-[#1a1a1f] border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                                                                    }`}
+                                                                >
+                                                                    <span className="text-xl">🎙️</span>
+                                                                    <div>
+                                                                        <div className="font-bold text-xs flex items-center gap-1.5">
+                                                                            <span>Documentary / Narration</span>
+                                                                            {storyFormat === 'documentary' && <span className="text-[9px] font-mono text-red-500 font-bold uppercase">✓ Active</span>}
+                                                                        </div>
+                                                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                                            Pure voiceover narration only. No actor dialogues or speaker labels will be generated.
+                                                                        </p>
+                                                                    </div>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
 
                                             <div>
                                                 <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Screenplay Script Title</label>
