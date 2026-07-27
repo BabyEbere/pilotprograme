@@ -53,23 +53,15 @@ export default function Scripts() {
 
 
     const [formData, setFormData] = useState({
-
         nicheId: '',
-
         subNicheId: '', // Added subNicheId
-
         description: '',
-
         autoGenerate: false,
-
         duration: 10,
-
         isFaceless: true,
-
         perspective: 'first_person',
-
-        isSimpleTone: false
-
+        isSimpleTone: false,
+        storyFormat: 'documentary' // 'documentary' | 'roleplay'
     });
 
 
@@ -284,7 +276,9 @@ export default function Scripts() {
 
                     perspective: formData.perspective,
 
-                    is_simple_tone: formData.isSimpleTone
+                    is_simple_tone: formData.isSimpleTone,
+
+                    story_format: formData.storyFormat
 
                 })
 
@@ -795,6 +789,62 @@ export default function Scripts() {
 
                                     </div>
 
+                                </div>
+
+                                {/* STORY PRODUCTION FORMAT SELECTOR (DOCUMENTARY VS ROLE PLAY) */}
+                                <div className="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
+                                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Production Format / Script Style *
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div
+                                            onClick={() => setFormData({ ...formData, storyFormat: 'documentary' })}
+                                            className={`cursor-pointer p-3 rounded-xl border transition-all flex items-start gap-3 ${
+                                                formData.storyFormat === 'documentary'
+                                                    ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-500 ring-1 ring-purple-500'
+                                                    : 'bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-purple-500/50'
+                                            }`}
+                                        >
+                                            <span className="text-xl leading-none">🎙️</span>
+                                            <div>
+                                                <div className="font-bold text-xs text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                    <span>Documentary / Narration</span>
+                                                    {formData.storyFormat === 'documentary' && (
+                                                        <span className="text-[9px] font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
+                                                            ✓ Active
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                    Pure voiceover narration only. No actor dialogues or speaker labels will be generated.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            onClick={() => setFormData({ ...formData, storyFormat: 'roleplay' })}
+                                            className={`cursor-pointer p-3 rounded-xl border transition-all flex items-start gap-3 ${
+                                                formData.storyFormat === 'roleplay'
+                                                    ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-500 ring-1 ring-purple-500'
+                                                    : 'bg-white dark:bg-[#111] border-gray-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-purple-500/50'
+                                            }`}
+                                        >
+                                            <span className="text-xl leading-none">🎭</span>
+                                            <div>
+                                                <div className="font-bold text-xs text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                    <span>Role Play / Screenplay</span>
+                                                    {formData.storyFormat === 'roleplay' && (
+                                                        <span className="text-[9px] font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
+                                                            ✓ Active
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                                    Generates dynamic character actor dialogues, speaker exchanges & roleplay interactions.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
 
