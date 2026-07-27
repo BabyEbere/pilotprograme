@@ -551,9 +551,43 @@ export default function Images() {
                             </div>
                         </div>
 
-                        {/* GLOBAL MODEL & ASPECT RATIO CONTROL BAR */}
+                        {/* GLOBAL SCRIPT SELECTOR, MODEL & ASPECT RATIO CONTROL BAR */}
                         <div className="bg-[#1c1c24] border border-white/10 rounded-2xl p-4 space-y-4 shadow-xl">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                {/* 1. SCRIPT SELECTOR DROPDOWN */}
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                                        <MdFolder className="text-red-500" /> Select Script to Generate Images
+                                    </label>
+                                    <select
+                                        value={selectedAlbumId || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (!val) {
+                                                setSelectedAlbumId(null);
+                                                setViewMode('albums');
+                                            } else {
+                                                setSelectedAlbumId(val);
+                                                setFormData(prev => ({ ...prev, script_id: val }));
+                                                setViewMode('album-details');
+                                            }
+                                        }}
+                                        className="w-full bg-[#111116] border border-white/10 text-white text-xs font-bold rounded-xl p-3 outline-none focus:border-red-500"
+                                    >
+                                        <option value="">-- Choose a Script ({scripts.length} Available) --</option>
+                                        {scripts.map(s => (
+                                            <option key={s.id} value={s.id}>
+                                                🎬 {s.title} ({s.niche_name || 'Script'})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                                        {selectedAlbumId ? 'Currently viewing scene visuals for selected script.' : 'Pick a saved script to generate & manage scene visuals.'}
+                                    </p>
+                                </div>
+
+                                {/* 2. MODEL ENGINE SELECTOR */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
                                         <MdTune className="text-red-500" /> Select AI Model Engine
@@ -572,10 +606,10 @@ export default function Images() {
                                     <p className="text-[10px] text-gray-400 mt-1 leading-tight">{activeModelObj.desc}</p>
                                 </div>
 
-                                {/* ASPECT RATIO SELECTOR WITH VISUAL SHAPE ILLUSTRATIONS */}
+                                {/* 3. ASPECT RATIO SELECTOR */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center justify-between">
-                                        <span>Aspect Ratio Format ({ASPECT_RATIOS.length} Formats)</span>
+                                        <span>Aspect Ratio Format</span>
                                         <span className="text-red-400 font-mono font-bold">{selectedAspectRatio}</span>
                                     </label>
                                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
@@ -614,33 +648,33 @@ export default function Images() {
                         <div className="space-y-6">
                             <div className="flex items-center justify-between border-b border-white/5 pb-3">
                                 <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                                    <MdFolder className="text-red-500 w-4 h-4" /> Script Content Folders ({scriptsWithImages.length})
+                                    <MdFolder className="text-red-500 w-4 h-4" /> Script Content Library ({scripts.length} Saved Scripts)
                                 </h2>
                             </div>
 
-                            {loading ? (
+                            {loading || loadingScripts ? (
                                 <div className="text-center py-16">
                                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
-                                    <p className="text-xs text-gray-500 mt-3 font-semibold uppercase tracking-wider">Loading image library...</p>
+                                    <p className="text-xs text-gray-500 mt-3 font-semibold uppercase tracking-wider">Loading image & script library...</p>
                                 </div>
-                            ) : images.length === 0 ? (
+                            ) : scripts.length === 0 && images.length === 0 ? (
                                 <div className="text-center py-16 bg-[#111116] border border-white/10 rounded-2xl p-8 space-y-4">
                                     <MdFolder className="w-12 h-12 text-gray-600 mx-auto" />
-                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">No Image Albums Yet</h3>
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">No Saved Scripts Found</h3>
                                     <p className="text-xs text-gray-400 max-w-md mx-auto leading-relaxed">
-                                        Select a script from your dashboard to extract descriptive image prompts directly from your script scenes!
+                                        Create or compile a script in Story Studio or Script Compiler first, then return here to extract and generate scene visuals!
                                     </p>
                                     <button
-                                        onClick={() => router.push('/dashboard/scripts')}
+                                        onClick={() => router.push('/dashboard/story-writer')}
                                         className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-900/20"
                                     >
-                                        Go to Script Studio →
+                                        Go to Story Writer →
                                     </button>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
 
-                                    {/* STANDALONE PROMPTS FOLDER */}
+                                    {/* STANDALONE PROMPTS FOLDER (If any exist) */}
                                     {images.some(img => !img.script_id) && (
                                         <div
                                             onClick={() => {
@@ -670,15 +704,17 @@ export default function Images() {
                                         </div>
                                     )}
 
-                                    {/* SCRIPT FOLDERS */}
-                                    {scriptsWithImages.map(album => {
-                                        const completedCount = album.prompts.filter(p => p.status === 'completed').length;
+                                    {/* ALL SAVED SCRIPTS GRID */}
+                                    {scripts.map(script => {
+                                        const scriptPrompts = images.filter(img => String(img.script_id) === String(script.id));
+                                        const completedCount = scriptPrompts.filter(p => p.status === 'completed').length;
 
                                         return (
                                             <div
-                                                key={album.id}
+                                                key={script.id}
                                                 onClick={() => {
-                                                    setSelectedAlbumId(album.id);
+                                                    setSelectedAlbumId(script.id);
+                                                    setFormData(prev => ({ ...prev, script_id: script.id }));
                                                     setViewMode('album-details');
                                                 }}
                                                 className="bg-[#111116] hover:bg-[#1a1a22] border border-white/10 hover:border-red-500/30 rounded-2xl p-5 cursor-pointer transition-all flex flex-col justify-between group shadow-sm hover:shadow-md"
@@ -688,23 +724,27 @@ export default function Images() {
                                                         <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 group-hover:scale-105 transition-transform">
                                                             <MdFolder className="w-6 h-6" />
                                                         </div>
-                                                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10">
-                                                            {completedCount}/{album.prompts.length} Rendered
+                                                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                                                            completedCount > 0
+                                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                                : 'bg-white/5 text-gray-400 border-white/10'
+                                                        }`}>
+                                                            {completedCount > 0 ? `${completedCount} Rendered` : '0 Images'}
                                                         </span>
                                                     </div>
 
                                                     <div>
                                                         <h3 className="text-sm font-bold text-white group-hover:text-red-400 transition-colors line-clamp-1">
-                                                            {album.title}
+                                                            {script.title}
                                                         </h3>
                                                         <p className="text-[10px] text-gray-400 mt-0.5">
-                                                            {album.niche_name || 'General Content'}
+                                                            {script.niche_name || 'General Content'}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-bold text-red-400 uppercase tracking-wider">
-                                                    <span>Open Folder</span>
+                                                    <span>{scriptPrompts.length > 0 ? 'Manage Scene Visuals' : 'Generate Scene Images'}</span>
                                                     <span>→</span>
                                                 </div>
                                             </div>
