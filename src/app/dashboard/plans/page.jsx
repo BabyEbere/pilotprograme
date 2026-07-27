@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -61,7 +61,7 @@ function GlobalLoader({ message }) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function Plans() {
+function PlansContent() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -522,5 +522,13 @@ export default function Plans() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function Plans() {
+    return (
+        <Suspense fallback={<div className="flex h-screen bg-gray-50 dark:bg-[#0a0a0a] text-white p-6 text-xs font-bold">Loading Plans...</div>}>
+            <PlansContent />
+        </Suspense>
     );
 }

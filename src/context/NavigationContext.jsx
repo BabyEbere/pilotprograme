@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, Suspense, useCallback } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Loader from '@/components/Loader';
 
@@ -11,14 +11,28 @@ const NavigationContext = createContext({
     startNavigation: (path, label) => {},
 });
 
+function SearchParamsTracker({ onSearchParamsChange }) {
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        if (onSearchParamsChange) {
+            onSearchParamsChange(searchParams);
+        }
+    }, [searchParams, onSearchParamsChange]);
+    return null;
+}
+
 export function NavigationProvider({ children }) {
     const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const [searchParams, setSearchParams] = useState(null);
 
     const [isNavigating, setIsNavigating] = useState(false);
     const [navigatingPath, setNavigatingPath] = useState(null);
     const [targetLabel, setTargetLabel] = useState('');
     const [showUniversalLoader, setShowUniversalLoader] = useState(false);
+
+    const handleSearchParamsChange = useCallback((params) => {
+        setSearchParams(params);
+    }, []);
 
     // Reset loader on route change
     useEffect(() => {
@@ -57,6 +71,10 @@ export function NavigationProvider({ children }) {
                 startNavigation,
             }}
         >
+            <Suspense fallback={null}>
+                <SearchParamsTracker onSearchParamsChange={handleSearchParamsChange} />
+            </Suspense>
+
             {/* Top Red Ambient Progress Bar */}
             {isNavigating && (
                 <div className="fixed top-0 left-0 right-0 z-[99999] pointer-events-none">

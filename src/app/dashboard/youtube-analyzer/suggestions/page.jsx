@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Star, Trash2, Calendar, RefreshCw, Flame, Award, Lightbulb, Compass, ArrowUpRight } from 'lucide-react';
 import Loader from '@/components/Loader';

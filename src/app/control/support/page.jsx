@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect, useRef, Suspense } from 'react';
 import {
     MdConfirmationNumber, MdChatBubble, MdRefresh,
@@ -61,8 +63,8 @@ function AdminSupportContent() {
     const [sendingReply, setSendingReply] = useState(false);
     const bottomRef = useRef(null);
 
-    const adminData = JSON.parse(localStorage.getItem('user') || '{}');
-    const headers = { Authorization: `Bearer ${adminData.token}`, 'Content-Type': 'application/json' };
+    const adminData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+    const headers = { Authorization: `Bearer ${adminData.token || ''}`, 'Content-Type': 'application/json' };
 
     useEffect(() => { fetchStats(); fetchTickets(); }, []);
     useEffect(() => { fetchTickets(); }, [filter]);

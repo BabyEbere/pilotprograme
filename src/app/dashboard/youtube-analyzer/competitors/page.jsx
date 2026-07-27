@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { 
     Users, Plus, Trash2, ArrowUpRight, Award, AlertCircle, Info, RefreshCw, BarChart2, Youtube

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -35,7 +37,10 @@ function BookmarkedIdeasContent() {
     };
 
     const fetchFavorites = async () => {
-        if (!user?.id) return;
+        if (!user?.id) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         setError('');
         try {
