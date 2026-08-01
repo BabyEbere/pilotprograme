@@ -10,7 +10,7 @@ const API_URL = 'https://s1.pilotprograme.com/api';
 async function getPost(slug) {
     try {
         const res = await fetch(`${API_URL}/blog/posts/${encodeURIComponent(slug)}`, {
-            next: { revalidate: 3600 } // Cache blog fetches for 1 hour
+            next: { revalidate: 3600 } // Cache blog fetches for 1 hour (ISR)
         });
         const data = await res.json();
         
@@ -36,6 +36,29 @@ async function getPost(slug) {
         console.error('Error fetching blog post:', err);
     }
     return null;
+}
+
+export const revalidate = 60; // Revalidate pages every 60 seconds (ISR)
+export const dynamicParams = true; // New posts created in Admin render dynamically on-demand!
+
+export async function generateStaticParams() {
+    try {
+        const res = await fetch(`${API_URL}/blog/posts?status=published`, {
+            next: { revalidate: 60 }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.posts)) {
+            return data.posts
+                .filter(post => post.slug && typeof post.slug === 'string')
+                .map((post) => ({
+                    // encodeURIComponent ensures special chars like colons (:) don't break Windows folder creation during build
+                    slug: encodeURIComponent(post.slug),
+                }));
+        }
+    } catch (err) {
+        console.error('Error generating static params for blog:', err);
+    }
+    return [];
 }
 
 export async function generateMetadata({ params }) {
@@ -242,7 +265,7 @@ export default async function BlogPostPage({ params }) {
                     
                     {/* Content */}
                     <div 
-                        className="blog-content max-w-none"
+                        className="blog-content max-w-none text-gray-800 dark:text-gray-200"
                         dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                     
@@ -252,9 +275,9 @@ export default async function BlogPostPage({ params }) {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
                             <div className="space-y-4">
                                 {faqs.map((faq, index) => (
-                                    <div key={index} className="bg-gray-55 dark:bg-[#111111] rounded-lg p-6">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
-                                        <p className="text-gray-655 dark:text-gray-400">{faq.a}</p>
+                                    <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-lg p-6">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q || faq.question}</h3>
+                                        <p className="text-gray-600 dark:text-gray-400">{faq.a || faq.answer}</p>
                                     </div>
                                 ))}
                             </div>
