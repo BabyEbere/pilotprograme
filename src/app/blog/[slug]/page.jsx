@@ -183,9 +183,12 @@ export default async function BlogPostPage({ params }) {
         'datePublished': post.created_at,
         'dateModified': post.updated_at || post.created_at,
         'author': {
-            '@type': 'Organization',
-            'name': 'Pilot Programme Editorial Team',
-            'url': 'https://pilotprograme.com/about'
+            '@type': 'Person',
+            '@id': post.author_slug ? `https://pilotprograme.com/blog/authors/${post.author_slug}#person` : `https://pilotprograme.com/about#person`,
+            'name': post.author_name || 'Pilot Programme Editorial Team',
+            'url': post.author_slug ? `https://pilotprograme.com/blog/authors/${post.author_slug}` : 'https://pilotprograme.com/about',
+            'image': post.author_avatar || 'https://pilotprograme.com/pilotprograme-logo.jpg',
+            'jobTitle': 'Senior AI Content Strategist & Author'
         },
         'publisher': {
             '@type': 'Organization',

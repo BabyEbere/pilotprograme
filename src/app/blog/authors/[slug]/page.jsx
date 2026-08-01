@@ -42,13 +42,16 @@ export async function generateMetadata({ params }) {
 
     if (!data || !data.author) {
         return {
-            title: 'Author Not Found — Pilot Programme',
+            title: 'Author Profile Not Found — Pilot Programme',
         };
     }
 
     const { author } = data;
     const canonicalUrl = `https://pilotprograme.com/blog/authors/${decodedSlug}`;
     const avatarUrl = author.avatar || 'https://pilotprograme.com/pilotprograme-logo.jpg';
+    const nameParts = (author.name || '').trim().split(' ');
+    const firstName = nameParts[0] || author.name;
+    const lastName = nameParts.slice(1).join(' ') || '';
 
     return {
         title: `${author.name} — Author Profile | Pilot Programme`,
@@ -58,17 +61,31 @@ export async function generateMetadata({ params }) {
         },
         openGraph: {
             title: `${author.name} — Author Profile | Pilot Programme`,
-            description: author.bio || `Articles written by ${author.name}`,
+            description: author.bio || `Articles and strategy publications written by ${author.name}`,
             url: canonicalUrl,
-            images: [{ url: avatarUrl, width: 800, height: 800, alt: author.name }],
             type: 'profile',
+            profile: {
+                firstName,
+                lastName,
+                username: decodedSlug,
+                gender: author.gender || 'other'
+            },
+            images: [
+                { 
+                    url: avatarUrl, 
+                    width: 1200, 
+                    height: 630, 
+                    alt: `${author.name} Profile Thumbnail` 
+                }
+            ],
             siteName: 'Pilot Programme',
         },
         twitter: {
-            card: 'summary',
+            card: 'summary_large_image',
             title: `${author.name} — Author Profile | Pilot Programme`,
             description: author.bio || `Articles written by ${author.name}`,
             images: [avatarUrl],
+            creator: '@pilotprograme'
         }
     };
 }
@@ -99,6 +116,8 @@ export default async function AuthorProfilePage({ params }) {
     }
 
     const { author, posts } = data;
+    const canonicalUrl = `https://pilotprograme.com/blog/authors/${decodedSlug}`;
+    const avatarUrl = author.avatar || 'https://pilotprograme.com/pilotprograme-logo.jpg';
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
@@ -123,19 +142,86 @@ export default async function AuthorProfilePage({ params }) {
         ...(Array.isArray(author.external_websites) ? author.external_websites : [])
     ];
 
-    // Person Schema JSON-LD
-    const personSchema = {
+    // 1. ProfilePage Schema JSON-LD (For Google Search Console Avatar & Author Rich Snippet)
+    const profilePageSchema = {
         '@context': 'https://schema.org',
-        '@type': 'Person',
-        'name': author.name,
-        'url': `https://pilotprograme.com/blog/authors/${decodedSlug}`,
-        'image': author.avatar || 'https://pilotprograme.com/pilotprograme-logo.jpg',
+        '@type': 'ProfilePage',
+        '@id': `${canonicalUrl}#profilepage`,
+        'url': canonicalUrl,
+        'name': `${author.name} — Author Profile`,
         'description': author.bio || '',
-        'gender': author.gender || 'other',
-        'email': author.email || undefined,
-        'sameAs': sameAsArray.length > 0 ? sameAsArray : undefined
+        'mainEntity': {
+            '@type': 'Person',
+            '@id': `${canonicalUrl}#person`,
+            'name': author.name,
+            'alternateName': author.name,
+            'url': canonicalUrl,
+            'image': {
+                '@type': 'ImageObject',
+                '@id': `${canonicalUrl}#authorimage`,
+                'url': avatarUrl,
+                'caption': author.name,
+                'width': 800,
+                'height': 800
+            },
+            'jobTitle': 'Senior AI Content Strategist & Author',
+            'worksFor': {
+                '@type': 'Organization',
+                'name': 'Pilot Programme',
+                'url': 'https://pilotprograme.com',
+                'logo': 'https://pilotprograme.com/pilotprograme-logo.jpg'
+            },
+            'description': author.bio || '',
+            'gender': author.gender || 'other',
+            'email': author.email || undefined,
+            'sameAs': sameAsArray.length > 0 ? sameAsArray : undefined
+        }
     };
 
+    // 2. Dataset Schema JSON-LD
+    const datasetSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        '@id': `${canonicalUrl}#dataset`,
+        'name': `${author.name} Publications & Research Dataset`,
+        'description': `Publication dataset containing articles, guides, and strategy research on YouTube channel automation and AI content creation written by ${author.name}.`,
+        'url': canonicalUrl,
+        'creator': {
+            '@type': 'Person',
+            'name': author.name,
+            'url': canonicalUrl
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'Pilot Programme',
+            'url': 'https://pilotprograme.com'
+        },
+        'keywords': [
+            'YouTube Automation',
+            'AI Content Strategy',
+            'Faceless YouTube Channels',
+            'Video Scriptwriting',
+            'Channel Monetization'
+        ],
+        'license': 'https://creativecommons.org/licenses/by/4.0/',
+        'isAccessibleForFree': true
+    };
+
+    // 3. ItemList Schema (Author's Articles)
+    const itemListSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'name': `Articles Authored by ${author.name}`,
+        'numberOfItems': posts.length,
+        'itemListElement': posts.map((p, index) => ({
+            '@type': 'ListItem',
+            'position': index + 1,
+            'url': `https://pilotprograme.com/blog/${p.slug}`,
+            'name': p.title
+        }))
+    };
+
+    // 4. BreadcrumbList Schema
     const breadcrumbSchema = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -143,7 +229,7 @@ export default async function AuthorProfilePage({ params }) {
             { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://pilotprograme.com/' },
             { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://pilotprograme.com/blog' },
             { '@type': 'ListItem', 'position': 3, 'name': 'Authors', 'item': 'https://pilotprograme.com/blog' },
-            { '@type': 'ListItem', 'position': 4, 'name': author.name, 'item': `https://pilotprograme.com/blog/authors/${decodedSlug}` }
+            { '@type': 'ListItem', 'position': 4, 'name': author.name, 'item': canonicalUrl }
         ]
     };
 
@@ -151,7 +237,15 @@ export default async function AuthorProfilePage({ params }) {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(profilePageSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
             />
             <script
                 type="application/ld+json"

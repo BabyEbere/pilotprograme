@@ -43,5 +43,26 @@ export default async function sitemap() {
         console.error('Error generating dynamic blog sitemap:', err);
     }
 
-    return [...routes, ...blogRoutes];
+    // Fetch all public author profiles dynamically
+    let authorRoutes = [];
+    try {
+        const res = await fetch(`${API_URL}/blog/authors`, {
+            next: { revalidate: 3600 }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.authors)) {
+                authorRoutes = data.authors.map((author) => ({
+                    url: `${baseUrl}/blog/authors/${encodeURIComponent(author.slug)}`,
+                    lastModified: author.updated_at || author.created_at || new Date().toISOString(),
+                    changeFrequency: 'weekly',
+                    priority: 0.8,
+                }));
+            }
+        }
+    } catch (err) {
+        console.error('Error generating dynamic author sitemap:', err);
+    }
+
+    return [...routes, ...blogRoutes, ...authorRoutes];
 }
