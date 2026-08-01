@@ -46,9 +46,11 @@ export default function AdminBlogEditor() {
 
     useEffect(() => {
         fetchCategories();
+        fetchAuthors();
         if (id && editPost) {
             setForm({
                 ...editPost,
+                author_id: editPost.author_id || '',
                 faq_json: JSON.parse(editPost.faq_json || '[]'),
                 schema_json: JSON.parse(editPost.schema_json || '{}')
             });
@@ -60,6 +62,14 @@ export default function AdminBlogEditor() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) setCategories(data.categories);
+            });
+    };
+
+    const fetchAuthors = () => {
+        fetch(`${(typeof window !== 'undefined' ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : 'https://s1.pilotprograme.com/api') : 'http://localhost:5000')}/admin/blog/authors`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setAuthors(data.authors || []);
             });
     };
 
@@ -305,7 +315,7 @@ export default function AdminBlogEditor() {
                                         className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 transition-all font-semibold"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Slug</label>
                                         <input 
@@ -324,6 +334,17 @@ export default function AdminBlogEditor() {
                                             className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 uppercase text-[10px] font-bold tracking-widest"
                                         >
                                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Assign Author</label>
+                                        <select 
+                                            value={form.author_id || ''}
+                                            onChange={(e) => setForm(prev => ({ ...prev, author_id: e.target.value ? parseInt(e.target.value) : '' }))}
+                                            className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 uppercase text-[10px] font-bold tracking-widest"
+                                        >
+                                            <option value="">-- Default / Team --</option>
+                                            {authors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                         </select>
                                     </div>
                                 </div>

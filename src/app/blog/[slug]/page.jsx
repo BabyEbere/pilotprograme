@@ -2,7 +2,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Link from 'next/link';
-import { Calendar, Clock, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, BookOpen } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 
 const API_URL = 'https://s1.pilotprograme.com/api';
@@ -38,6 +38,29 @@ async function getPost(slug) {
     return null;
 }
 
+async function getRelatedPosts(currentPostId) {
+    try {
+        const res = await fetch(`${API_URL}/blog/posts?status=published`, {
+            next: { revalidate: 3600 }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.posts)) {
+                return data.posts
+                    .filter(p => p.id !== currentPostId)
+                    .slice(0, 3)
+                    .map(p => ({
+                        ...p,
+                        featured_image: p.featured_image ? p.featured_image.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/, 'https://s1.pilotprograme.com') : ''
+                    }));
+            }
+        }
+    } catch (err) {
+        console.error('Error fetching related posts:', err);
+    }
+    return [];
+}
+
 export const revalidate = 60; // Revalidate pages every 60 seconds (ISR)
 export const dynamicParams = true; // New posts created in Admin render dynamically on-demand!
 
@@ -51,7 +74,6 @@ export async function generateStaticParams() {
             return data.posts
                 .filter(post => post.slug && typeof post.slug === 'string')
                 .map((post) => ({
-                    // encodeURIComponent ensures special chars like colons (:) don't break Windows folder creation during build
                     slug: encodeURIComponent(post.slug),
                 }));
         }
@@ -72,6 +94,7 @@ export async function generateMetadata({ params }) {
         };
     }
     
+    const canonicalUrl = `https://pilotprograme.com/blog/${decodedSlug}`;
     const ogImage = post.featured_image
         ? [{ url: post.featured_image, width: 1200, height: 630, alt: post.title }]
         : [{ url: 'https://pilotprograme.com/pilotprograme-logo.jpg', width: 1200, height: 630, alt: post.title }];
@@ -80,10 +103,13 @@ export async function generateMetadata({ params }) {
         title: post.meta_title || `${post.title} — Pilot Programme`,
         description: post.meta_description || post.excerpt || '',
         keywords: post.keywords || '',
+        alternates: {
+            canonical: canonicalUrl,
+        },
         openGraph: {
             title: post.meta_title || post.title,
             description: post.meta_description || post.excerpt || '',
-            url: `https://pilotprograme.com/blog/${decodedSlug}`,
+            url: canonicalUrl,
             images: ogImage,
             type: 'article',
             siteName: 'Pilot Programme',
@@ -125,6 +151,8 @@ export default async function BlogPostPage({ params }) {
         );
     }
 
+    const relatedPosts = await getRelatedPosts(post.id);
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { 
@@ -140,8 +168,8 @@ export default async function BlogPostPage({ params }) {
         return Math.ceil(wordCount / wordsPerMinute);
     };
 
-    // Build structured data schemas
-    const schema = {
+    // Structured Data Schemas (JSON-LD)
+    const articleSchema = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         'headline': post.title,
@@ -156,8 +184,8 @@ export default async function BlogPostPage({ params }) {
         'dateModified': post.updated_at || post.created_at,
         'author': {
             '@type': 'Organization',
-            'name': 'Pilot Programme',
-            'url': 'https://pilotprograme.com'
+            'name': 'Pilot Programme Editorial Team',
+            'url': 'https://pilotprograme.com/about'
         },
         'publisher': {
             '@type': 'Organization',
@@ -167,6 +195,17 @@ export default async function BlogPostPage({ params }) {
                 'url': 'https://pilotprograme.com/pilotprograme-logo.jpg'
             }
         }
+    };
+
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://pilotprograme.com/' },
+            { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://pilotprograme.com/blog' },
+            { '@type': 'ListItem', 'position': 3, 'name': post.category_name || 'Articles', 'item': 'https://pilotprograme.com/blog' },
+            { '@type': 'ListItem', 'position': 4, 'name': post.title, 'item': `https://pilotprograme.com/blog/${decodedSlug}` }
+        ]
     };
 
     let faqSchema = null;
@@ -199,7 +238,11 @@ export default async function BlogPostPage({ params }) {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
             />
             {faqSchema && (
                 <script
@@ -212,7 +255,7 @@ export default async function BlogPostPage({ params }) {
             <Breadcrumbs />
             
             <article className="min-h-screen bg-white dark:bg-[#0a0a0a]">
-                {/* Header */}
+                {/* Header Featured Image */}
                 {post.featured_image && (
                     <div className="aspect-video max-h-[500px] overflow-hidden">
                         <img 
@@ -227,20 +270,20 @@ export default async function BlogPostPage({ params }) {
                     {/* Back button */}
                     <Link 
                         href="/blog"
-                        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 transition-colors mb-8"
+                        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 transition-colors mb-8 text-sm font-medium"
                     >
-                        <ArrowLeft className="w-5 h-5" />
-                        Back to Blog
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Blog Index
                     </Link>
                     
                     {/* Post Meta */}
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
                         <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-4 h-4 text-red-500" />
                             <time>{formatDate(post.created_at)}</time>
                         </div>
                         <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-4 h-4 text-red-500" />
                             <span>{getReadingTime(post.content || '')} min read</span>
                         </div>
                         {post.category_name && (
@@ -252,18 +295,18 @@ export default async function BlogPostPage({ params }) {
                     </div>
                     
                     {/* Title */}
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                    <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
                         {post.title}
                     </h1>
                     
                     {/* Excerpt */}
                     {post.excerpt && (
-                        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed font-light border-l-4 border-red-500 pl-4">
                             {post.excerpt}
                         </p>
                     )}
                     
-                    {/* Content */}
+                    {/* Article Body Content */}
                     <div 
                         className="blog-content max-w-none text-gray-800 dark:text-gray-200"
                         dangerouslySetInnerHTML={{ __html: post.content }}
@@ -275,10 +318,74 @@ export default async function BlogPostPage({ params }) {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
                             <div className="space-y-4">
                                 {faqs.map((faq, index) => (
-                                    <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-lg p-6">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q || faq.question}</h3>
-                                        <p className="text-gray-600 dark:text-gray-400">{faq.a || faq.answer}</p>
+                                    <div key={index} className="bg-gray-50 dark:bg-[#111111] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-lg">{faq.q || faq.question}</h3>
+                                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{faq.a || faq.answer}</p>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Author & E-E-A-T Signals Card */}
+                    <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 dark:bg-[#111111] p-6 rounded-2xl border border-gray-200 dark:border-white/10">
+                        <Link href={post.author_slug ? `/blog/authors/${post.author_slug}` : '/blog'}>
+                            <img 
+                                src={post.author_avatar || 'https://pilotprograme.com/pilotprograme-logo.jpg'} 
+                                alt={post.author_name || 'Pilot Programme Editorial Team'} 
+                                className="w-16 h-16 rounded-full object-cover border-2 border-red-500/40 hover:scale-105 transition-transform" 
+                            />
+                        </Link>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Link href={post.author_slug ? `/blog/authors/${post.author_slug}` : '/blog'} className="font-bold text-gray-900 dark:text-white text-base hover:text-red-500 transition-colors">
+                                    Written by {post.author_name || 'the Pilot Programme Editorial Team'}
+                                </Link>
+                                {post.author_gender && (
+                                    <span className="capitalize text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                                        {post.author_gender}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                                {post.author_bio || 'Specialists in AI video synthesis, faceless YouTube channel automation, scriptwriting frameworks, and channel monetization strategies.'}
+                            </p>
+                            {post.author_slug && (
+                                <Link href={`/blog/authors/${post.author_slug}`} className="inline-block text-xs text-red-600 dark:text-red-400 font-bold mt-2 hover:underline">
+                                    View full author profile & all articles →
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Internal Linking: Related Posts Section */}
+                    {relatedPosts.length > 0 && (
+                        <div className="mt-16 pt-12 border-t border-gray-200 dark:border-white/10">
+                            <div className="flex items-center gap-2 mb-8">
+                                <BookOpen className="w-6 h-6 text-red-600" />
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Related Articles & Guides</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {relatedPosts.map((rel) => (
+                                    <Link 
+                                        key={rel.id} 
+                                        href={`/blog/${rel.slug}`}
+                                        className="group bg-gray-50 dark:bg-[#111111] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden hover:border-red-500 transition-all p-4 flex flex-col justify-between"
+                                    >
+                                        <div>
+                                            {rel.featured_image && (
+                                                <img 
+                                                    src={rel.featured_image} 
+                                                    alt={rel.title} 
+                                                    className="w-full h-32 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform" 
+                                                />
+                                            )}
+                                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-2 group-hover:text-red-500 transition-colors">
+                                                {rel.title}
+                                            </h3>
+                                        </div>
+                                        <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-4">Read article →</p>
+                                    </Link>
                                 ))}
                             </div>
                         </div>

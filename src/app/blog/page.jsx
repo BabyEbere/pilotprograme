@@ -59,6 +59,9 @@ export async function generateMetadata() {
         title: 'Blog — Pilot Programme | Faceless YouTube Automation Tips & Guides',
         description: 'Read the latest tips, guides, and insights on faceless YouTube automation, AI content creation, and growing your channel from the Pilot Programme blog.',
         keywords: 'Pilot Programme blog, faceless YouTube tips, AI content creation guides, YouTube automation blog, faceless YouTube strategy',
+        alternates: {
+            canonical: 'https://pilotprograme.com/blog',
+        },
         openGraph: {
             title: 'Blog — Pilot Programme | Faceless YouTube Automation Tips & Guides',
             description: 'Read the latest tips, guides, and insights on faceless YouTube automation, AI content creation, and growing your channel.',

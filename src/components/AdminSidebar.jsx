@@ -87,6 +87,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     const blogItems = [
         { icon: MdDescription, label: 'All Posts', path: '/control/blog' },
         { icon: MdCategory, label: 'Categories', path: '/control/blog/categories' },
+        { icon: MdPeople, label: 'Authors', path: '/control/blog/authors' },
     ];
 
     const researchItems = [
