@@ -41,6 +41,12 @@ export default function Videos() {
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
 
+    // Script & Scene Image Import States
+    const [userScripts, setUserScripts] = useState([]);
+    const [selectedScriptId, setSelectedScriptId] = useState('');
+    const [scriptDetails, setScriptDetails] = useState(null);
+    const [loadingScript, setLoadingScript] = useState(false);
+
     // Gallery state
     const [videos, setVideos] = useState([]);
     const [galleryLoading, setGalleryLoading] = useState(false);
@@ -55,10 +61,42 @@ export default function Videos() {
         document.title = 'Videos | AI Studio';
         fetchModels();
         fetchVideos();
+        fetchUserScripts();
         return () => {
             if (eventSourceRef.current) eventSourceRef.current.close();
         };
     }, []);
+
+    const fetchUserScripts = async () => {
+        if (!user.id) return;
+        try {
+            const res = await fetch(`${API_URL}/scripts?user_id=${user.id}`);
+            const data = await res.json();
+            if (data.success) setUserScripts(data.scripts || []);
+        } catch (e) {
+            console.error('Failed to load user scripts:', e);
+        }
+    };
+
+    const handleSelectScript = async (scriptId) => {
+        setSelectedScriptId(scriptId);
+        if (!scriptId) {
+            setScriptDetails(null);
+            return;
+        }
+        setLoadingScript(true);
+        try {
+            const res = await fetch(`${API_URL}/scripts/${scriptId}`);
+            const data = await res.json();
+            if (data.success && data.script) {
+                setScriptDetails(data.script);
+            }
+        } catch (e) {
+            console.error('Failed to load script details:', e);
+        } finally {
+            setLoadingScript(false);
+        }
+    };
 
     // ── Data fetching ──────────────────────────────────────────────────────
     const fetchModels = async () => {
@@ -244,6 +282,101 @@ export default function Videos() {
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                             {/* ── Left: Controls ──────────────── */}
                             <div className="lg:col-span-2 space-y-5">
+                                {/* IMPORT FROM SAVED SCRIPT & SCENE IMAGES */}
+                                <div className="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-2xl p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+                                            <MdAutoAwesome /> Select Saved Script Scene
+                                        </label>
+                                        {userScripts.length > 0 && (
+                                            <span className="text-[10px] text-gray-400">
+                                                {userScripts.length} scripts found
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <select
+                                        value={selectedScriptId}
+                                        onChange={(e) => handleSelectScript(e.target.value)}
+                                        className="w-full bg-white dark:bg-black/60 border border-gray-200 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                                    >
+                                        <option value="">-- Choose a script to load scene images --</option>
+                                        {userScripts.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.title} ({s.niche_name || 'Script'})
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    {loadingScript && (
+                                        <div className="flex items-center gap-2 text-xs text-purple-400 py-2">
+                                            <span className="animate-spin w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full" />
+                                            Loading scene images...
+                                        </div>
+                                    )}
+
+                                    {scriptDetails && scriptDetails.images && scriptDetails.images.length > 0 && (
+                                        <div className="space-y-2 pt-1">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                                                Select Scene Image to Animate:
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                                                {scriptDetails.images.map((img, idx) => (
+                                                    <div
+                                                        key={img.id || idx}
+                                                        className="group relative bg-black/40 border border-white/10 rounded-xl overflow-hidden hover:border-purple-500 transition-all p-1"
+                                                    >
+                                                        <img
+                                                            src={img.url || img.image_url}
+                                                            alt={img.prompt}
+                                                            className="w-full h-20 object-cover rounded-lg"
+                                                        />
+                                                        <p className="text-[9px] text-gray-300 line-clamp-2 mt-1 px-1">
+                                                            {img.prompt || img.prompt_text}
+                                                        </p>
+                                                        <div className="mt-2 flex flex-col gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const imgTargetUrl = img.url || img.image_url;
+                                                                    const promptTxt = img.prompt || img.prompt_text || '';
+                                                                    setImageUrl(imgTargetUrl);
+                                                                    setImageFile(null);
+                                                                    setImagePreview(imgTargetUrl);
+                                                                    setPrompt(promptTxt);
+                                                                    const i2vModel = models.find(m => m.supports_i2v);
+                                                                    if (i2vModel) setSelectedModel(i2vModel.id);
+                                                                    showToast('Loaded image & prompt into Image-to-Video mode!', 'success');
+                                                                }}
+                                                                className="w-full bg-purple-600 hover:bg-purple-500 text-white text-[9px] font-bold py-1 rounded-md transition-all text-center"
+                                                            >
+                                                                🖼️ Image-to-Video
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const promptTxt = img.prompt || img.prompt_text || '';
+                                                                    setPrompt(promptTxt);
+                                                                    showToast('Loaded prompt into Text-to-Video mode!', 'info');
+                                                                }}
+                                                                className="w-full bg-white/10 hover:bg-white/20 text-gray-200 text-[9px] font-bold py-1 rounded-md transition-all text-center"
+                                                            >
+                                                                📝 Text-to-Video
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {scriptDetails && (!scriptDetails.images || scriptDetails.images.length === 0) && (
+                                        <p className="text-[11px] text-amber-400 py-1">
+                                            No generated scene images found for this script yet. Generate prompts/images first in Image Studio.
+                                        </p>
+                                    )}
+                                </div>
+
                                 {/* Prompt */}
                                 <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-5 transition-colors">
                                     <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-2 block">
