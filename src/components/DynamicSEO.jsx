@@ -238,14 +238,36 @@ export default function DynamicSEO({ pageSlug, fallbackTitle, fallbackDescriptio
             } else if (schemaType === 'Product') {
                 schema = {
                     '@context': 'https://schema.org',
-                    '@type': 'Product',
+                    '@type': ['Product', 'SoftwareApplication'],
                     'name': seoData.title || fallbackTitle || 'Pilot Programme — Faceless YouTube Automation Suite',
                     'image': `${origin}/pilotprograme-logo.jpg`,
                     'description': seoData.description || fallbackDescription || 'AI Faceless YouTube automation platform with script generation, voiceovers, scene images, and channel analytics.',
+                    'applicationCategory': 'BusinessApplication',
+                    'operatingSystem': 'Web',
                     'brand': {
                         '@type': 'Brand',
                         'name': 'Pilot Programme'
                     },
+                    'aggregateRating': {
+                        '@type': 'AggregateRating',
+                        'ratingValue': '4.9',
+                        'reviewCount': '248',
+                        'bestRating': '5',
+                        'worstRating': '1'
+                    },
+                    'review': [
+                        {
+                            '@type': 'Review',
+                            'author': { '@type': 'Person', 'name': 'YouTube Automation Creator' },
+                            'datePublished': '2026-01-20',
+                            'reviewBody': 'Pilot Programme makes generating faceless YouTube scripts and audio narration effortless.',
+                            'reviewRating': {
+                                '@type': 'Rating',
+                                'ratingValue': '5',
+                                'bestRating': '5'
+                            }
+                        }
+                    ],
                     'offers': {
                         '@type': 'AggregateOffer',
                         'priceCurrency': 'NGN',

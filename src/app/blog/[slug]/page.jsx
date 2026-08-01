@@ -120,15 +120,21 @@ export default async function BlogPostPage({ params }) {
     // Build structured data schemas
     const schema = {
         '@context': 'https://schema.org',
-        '@type': 'Article',
+        '@type': 'BlogPosting',
         'headline': post.title,
         'description': post.excerpt || post.meta_description || '',
+        'image': post.featured_image ? [post.featured_image] : ['https://pilotprograme.com/pilotprograme-logo.jpg'],
         'url': `https://pilotprograme.com/blog/${decodedSlug}`,
+        'mainEntityOfPage': {
+            '@type': 'WebPage',
+            '@id': `https://pilotprograme.com/blog/${decodedSlug}`
+        },
         'datePublished': post.created_at,
         'dateModified': post.updated_at || post.created_at,
         'author': {
             '@type': 'Organization',
-            'name': 'Pilot Programme'
+            'name': 'Pilot Programme',
+            'url': 'https://pilotprograme.com'
         },
         'publisher': {
             '@type': 'Organization',
