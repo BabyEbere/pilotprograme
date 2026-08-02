@@ -15,7 +15,7 @@ export default function AdminBlogEditor() {
     const { id } = useParams();
     const router = useRouter();
     const pathname = usePathname();
-    const editPost = location.state?.post;
+    const editPost = typeof window !== 'undefined' ? (window.history?.state?.usr?.post || window.history?.state?.post) : null;
 
     const [form, setForm] = useState({
         title: '',
