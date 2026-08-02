@@ -33,6 +33,7 @@ export default function AdminBlogEditor() {
     });
 
     const [categories, setCategories] = useState([]);
+    const [authors, setAuthors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [aiGenerating, setAiGenerating] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');

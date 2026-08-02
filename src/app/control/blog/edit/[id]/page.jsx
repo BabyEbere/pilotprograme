@@ -29,6 +29,7 @@ export default function AdminBlogEditor() {
     });
 
     const [categories, setCategories] = useState([]);
+    const [authors, setAuthors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [aiGenerating, setAiGenerating] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
@@ -42,6 +43,7 @@ export default function AdminBlogEditor() {
 
     useEffect(() => {
         fetchCategories();
+        fetchAuthors();
         if (id) {
             setLoading(true);
             const API_URL = (typeof window !== 'undefined' 
@@ -77,6 +79,7 @@ export default function AdminBlogEditor() {
                             excerpt: data.post.excerpt || '',
                             featured_image: data.post.featured_image || '',
                             category_id: data.post.category_id || 1,
+                            author_id: data.post.author_id || '',
                             status: data.post.status || 'draft',
                             meta_title: data.post.meta_title || '',
                             meta_description: data.post.meta_description || '',
@@ -103,6 +106,19 @@ export default function AdminBlogEditor() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) setCategories(data.categories);
+            });
+    };
+
+    const fetchAuthors = () => {
+        const API_URL = (typeof window !== 'undefined' 
+            ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                ? 'http://localhost:5000' 
+                : 'https://s1.pilotprograme.com/api') 
+            : 'http://localhost:5000');
+        fetch(`${API_URL}/admin/blog/authors`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setAuthors(data.authors || []);
             });
     };
 
@@ -364,7 +380,7 @@ export default function AdminBlogEditor() {
                                         className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 transition-all font-semibold"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Slug</label>
                                         <input 
@@ -383,6 +399,17 @@ export default function AdminBlogEditor() {
                                             className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 uppercase text-[10px] font-bold tracking-widest"
                                         >
                                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-2">Assign Author</label>
+                                        <select 
+                                            value={form.author_id || ''}
+                                            onChange={(e) => setForm(prev => ({ ...prev, author_id: e.target.value ? parseInt(e.target.value) : '' }))}
+                                            className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-white/5 text-gray-900 dark:text-white p-3 rounded-xl outline-none focus:border-red-500/30 uppercase text-[10px] font-bold tracking-widest"
+                                        >
+                                            <option value="">-- Default / Team --</option>
+                                            {authors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
